@@ -1,0 +1,32 @@
+# --- UNITY GITIGNORE CHUẨN ---
+
+# Thư mục rác Unity (Mấy cái nặng GB là ở đây)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+
+# File rác hệ thống sinh ra khi mở VS
+.vs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opentdb
+*.inpidb
+
+# Rác hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Bản build game lỡ tay (Xóa cái này đi nếu bạn đặt tên khác)
+New folder/
