@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class YamiMonoBehaviour : MonoBehaviour
+public class YamiMonoBehaviour : NetworkBehaviour
 {
     protected virtual void Reset()
     {

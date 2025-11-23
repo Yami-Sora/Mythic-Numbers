@@ -6,7 +6,7 @@ using Fusion;
 public class CardNet : NetworkBehaviour
 {
     [Header("UI Refs")]
-    public TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
+    [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
     public Image bgImage; // Kéo cái ảnh nền lá bài vào đây
     public GameObject highlightObj; // Một cái viền vàng (ẩn đi mặc định)
 
@@ -37,22 +37,21 @@ public class CardNet : NetworkBehaviour
         if (HandIndex != -1)
         {
             Transform targetParent = (OwnerID == 0) ?
-                GameManagerNet.Instance.rightHandPos : // P1 (Host) ở bên phải (logic tạm)
-                GameManagerNet.Instance.leftHandPos;   // P2 ở bên trái
+                GameManagerNet.Instance.RightHandPos : // P1 (Host) ở bên phải (logic tạm)
+                GameManagerNet.Instance.LeftHandPos;   // P2 ở bên trái
 
-            // Vì là NetworkObject, ta không setParent trực tiếp mà chỉ lerp position
-            // Nhưng để đơn giản cho người mới, ta sẽ set parent ở local visual (nếu chưa set)
+            // Set Parent Cục bộ (Local) (nếu chưa set) để UI tự động sắp xếp gọn gàng, bỏ qua Lerp mạng cho code đơn giản hơn.
             if (transform.parent != targetParent) transform.SetParent(targetParent, false);
         }
         else
         {
             // Bài đã đánh -> Cần tìm nó đang ở ô nào trên bàn
-            // Duyệt mảng BoardState trong GameManager để tìm xem mình đang ở ô số mấy
+            // Duyệt mảng BoardState chứa các NetworkId trong GameManager để tìm xem lá bài hiện tại đang ở ô số mấy
             for (int i = 0; i < 9; i++)
             {
-                if (GameManagerNet.Instance.BoardState[i] == Object.Id)
+                if (GameManagerNet.Instance.BoardState[i] == Object.Id)//ID mạng của lá bài hiện tại có khớp với ID đang được lưu trữ trong ô bàn cờ số i không?
                 {
-                    Transform targetSlot = GameManagerNet.Instance.slots[i];
+                    Transform targetSlot = GameManagerNet.Instance.Slots[i];
                     if (transform.parent != targetSlot)
                     {
                         transform.SetParent(targetSlot, false);

@@ -4,49 +4,42 @@ using UnityEngine;
 
 public class GameManagerNet : NetworkBehaviour
 {
-    public static GameManagerNet Instance;
+    public static GameManagerNet Instance { get; private set; }
 
     [Header("References")]
-    public NetworkObject cardPrefab;
-    public Transform[] slots;      // Kéo 9 cái Slot_0 -> Slot_8 vào
-    public Transform leftHandPos;  // Panel chứa bài địch
-    public Transform rightHandPos; // Panel chứa bài mình
-    public TMP_Text turnText;          // UI hiển thị lượt ai
-
+    [SerializeField] private NetworkObject cardPrefab;
+    private Transform[] slots;      // Kéo 9 cái Slot_0 -> Slot_8 vào
+    private Transform leftHandPos;  // Panel chứa bài địch
+    private Transform rightHandPos; // Panel chứa bài mình
+    private TMP_Text turnText;      // UI hiển thị lượt ai
+    private bool uiReady = false;
+    public Transform[] Slots => slots;
+    public Transform LeftHandPos => leftHandPos;
+    public Transform RightHandPos => rightHandPos;
     [Networked] public int CurrentTurn { get; set; } // 0 hoặc 1
     [Networked, Capacity(9)] public NetworkArray<NetworkId> BoardState { get; } // Lưu ID bài trên bàn
 
     private CardNet selectedLocalCard; // Bài đang chọn ở máy local
 
-    private void Awake()
+    public void SetSceneReferences(Transform[] slots, Transform leftHandPos, Transform rightHandPos, TMP_Text turnText)
     {
-        if (Instance != null) Debug.LogError("GameManagerNet.Instance already exist!");
-        Instance = this;
+        this.slots = slots;
+        this.leftHandPos = leftHandPos;
+        this.rightHandPos = rightHandPos;
+        this.turnText = turnText;
+
+        uiReady = true;
     }
 
     public override void Spawned()
     {
-        // --- TỰ ĐỘNG TÌM UI (AUTO SETUP) ---
-        // Cách này giúp bạn không bao giờ bị mất liên kết khi dùng Prefab
-
-        // 1. Tìm 9 ô Slot (Giả sử bạn đặt tên là Slot_0 đến Slot_8)
-        slots = new Transform[9];
-        for (int i = 0; i < 9; i++)
-        {
-            // Tìm object theo tên trong Scene
-            GameObject slotObj = GameObject.Find("Slot_" + i);
-            if (slotObj != null) slots[i] = slotObj.transform;
-            else Debug.LogError($"Không tìm thấy Slot_{i}. Hãy kiểm tra lại tên!");
-        }
-
-        // 2. Tìm Hand Panel
-        GameObject pLeft = GameObject.Find("Panel_Left");
-        if (pLeft) leftHandPos = pLeft.transform;
-
-        GameObject pRight = GameObject.Find("Panel_Right");
-        if (pRight) rightHandPos = pRight.transform;
-
         // Chỉ Host (Server) mới được chia bài lúc đầu
+        if (Instance != null && Instance != this)
+        {
+            Runner.Despawn(Object);
+            return;
+        }
+        Instance = this;
         if (Object.HasStateAuthority)
         {
             CurrentTurn = 0; // Player 1 đi trước
@@ -56,6 +49,7 @@ public class GameManagerNet : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        if (!uiReady) return;
         // Cập nhật UI Lượt đi
         if (turnText)
             turnText.text = (CurrentTurn == 0) ? "PLAYER 1 TURN (BLUE)" : "PLAYER 2 TURN (RED)";
@@ -98,7 +92,7 @@ public class GameManagerNet : NetworkBehaviour
         // (Logic kiểm tra ID người chơi local so với CurrentTurn)
         // Tạm thời giả định PlayerRef.Local tương ứng với OwnerID để test
 
-        // Tắt highlight con cũ (nếu có)
+        // Tắt highlight con cũ trong trường hợp chọn 1 lá xong chọn lá khác
         if (selectedLocalCard != null)
         {
             selectedLocalCard.SetHighlight(false);

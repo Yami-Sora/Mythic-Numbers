@@ -23,7 +23,7 @@ public class AppController : MonoBehaviour
         {
             Debug.Log("Gửi yêu cầu Restart...");
             GameManagerNet.Instance.RequestRestart();
-            GameRefereeNet.Instance.resultPanel.SetActive(false);
+            GameRefereeNet.Instance.ResultPanel.SetActive(false);
         }
         else
         {

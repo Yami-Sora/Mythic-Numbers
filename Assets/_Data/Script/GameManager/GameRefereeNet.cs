@@ -4,28 +4,36 @@ using UnityEngine;
 
 public class GameRefereeNet : NetworkBehaviour
 {
-    public static GameRefereeNet Instance;
+    public static GameRefereeNet Instance { get; private set; }
 
     [Header("UI Win/Lose")]
-    public GameObject resultPanel; // Kéo Panel kết quả vào đây
-    public TMP_Text resultText;    // Kéo Text kết quả vào đây
+    private GameObject resultPanel;
+    private TMP_Text resultText;
+    public GameObject ResultPanel => resultPanel;
+    public TMP_Text ResultText => resultText;
 
-    private void Awake()
+    public void SetUIRefs(GameObject panel, TMP_Text text)
     {
-        Instance = this;
+        resultPanel = panel;
+        resultText = text;
+
+        // Đảm bảo lúc đầu nó tắt đi, CHỈ CHẠY MỘT LẦN KHI GÁN
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(false);
+        }
     }
     public override void Spawned()
     {
-        // --- TỰ ĐỘNG TÌM UI ---
-        // Tìm object có tên là "ResultPanel" đang nằm trong Scene
-        GameObject panelObj = GameObject.Find("ResultPanel");
-
-        if (panelObj != null)
+        if (Instance != null && Instance != this)
         {
-            resultPanel = panelObj;
-            // Tìm component TextMeshPro nằm con của Panel
-            resultText = resultPanel.GetComponentInChildren<TMP_Text>();
+            Runner.Despawn(Object);
+            return;
+        }
+        Instance = this;
 
+        if (resultPanel != null)
+        {
             // Đảm bảo lúc đầu nó tắt đi
             resultPanel.SetActive(false);
         }
@@ -98,23 +106,23 @@ public class GameRefereeNet : NetworkBehaviour
         // (Lưu ý: Hàm GetLocalPlayerID cần phải đúng logic như bài trước đã bàn)
         int myID = GameManagerNet.Instance.GetLocalPlayerID();
 
-        string msg = "";
+        string message = "";
         if (winnerID == 2)
         {
-            msg = $"HÒA!  \n ({s2} - {s1})";
+            message = $"HÒA!  \n ({s2} - {s1})";
             if (resultText) resultText.color = Color.yellow;
         }
         else if (winnerID == myID)
         {
-            msg = $"CHIẾN THẮNG!  \n ({s2} - {s1})";
+            message = $"CHIẾN THẮNG!  \n ({s2} - {s1})";
             if (resultText) resultText.color = Color.green;
         }
         else
         {
-            msg = $"THẤT BẠI  \n ({s2} - {s1})";
+            message = $"THẤT BẠI  \n ({s2} - {s1})";
             if (resultText) resultText.color = Color.red;
         }
 
-        if (resultText) resultText.text = msg;
+        if (resultText) resultText.text = message;
     }
 }

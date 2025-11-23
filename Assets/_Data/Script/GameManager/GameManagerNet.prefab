@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 6971291893176348093}
   - component: {fileID: 8967817571561170791}
   - component: {fileID: 8349414639861191568}
-  - component: {fileID: 3451843333618887015}
   m_Layer: 0
   m_Name: GameManagerNet
   m_TagString: Untagged
@@ -52,7 +51,6 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 8349414639861191568}
-  - {fileID: 3451843333618887015}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &8349414639861191568
 MonoBehaviour:
@@ -67,23 +65,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerNet
   cardPrefab: {fileID: 4286878122934005440, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
-  slots: []
-  leftHandPos: {fileID: 0}
-  rightHandPos: {fileID: 0}
-  turnText: {fileID: 0}
   _CurrentTurn: 0
   _BoardState: []
---- !u!114 &3451843333618887015
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 843335948712489606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 678d098088768234f988eaed0ae575af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameRefereeNet
-  resultPanel: {fileID: 0}
-  resultText: {fileID: 0}

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 
 public class NetworkLauncher : MonoBehaviour
 {
-    public GameObject gameManagerPrefab; // Prefab chứa GameManager
 
     async void Start()
     {
@@ -25,10 +24,25 @@ public class NetworkLauncher : MonoBehaviour
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
-        // Nếu là người tạo phòng, sinh ra GameManager
+        // ✅ KẾT NỐI VỚI NETWORK APP MANAGER
+        // Chỉ Master Client (người tạo phòng) mới có quyền sinh ra các Network Object quản lý
         if (runner.IsSharedModeMasterClient)
         {
-            runner.Spawn(gameManagerPrefab, Vector3.zero, Quaternion.identity);
+            // Tìm NetworkAppManager đang có sẵn trong Scene
+            NetworkAppManager appManager = FindFirstObjectByType<NetworkAppManager>();
+
+            if (appManager != null)
+            {
+                Debug.Log("Master Client: Đang gọi NetworkAppManager để khởi tạo Game...");
+
+                // Gọi hàm StartGame bên kia để nó Spawn cả GameManager lẫn Referee
+                // VÀ quan trọng nhất là gán tham chiếu UI (SetSceneReferences)
+                appManager.StartGame(runner);
+            }
+            else
+            {
+                Debug.LogError("LỖI: Không tìm thấy NetworkAppManager trong Scene! Hãy chắc chắn bạn đã tạo GameObject này.");
+            }
         }
     }
 }
