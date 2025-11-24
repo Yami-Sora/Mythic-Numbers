@@ -53,7 +53,7 @@ public class GameManagerNet : NetworkBehaviour
         if (!uiReady) return;
         // Cập nhật UI Lượt đi
         if (turnText)
-            turnText.text = (CurrentTurn == 0) ? "PLAYER 1 TURN (BLUE)" : "PLAYER 2 TURN (RED)";
+            turnText.text = (CurrentTurn == 0) ? "Player 1 Turn (Blue)" : "Player 2 Turn (Red)";
     }
 
     void DealCards()
