@@ -1,6 +1,7 @@
 using Fusion;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManagerNet : NetworkBehaviour
 {
@@ -224,7 +225,10 @@ public class GameManagerNet : NetworkBehaviour
         for (int i = 0; i < 9; i++)
         {
             BoardState.Set(i, default); // Xóa ID bài lưu trong ô
+            Image image = slots[i].GetComponent<Image>();
+            image.color = Color.white; // Reset màu nền ô
         }
+
 
         // C. Reset lượt đi và người thắng
         CurrentTurn = 0;

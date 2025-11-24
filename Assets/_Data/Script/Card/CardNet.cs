@@ -7,7 +7,6 @@ public class CardNet : NetworkBehaviour
 {
     [Header("UI Refs")]
     [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
-    public Image bgImage; // Kéo cái ảnh nền lá bài vào đây
     public GameObject highlightObj; // Một cái viền vàng (ẩn đi mặc định)
 
     // Dữ liệu đồng bộ qua mạng
@@ -57,6 +56,7 @@ public class CardNet : NetworkBehaviour
                         transform.SetParent(targetSlot, false);
                         transform.localPosition = Vector3.zero; // Căn giữa ô
                         transform.localScale = Vector3.one; // Đảm bảo không bị biến dạng
+                        UpdateBackgroundColor();
                     }
                     break;
                 }
@@ -70,8 +70,14 @@ public class CardNet : NetworkBehaviour
         txtRight.text = Right.ToString();
         txtBottom.text = Bottom.ToString();
         txtLeft.text = Left.ToString();
-
-        bgImage.color = (OwnerID == 0) ? colorP1 : colorP2;
+    }
+    void UpdateBackgroundColor()
+    {
+        if (HandIndex == -1)
+        {
+            Image image = transform.parent.GetComponent<Image>();
+            image.color = (OwnerID == 0) ? colorP1 : colorP2;
+        }
     }
 
     // Sự kiện Click (Gán vào Button component)
@@ -106,6 +112,7 @@ public class CardNet : NetworkBehaviour
     public void FlipOwner()
     {
         OwnerID = 1 - OwnerID; // Đảo 0 thành 1, 1 thành 0
+        UpdateBackgroundColor();
     }
     public void SetHighlight(bool isActive)
     {
