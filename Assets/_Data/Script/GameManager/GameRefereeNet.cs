@@ -109,17 +109,17 @@ public class GameRefereeNet : NetworkBehaviour
         string message = "";
         if (winnerID == 2)
         {
-            message = $"HÒA!  \n ({s2} - {s1})";
+            message = $"HÒA\n ({s2} - {s1})";
             if (resultText) resultText.color = Color.yellow;
         }
         else if (winnerID == myID)
         {
-            message = $"CHIẾN THẮNG!  \n ({s2} - {s1})";
+            message = $"CHIẾN THẮNG\n ({s2} - {s1})";
             if (resultText) resultText.color = Color.green;
         }
         else
         {
-            message = $"THẤT BẠI  \n ({s2} - {s1})";
+            message = $"THẤT BẠI\n ({s2} - {s1})";
             if (resultText) resultText.color = Color.red;
         }
 

@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 95782653967a7254dbdce3a3ac47ca4d
+guid: f04bcd248f01b404aa46714831b4e89b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1927370999492360763
-    second: snapedit_1763825587732-removebg-preview_0
-  - first:
-      213: -8665505121385197080
-    second: snapedit_1763825587732-removebg-preview_1
+      213: 4226617872927654854
+    second: Gemini_Generated_Image_3huz3v3huz3v3huz_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -103,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: snapedit_1763825587732-removebg-preview_0
+      name: Gemini_Generated_Image_3huz3v3huz3v3huz_0
       rect:
         serializedVersion: 2
-        x: 84
-        y: 38
-        width: 341
-        height: 420
+        x: 0
+        y: 0
+        width: 1622
+        height: 2471
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -118,30 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5c54ed0a94a9045e0800000000000000
-      internalID: -1927370999492360763
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: snapedit_1763825587732-removebg-preview_1
-      rect:
-        serializedVersion: 2
-        x: 470
-        y: 32
-        width: 6
-        height: 8
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 8e1d1800101fdb780800000000000000
-      internalID: -8665505121385197080
+      spriteID: 6c38b25df86f7aa30800000000000000
+      internalID: 4226617872927654854
       vertices: []
       indices: 
       edges: []
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      snapedit_1763825587732-removebg-preview_0: -1927370999492360763
-      snapedit_1763825587732-removebg-preview_1: -8665505121385197080
+      Gemini_Generated_Image_3huz3v3huz3v3huz_0: 4226617872927654854
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
