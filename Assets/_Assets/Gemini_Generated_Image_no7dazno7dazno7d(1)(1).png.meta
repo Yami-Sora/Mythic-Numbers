@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 26a5f3e96cbfe3b489bf9d14ab86941a
+guid: b2f2e1f0d93bfa746afbbeee7680d346
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3253760700049392771
-    second: snapedit_1763546331053_0
+      213: -8802450926329782444
+    second: Gemini_Generated_Image_no7dazno7dazno7d(1)(1)_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: snapedit_1763546331053_0
+      name: Gemini_Generated_Image_no7dazno7dazno7d(1)(1)_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1600
-        height: 914
+        width: 1620
+        height: 2468
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 38402961e1ea72d20800000000000000
-      internalID: 3253760700049392771
+      spriteID: 45f1e47158967d580800000000000000
+      internalID: -8802450926329782444
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      snapedit_1763546331053_0: 3253760700049392771
+      Gemini_Generated_Image_no7dazno7dazno7d(1)(1)_0: -8802450926329782444
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

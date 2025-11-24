@@ -556,7 +556,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -4791965999925121907, guid: 42ae2dd8ba4dc3a438020639b3da4902, type: 3}
+  m_Sprite: {fileID: -7473045586049788556, guid: eee0d0fbd5945854da4d48371f7b346d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -657,7 +657,6 @@ MonoBehaviour:
   txtRight: {fileID: 7645033774585155405}
   txtBottom: {fileID: 647359396558260722}
   txtLeft: {fileID: 124236589109307574}
-  bgImage: {fileID: 6663522439955511047}
   highlightObj: {fileID: 1339143399985017692}
   _Top: 0
   _Right: 0
