@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6971291893176348093}
   - component: {fileID: 8967817571561170791}
   - component: {fileID: 8349414639861191568}
+  - component: {fileID: 7819502552760626106}
   m_Layer: 0
   m_Name: GameManagerNet
   m_TagString: Untagged
@@ -64,6 +65,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1bd6d1fbc98c04d849bc63126c2a8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerNet
+  playWithAI: 0
   cardPrefab: {fileID: 4286878122934005440, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
   _CurrentTurn: 0
   _BoardState: []
+--- !u!114 &7819502552760626106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 843335948712489606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b2f7e5aaf0c8514a84c89246f5b01e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameAI
+  thinkingTime: 1.5

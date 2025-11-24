@@ -3,9 +3,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(GameAI))]
 public class GameManagerNet : NetworkBehaviour
 {
     public static GameManagerNet Instance { get; private set; }
+
+    [Header("Settings")]
+    public bool playWithAI = false;
 
     [Header("References")]
     [SerializeField] private NetworkObject cardPrefab;
@@ -14,6 +18,8 @@ public class GameManagerNet : NetworkBehaviour
     private Transform rightHandPos; // Panel chứa bài mình
     private TMP_Text turnText;      // UI hiển thị lượt ai
     private bool uiReady = false;
+
+    private GameAI aiBrain;
     public Transform[] Slots => slots;
     public Transform LeftHandPos => leftHandPos;
     public Transform RightHandPos => rightHandPos;
@@ -31,16 +37,33 @@ public class GameManagerNet : NetworkBehaviour
 
         uiReady = true;
     }
+    //public void OnAIModeChanged(bool isOn)
+    //{
+    //    playWithAI = isOn;
+
+    //    if (isOn) Debug.Log("Đã BẬT chế độ đấu với AI");
+    //    else Debug.Log("Đã TẮT chế độ đấu với AI (Chơi 2 người)");
+    //}
 
     public override void Spawned()
     {
         // Chỉ Host (Server) mới được chia bài lúc đầu
         if (Instance != null && Instance != this)
         {
-            Runner.Despawn(Object);
+            Runner.Despawn(Object);//Nếu đã có instance khác thì tự hủy
             return;
         }
         Instance = this;
+        // Khởi tạo AI
+
+        // ✅ [SỬA ĐỔI 1] TỰ ĐỘNG BẬT AI NẾU CHƠI OFFLINE
+        if (Runner.GameMode == GameMode.Single)
+        {
+            playWithAI = true;
+            Debug.Log("[GameManager] Đang chạy chế độ Offline Single Player -> Auto bật AI.");
+            aiBrain = GetComponent<GameAI>();
+            if (aiBrain != null) aiBrain.Init(this);
+        }
         if (Object.HasStateAuthority)
         {
             CurrentTurn = 0; // Player 1 đi trước
@@ -75,8 +98,8 @@ public class GameManagerNet : NetworkBehaviour
         int l = Random.Range(1, 10);
 
         var no = Runner.Spawn(cardPrefab, Vector3.zero, Quaternion.identity);
-
         CardNet card = no.GetComponent<CardNet>();
+
         card.Top = t; card.Right = r; card.Bottom = b; card.Left = l;
         card.OwnerID = ownerID;
         card.HandIndex = index;
@@ -91,20 +114,15 @@ public class GameManagerNet : NetworkBehaviour
     {
         // Kiểm tra có đúng lượt của mình không
         // (Logic kiểm tra ID người chơi local so với CurrentTurn)
-        // Tạm thời giả định PlayerRef.Local tương ứng với OwnerID để test
+        // Check quyền sở hữu
+        if (card.OwnerID != GetLocalPlayerID()) return;
 
         // Tắt highlight con cũ trong trường hợp chọn 1 lá xong chọn lá khác
-        if (selectedLocalCard != null)
-        {
-            selectedLocalCard.SetHighlight(false);
-        }
+        if (selectedLocalCard != null) selectedLocalCard.SetHighlight(false);
 
         // Bật highlight con mới
         selectedLocalCard = card;
-        if (selectedLocalCard != null)
-        {
-            selectedLocalCard.SetHighlight(true);
-        }
+        if (selectedLocalCard != null) selectedLocalCard.SetHighlight(true);
 
         Debug.Log("Đã chọn bài: " + card.Top + "/" + card.Right);
     }
@@ -113,6 +131,10 @@ public class GameManagerNet : NetworkBehaviour
     public void OnSlotClicked(int slotIndex)
     {
         if (selectedLocalCard == null) return;
+
+        // Check lượt
+        if (GetLocalPlayerID() != CurrentTurn) return;
+
         // Tắt highlight trước khi gửi RPC
         selectedLocalCard.SetHighlight(false);
 
@@ -125,6 +147,7 @@ public class GameManagerNet : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_PlayCard(NetworkId cardId, int slotIndex, RpcInfo info = default)
     {
+        if (slotIndex < 0 || slotIndex >= 9) return;
         // 1. Kiểm tra xem ô đó đã có bài chưa
         if (BoardState[slotIndex].IsValid) return;
 
@@ -136,19 +159,25 @@ public class GameManagerNet : NetworkBehaviour
         if (cardObj != null)
         {
             CardNet card = cardObj.GetComponent<CardNet>();
-            card.HandIndex = -1; // Đánh dấu đã đánh xuống bàn
+            if (card.HandIndex == -1) return;
 
-            // 4. Xử lý Lật Bài
+            // Thực hiện
+            BoardState.Set(slotIndex, cardId);
+            card.HandIndex = -1;
             ResolveBattle(card, slotIndex);
-        }
-        // --- GỌI TRỌNG TÀI KIỂM TRA ---
-        if (GameRefereeNet.Instance != null)
-        {
-            GameRefereeNet.Instance.CheckEndGame();
-        }
 
-        // 5. Đổi lượt
-        CurrentTurn = 1 - CurrentTurn;
+            if (GameRefereeNet.Instance != null)
+                GameRefereeNet.Instance.CheckEndGame();
+
+            CurrentTurn = 1 - CurrentTurn;
+
+            // [AI TRIGGER] 
+            // Nếu có AI + Đến lượt P2 (ID 1) + Mình là Server (Offline thì mình luôn là Server)
+            if (playWithAI && CurrentTurn == 1 && Object.HasStateAuthority)
+            {
+                if (aiBrain != null) aiBrain.StartTurn(1);
+            }
+        }
     }
 
     void ResolveBattle(CardNet playedCard, int index)
@@ -194,9 +223,11 @@ public class GameManagerNet : NetworkBehaviour
     {
         // Nếu mình là chủ phòng (Master Client) -> Là Player 1 (ID 0)
         // Nếu không -> Là Player 2 (ID 1)
-        // Lưu ý: Đây là logic đơn giản cho 2 người. 
+
+        // Nếu chơi Offline (Single Mode), người chơi luôn là Player 0 (Blue)
+        if (Runner.GameMode == GameMode.Single) return 0;
         //return Runner.IsSharedModeMasterClient ? 0 : 1;
-         return CurrentTurn;
+        return CurrentTurn;
     }
     // --- LOGIC RESTART GAME (SOFT RESET) ---
 

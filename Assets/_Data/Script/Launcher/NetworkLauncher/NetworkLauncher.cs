@@ -5,11 +5,23 @@ using System.Threading.Tasks;
 public class NetworkLauncher : MonoBehaviour
 {
 
-    async void Start()
+    //async void Start()
+    //{
+    //    await StartGame(GameMode.Shared);
+    //}
+
+    // Gọi hàm này khi bấm nút "Play Online"
+    public async void OnPlayOnlineClicked()
     {
         await StartGame(GameMode.Shared);
     }
 
+    // Gọi hàm này khi bấm nút "Play Solo (Offline)"
+    public async void OnPlayOfflineClicked()
+    {
+        // GameMode.Single chạy offline hoàn toàn
+        await StartGame(GameMode.Single);
+    }
     async Task StartGame(GameMode mode)
     {
         // Tạo Runner (môi trường mạng)
@@ -26,22 +38,18 @@ public class NetworkLauncher : MonoBehaviour
 
         // ✅ KẾT NỐI VỚI NETWORK APP MANAGER
         // Chỉ Master Client (người tạo phòng) mới có quyền sinh ra các Network Object quản lý
-        if (runner.IsSharedModeMasterClient)
+        if (runner.IsSharedModeMasterClient || runner.GameMode == GameMode.Single)
         {
-            // Tìm NetworkAppManager đang có sẵn trong Scene
             NetworkAppManager appManager = FindFirstObjectByType<NetworkAppManager>();
-
             if (appManager != null)
             {
-                Debug.Log("Master Client: Đang gọi NetworkAppManager để khởi tạo Game...");
-
-                // Gọi hàm StartGame bên kia để nó Spawn cả GameManager lẫn Referee
-                // VÀ quan trọng nhất là gán tham chiếu UI (SetSceneReferences)
+                // Tự động bật AI nếu chơi Single
+                if (mode == GameMode.Single)
+                {
+                    // (Tùy chọn) Bạn có thể truyền cờ vào đây để báo Manager bật AI
+                    Debug.Log("Chế độ Offline: Tự động kích hoạt AI");
+                }
                 appManager.StartGame(runner);
-            }
-            else
-            {
-                Debug.LogError("LỖI: Không tìm thấy NetworkAppManager trong Scene! Hãy chắc chắn bạn đã tạo GameObject này.");
             }
         }
     }
