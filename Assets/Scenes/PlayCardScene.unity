@@ -632,6 +632,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1320687077}
+        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
+        m_MethodName: SetModeInteractable
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &203607904
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2213,6 +2225,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 1320687077}
+        m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
+        m_MethodName: SetModeInteractable
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1143694428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2712,6 +2736,8 @@ MonoBehaviour:
   offlineButtonText: {fileID: 1656065132}
   LeftAiImage: {fileID: 2065633732}
   LeftPlayer2: {fileID: 13665361}
+  btnVsAi: {fileID: 1143694427}
+  btnVsPlayer: {fileID: 203607903}
   selectedColor: {r: 0, g: 1, b: 0, a: 1}
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1320687078
@@ -2723,7 +2749,7 @@ Transform:
   m_GameObject: {fileID: 1320687076}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 472.3123, y: 413.37332, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

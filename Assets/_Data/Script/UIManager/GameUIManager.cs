@@ -11,7 +11,11 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private TMP_Text offlineButtonText;
     [SerializeField] private Image LeftAiImage;
     [SerializeField] private Image LeftPlayer2;
+    [SerializeField] private Button btnVsAi;
+    [SerializeField] private Button btnVsPlayer;
 
+    [Header("Interactable Settings")]
+    bool isInteractable = false;
 
     [Header("Color Settings")]
     [SerializeField] private Color selectedColor = Color.green;
@@ -61,6 +65,17 @@ public class GameUIManager : MonoBehaviour
         {
             LeftPlayer2.gameObject.SetActive(!isActive);
         }
+    }
 
+    public void SetModeInteractable()
+    {
+        if (btnVsAi != null)
+        {
+            btnVsAi.interactable = isInteractable;
+        }
+        if (btnVsPlayer != null)
+        {
+            btnVsPlayer.interactable = isInteractable;
+        }
     }
 }
