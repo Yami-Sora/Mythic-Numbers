@@ -37,13 +37,6 @@ public class GameManagerNet : NetworkBehaviour
 
         uiReady = true;
     }
-    //public void OnAIModeChanged(bool isOn)
-    //{
-    //    playWithAI = isOn;
-
-    //    if (isOn) Debug.Log("Đã BẬT chế độ đấu với AI");
-    //    else Debug.Log("Đã TẮT chế độ đấu với AI (Chơi 2 người)");
-    //}
 
     public override void Spawned()
     {

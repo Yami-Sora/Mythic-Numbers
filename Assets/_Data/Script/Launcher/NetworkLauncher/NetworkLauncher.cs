@@ -5,20 +5,18 @@ using System.Threading.Tasks;
 public class NetworkLauncher : MonoBehaviour
 {
 
-    //async void Start()
-    //{
-    //    await StartGame(GameMode.Shared);
-    //}
-
     // Gọi hàm này khi bấm nút "Play Online"
     public async void OnPlayOnlineClicked()
     {
+        GameUIManager.Instance.SetLauncherModeUI(true);
         await StartGame(GameMode.Shared);
     }
 
     // Gọi hàm này khi bấm nút "Play Solo (Offline)"
     public async void OnPlayOfflineClicked()
     {
+        GameUIManager.Instance.SetLauncherModeUI(false);
+        GameUIManager.Instance.SetLeftImageActive(true);
         // GameMode.Single chạy offline hoàn toàn
         await StartGame(GameMode.Single);
     }
