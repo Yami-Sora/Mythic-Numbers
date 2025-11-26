@@ -9,22 +9,47 @@ public class GameAI : MonoBehaviour
     [SerializeField] private float thinkingTime = 1.5f; // Thời gian giả vờ suy nghĩ
 
     private GameManagerNet gameManager;
-
+    // ✅ THÊM: Biến lưu trữ luồng suy nghĩ hiện tại, fix bug tự động đánh 2 lá sau khi reset
+    private Coroutine currentThinkingCoroutine;
     public void Init(GameManagerNet manager)
     {
         this.gameManager = manager;
+    }
+    // ✅ THÊM: Hàm cưỡng chế dừng suy nghĩ
+    public void StopThinking()
+    {
+        if (currentThinkingCoroutine != null)
+        {
+            StopCoroutine(currentThinkingCoroutine);
+            currentThinkingCoroutine = null;
+            Debug.Log("[AI] Đã bị ép buộc ngừng suy nghĩ do Reset game.");
+        }
     }
 
     // Hàm này được GameManager gọi khi đến lượt AI
     public void StartTurn(int aiPlayerID)
     {
-        StartCoroutine(ThinkAndDecide(aiPlayerID));
+        // Nếu đã có coroutine suy nghĩ đang chạy, dừng nó trước khi bắt đầu cái mới
+        if (currentThinkingCoroutine != null)
+        {
+            StopCoroutine(currentThinkingCoroutine);
+            currentThinkingCoroutine = null;
+        }
+
+        currentThinkingCoroutine = StartCoroutine(ThinkAndDecide(aiPlayerID));
     }
 
     private IEnumerator ThinkAndDecide(int aiPlayerID)
     {
         Debug.Log($"[AI] Đang suy nghĩ cho Player {aiPlayerID}...");
         yield return new WaitForSeconds(thinkingTime);
+
+        // Nếu GameManager bị null hoặc lượt đã đổi -> dừng
+        if (gameManager == null || gameManager.CurrentTurn != aiPlayerID)
+        {
+            currentThinkingCoroutine = null;
+            yield break;
+        }
 
         // --- BƯỚC 1: LẤY DỮ LIỆU ---
         // Tìm bài trên tay AI
@@ -46,7 +71,11 @@ public class GameAI : MonoBehaviour
         }
 
         // Nếu không còn bài hoặc không còn chỗ -> Dừng
-        if (aiHand.Count == 0 || emptySlots.Count == 0) yield break;
+        if (aiHand.Count == 0 || emptySlots.Count == 0)
+        {
+            currentThinkingCoroutine = null; // Kết thúc
+            yield break;
+        }
 
         // --- BƯỚC 2: THUẬT TOÁN GREEDY (TÌM NƯỚC ĐI TỐT NHẤT) ---
         CardNet bestCard = aiHand[0];
@@ -74,9 +103,18 @@ public class GameAI : MonoBehaviour
 
         Debug.Log($"[AI] Quyết định: Dùng bài {bestCard.Top}/{bestCard.Right} đánh vào ô {bestSlot} (Ăn được {maxFlips} bài)");
 
+        // Trước khi gửi RPC, kiểm tra lại trạng thái: lá vẫn ở tay, ô vẫn rỗng, và vẫn là lượt AI
+        if (bestCard == null || bestCard.HandIndex == -1 || gameManager.BoardState[bestSlot].IsValid || gameManager.CurrentTurn != aiPlayerID)
+        {
+            currentThinkingCoroutine = null;
+            yield break;
+        }
+
         // --- BƯỚC 3: THỰC HIỆN NƯỚC ĐI ---
         // Gọi ngược lại GameManager để thực hiện hành động (vì GameManager nắm quyền RPC)
         gameManager.RPC_PlayCard(bestCard.Object.Id, bestSlot);
+        // Đánh xong thì reset biến
+        currentThinkingCoroutine = null;
     }
 
     // --- CÁC HÀM TÍNH TOÁN GIẢ LẬP (PURE LOGIC) ---

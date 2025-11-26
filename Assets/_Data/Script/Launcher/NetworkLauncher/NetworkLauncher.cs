@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 public class NetworkLauncher : MonoBehaviour
 {
-
     // Gọi hàm này khi bấm nút "Play Online"
     public async void OnPlayOnlineClicked()
     {
         GameUIManager.Instance.SetLauncherModeUI(true);
-        await StartGame(GameMode.Shared);
+        // Tự động quyết định (Người đầu là Host, người sau là Client)
+        await StartGame(GameMode.AutoHostOrClient);
     }
 
     // Gọi hàm này khi bấm nút "Play Solo (Offline)"
@@ -22,8 +22,20 @@ public class NetworkLauncher : MonoBehaviour
     }
     async Task StartGame(GameMode mode)
     {
+        // Hủy Manager cũ nếu còn sót lại
+        if (GameManagerNet.Instance != null)
+        {
+            Destroy(GameManagerNet.Instance.gameObject);
+        }
         // Tạo Runner (môi trường mạng)
-        NetworkRunner runner = gameObject.AddComponent<NetworkRunner>();
+        // ✅ FIX: Tái sử dụng Runner nếu có, thay vì Destroy/Create liên tục
+        NetworkRunner runner = GetComponent<NetworkRunner>();
+        if (runner == null)
+        {
+            runner = gameObject.AddComponent<NetworkRunner>();
+        }
+
+        // Đảm bảo Runner sạch sẽ trước khi Start
         runner.ProvideInput = true;
 
         // Kết nối tới phòng tên "TestRoom"
@@ -34,19 +46,16 @@ public class NetworkLauncher : MonoBehaviour
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
 
-        // ✅ KẾT NỐI VỚI NETWORK APP MANAGER
-        // Chỉ Master Client (người tạo phòng) mới có quyền sinh ra các Network Object quản lý
-        if (runner.IsSharedModeMasterClient || runner.GameMode == GameMode.Single)
+
+        // ✅ ĐOẠN NÀY QUAN TRỌNG:
+        // Khi người thứ 2 vào, mode của họ là Client -> runner.IsServer = false.
+        // Họ sẽ KHÔNG chạy vào trong if này -> KHÔNG Spawn GameManagerNet (Đúng logic).
+        // Họ sẽ chờ Host (người 1) spawn và đồng bộ về máy họ.
+        if (runner.IsServer || runner.GameMode == GameMode.Single)
         {
             NetworkAppManager appManager = FindFirstObjectByType<NetworkAppManager>();
             if (appManager != null)
             {
-                // Tự động bật AI nếu chơi Single
-                if (mode == GameMode.Single)
-                {
-                    // (Tùy chọn) Bạn có thể truyền cờ vào đây để báo Manager bật AI
-                    Debug.Log("Chế độ Offline: Tự động kích hoạt AI");
-                }
                 appManager.StartGame(runner);
             }
         }

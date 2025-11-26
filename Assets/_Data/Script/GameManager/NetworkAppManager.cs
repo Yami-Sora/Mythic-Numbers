@@ -2,13 +2,13 @@ using Fusion;
 using TMPro;
 using UnityEngine;
 
-// Lớp này là Monobehaviour bình thường, chỉ tồn tại trong Scene
 public class NetworkAppManager : MonoBehaviour
 {
-    [Header("Network Prefabs to Spawn")]
-    // Kéo Prefab GameManagerNet vào đây (NÓ LÀ PREFAB GỐC, KHÔNG CÓ TRONG HIERARCHY)
+    public static NetworkAppManager Instance;
+
+    [Header("Network Prefabs")]
     [SerializeField] private NetworkObject gameManagerNetPrefab;
-    [SerializeField] private NetworkObject GameRefereeNetPrefab;
+    [SerializeField] private NetworkObject gameRefereeNetPrefab;
 
     [Header("Scene References")]
     [SerializeField] private Transform[] slots;
@@ -20,39 +20,60 @@ public class NetworkAppManager : MonoBehaviour
 
     private NetworkRunner runner;
 
-    // HÀM NÀY PHẢI ĐƯỢC GỌI KHI MẠNG KHỞI TẠO (Trong Fusion Launcher/UI)
+    private void Awake()
+    {
+        // Singleton Pattern
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void Start()
+    {
+        if (resultPanel) resultPanel.SetActive(false);
+    }
+
+    // ✅ [QUAN TRỌNG NHẤT] VÒNG LẶP CỨU HỘ
+    // Hàm này chạy mỗi frame. Nó sẽ tự động tìm xem có Manager nào chưa có UI không thì gán ngay.
+    // Cách này giúp Client (không gọi Spawn) vẫn được gán UI.
+    private void Update()
+    {
+        // 1. Cứu GameManagerNet
+        if (GameManagerNet.Instance != null && !GameManagerNet.Instance.IsUIReady)
+        {
+            Debug.Log("[AppManager] Phát hiện GameManager chưa có UI -> Đang gán...");
+            SetupGameManagerUI(GameManagerNet.Instance);
+        }
+    }
+
     public void StartGame(NetworkRunner runner)
     {
         this.runner = runner;
-        // Bắt đầu sinh ra Network Manager
-        runner.Spawn(gameManagerNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer, InitializeManager);
-        runner.Spawn(GameRefereeNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer, InitializeRefereeNet);
+        // Spawn không cần callback nữa, vì hàm Update bên trên sẽ lo việc đó ngay lập tức
+        runner.Spawn(gameManagerNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
+        runner.Spawn(gameRefereeNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
     }
 
-    // Callback này được gọi khi Network Object đã được sinh ra thành công
-    private void InitializeManager(NetworkRunner runner, NetworkObject networkObject)
+    // Hàm gán UI cho GameManager
+    public void SetupGameManagerUI(GameManagerNet manager)
     {
-        GameManagerNet manager = networkObject.GetComponent<GameManagerNet>();
-
-        if (manager != null)
-        {
-            // ✅ QUAN TRỌNG: Gán các tham chiếu tĩnh (Scene UI) vào Network Manager VỪA ĐƯỢC SINH RA
-            // Vì các biến này trong GameManagerNet là [SerializeField] private, 
-            // ta sẽ phải dùng Reflective Property/Method hoặc Public Setter (cách an toàn hơn).
-
-            // Tạm thời, để code đơn giản, ta cần tạo Public Setter trong GameManagerNet cho các biến này:
-            manager.SetSceneReferences(slots, leftHandPos, rightHandPos, turnText);
-            Debug.Log("GameManagerNet đã được sinh ra và các tham chiếu UI đã được gán.");
-        }
+        manager.SetSceneReferences(slots, leftHandPos, rightHandPos, turnText);
+        Debug.Log("AppManager: Đã gán UI cho GameManagerNet.");
     }
-    private void InitializeRefereeNet(NetworkRunner runner, NetworkObject networkObject)
-    {
-        GameRefereeNet refereeNet = networkObject.GetComponent<GameRefereeNet>();
 
-        if (refereeNet != null)
+    // Hàm gán UI cho Referee
+    public void SetupRefereeUI(GameRefereeNet referee)
+    {
+        if (resultPanel == null || resultText == null)
         {
-            refereeNet.SetUIRefs(resultPanel, resultText);
-            Debug.Log("GameRefereeNet đã được sinh ra và các tham chiếu UI đã được gán.");
+            Debug.LogError("AppManager: Quên kéo ResultPanel hoặc ResultText vào Inspector rồi!");
+            return;
         }
+
+        referee.SetUIRefs(resultPanel, resultText);
+        Debug.Log("AppManager: Đã gán UI cho GameRefereeNet.");
     }
 }

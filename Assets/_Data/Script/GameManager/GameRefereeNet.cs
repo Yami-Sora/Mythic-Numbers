@@ -32,17 +32,31 @@ public class GameRefereeNet : NetworkBehaviour
         }
         Instance = this;
 
-        if (resultPanel != null)
+        // ✅ [FIX QUAN TRỌNG CHO CLIENT]
+        // Nếu resultPanel đang null (nghĩa là chưa được gán), tự đi tìm AppManager để xin
+        // Điều này xảy ra trên máy Client vì Client không chạy qua Launcher để gọi hàm Setup
+        if (resultPanel == null)
         {
-            // Đảm bảo lúc đầu nó tắt đi
-            resultPanel.SetActive(false);
+            NetworkAppManager appManager = FindFirstObjectByType<NetworkAppManager>();
+            if (appManager != null)
+            {
+                // Gọi hàm Setup bên AppManager để nhận tham chiếu UI
+                appManager.SetupRefereeUI(this);
+                // Debug.Log("Referee (Client): Đã tự tìm thấy UI từ AppManager.");
+            }
+            else
+            {
+                Debug.LogWarning("Referee: Không tìm thấy NetworkAppManager để lấy UI Reference! Hãy kiểm tra lại Scene.");
+            }
         }
         else
         {
-            Debug.LogError("Không tìm thấy 'ResultPanel'! Hãy kiểm tra lại tên trong Hierarchy.");
+            // Nếu đã có (trên Host), tắt đi cho chắc chắn
+            resultPanel.SetActive(false);
         }
     }
 
+    // --- LOGIC KIỂM TRA KẾT THÚC GAME ---
     // Hàm này được gọi từ GameManagerNet sau khi đánh xong 1 lá
     public void CheckEndGame()
     {
@@ -97,8 +111,19 @@ public class GameRefereeNet : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_ShowResult(int winnerID, int s1, int s2)
     {
+        Debug.Log($"RPC_ShowResult Đã nhận lệnh! Winner: {winnerID}");
         // Kiểm tra null trước khi dùng để tránh lỗi
-        if (resultPanel == null || resultText == null) return;
+        // Kiểm tra null và báo lỗi nếu thiếu UI
+        if (resultPanel == null)
+        {
+            Debug.LogError("LỖI: resultPanel đang bị NULL! Chưa được gán từ NetworkAppManager.");
+            return;
+        }
+        if (resultText == null)
+        {
+            Debug.LogError("LỖI: resultText đang bị NULL!");
+            return;
+        }
 
         resultPanel.SetActive(true); // Bật Panel lên
 
