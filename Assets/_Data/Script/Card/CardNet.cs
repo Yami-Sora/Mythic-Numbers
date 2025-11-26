@@ -99,8 +99,13 @@ public class CardNet : NetworkBehaviour
 
     private void UpdateBackgroundColor()
     {
-        Image image = GetComponent<Image>();
-        if (image != null) image.color = (OwnerID == 0) ? colorP1 : colorP2;
+        if (HandIndex == -1)
+        {
+            Image image = transform.parent.GetComponent<Image>();
+            var gm = GameManagerNet.Instance;
+            int localPlayerId = gm.GetLocalPlayerID();
+            if (image != null) image.color = (OwnerID == localPlayerId) ? colorP1 : colorP2;
+        }
     }
 
     // --- LOGIC LẬT BÀI SỬA LẠI ---
