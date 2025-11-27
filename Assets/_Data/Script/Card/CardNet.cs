@@ -43,7 +43,7 @@ public class CardNet : NetworkBehaviour
             // Logic hiển thị:
             // Nếu đây là bài của tôi (OwnerID == localPlayerId) -> Hiện bên Phải
             // Nếu đây là bài địch -> Hiện bên Trái
-            if (OwnerID == localPlayerId)
+            if (OwnerID == 0)
             {
                 targetParent = gm.RightHandPos;
             }
@@ -102,9 +102,7 @@ public class CardNet : NetworkBehaviour
         if (HandIndex == -1)
         {
             Image image = transform.parent.GetComponent<Image>();
-            var gm = GameManagerNet.Instance;
-            int localPlayerId = gm.GetLocalPlayerID();
-            if (image != null) image.color = (OwnerID == localPlayerId) ? colorP1 : colorP2;
+            if (image != null) image.color = (OwnerID == 0) ? colorP1 : colorP2;
         }
     }
 
@@ -125,10 +123,7 @@ public class CardNet : NetworkBehaviour
     {
         if (HandIndex != -1 && GameManagerNet.Instance != null)
         {
-            if (OwnerID == GameManagerNet.Instance.GetLocalPlayerID())
-            {
-                GameManagerNet.Instance.SelectCard(this);
-            }
+            GameManagerNet.Instance.SelectCard(this);
         }
     }
     public void SetHighlight(bool isActive)

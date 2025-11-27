@@ -67,6 +67,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerNet
   playWithAI: 0
   cardPrefab: {fileID: 4286878122934005440, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
+  floatingTextPrefab: {fileID: 7310387484375277547, guid: 59a5c307adb07de48930ff6c1c955fba, type: 3}
   _CurrentTurn: 0
   _BoardState: []
 --- !u!114 &7819502552760626106

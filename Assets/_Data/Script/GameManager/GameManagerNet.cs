@@ -13,6 +13,11 @@ public class GameManagerNet : NetworkBehaviour
 
     [Header("References")]
     [SerializeField] private NetworkObject cardPrefab;
+
+    [Header("UI Effects")]
+    [SerializeField] private GameObject floatingTextPrefab;
+    private Transform effectsCanvas;
+
     private Transform[] slots;
     private Transform leftHandPos;
     private Transform rightHandPos;
@@ -31,12 +36,14 @@ public class GameManagerNet : NetworkBehaviour
     private CardNet selectedLocalCard;
 
     // --- SETUP UI ---
-    public void SetSceneReferences(Transform[] slots, Transform leftHandPos, Transform rightHandPos, TMP_Text turnText)
+    public void SetSceneReferences(Transform[] slots, Transform leftHandPos, Transform rightHandPos, TMP_Text turnText, Transform mainCanvas)
     {
         this.slots = slots;
         this.leftHandPos = leftHandPos;
         this.rightHandPos = rightHandPos;
         this.turnText = turnText;
+        this.effectsCanvas = mainCanvas; // Dùng Canvas chính làm cha cho Text bay
+
         uiReady = true;
     }
     public bool IsUIReady => uiReady;
@@ -80,9 +87,11 @@ public class GameManagerNet : NetworkBehaviour
                 NetworkAppManager.Instance.SetupGameManagerUI(this);
             return;
         }
-
-        if (turnText)
-            turnText.text = (CurrentTurn == 0) ? "Player 1 Turn (Blue)" : "Player 2 Turn (Red)";
+        int localPlayerId = GetLocalPlayerID();
+        if (localPlayerId == 0)
+            turnText.text = (CurrentTurn == 0) ? "Lượt của bạn (Blue)" : "Lượt đối thủ (Red)";
+        else
+            turnText.text = (CurrentTurn == 0) ? "Lượt đối thủ (Blue)" : "Lượt của bạn (Red)";
     }
 
     // --- QUAN TRỌNG: MAPPING ID ---
@@ -142,7 +151,11 @@ public class GameManagerNet : NetworkBehaviour
     public void SelectCard(CardNet card)
     {
         // Chỉ chọn được bài của mình (check theo ID 0/1 đã map)
-        if (card.OwnerID != GetLocalPlayerID()) return;
+        if (card.OwnerID != GetLocalPlayerID())
+        {
+            ShowFloatingText("Không phải bài của bạn!", card.transform.position);
+            return;
+        }
 
         if (selectedLocalCard != null) selectedLocalCard.SetHighlight(false);
         selectedLocalCard = card;
@@ -160,6 +173,44 @@ public class GameManagerNet : NetworkBehaviour
         RPC_PlayCard(selectedLocalCard.Object.Id, slotIndex);
         selectedLocalCard = null;
     }
+
+    public void ShowFloatingText(string message, Vector3 position)
+    {
+        // Kiểm tra null an toàn
+        if (floatingTextPrefab == null)
+        {
+            Debug.LogWarning("Chưa gán Floating Text Prefab!");
+            return;
+        }
+
+        // Nếu effectsCanvas bị mất hoặc null (do chuyển scene), tìm lại Canvas
+        if (effectsCanvas == null)
+        {
+            Canvas canvas = FindFirstObjectByType<Canvas>();
+            if (canvas != null) effectsCanvas = canvas.transform;
+        }
+
+        // ✅ FIX LỖI: Instantiate trước (không tham số parent), rồi mới SetParent
+        GameObject go = Instantiate(floatingTextPrefab);
+
+        // Gán vị trí (World Position) ngay khi sinh ra
+        go.transform.position = position;
+
+        // Gán Parent (nếu có Canvas)
+        if (effectsCanvas != null)
+        {
+            // worldPositionStays = true để giữ vị trí tại chỗ lá bài
+            go.transform.SetParent(effectsCanvas, true);
+
+            // Đảm bảo scale chuẩn (đôi khi UI bị scale to đùng khi set parent)
+            go.transform.localScale = Vector3.one;
+        }
+
+        // Setup nội dung
+        FloatingText ft = go.GetComponent<FloatingText>();
+        if (ft != null) ft.Setup(message);
+    }
+
 
     // --- SERVER LOGIC ---
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]

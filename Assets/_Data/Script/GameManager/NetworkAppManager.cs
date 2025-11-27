@@ -15,6 +15,9 @@ public class NetworkAppManager : MonoBehaviour
     [SerializeField] private Transform leftHandPos;
     [SerializeField] private Transform rightHandPos;
     [SerializeField] private TMP_Text turnText;
+    [SerializeField] private Transform mainCanvas;
+
+    [Header("Referee UI References")]
     [SerializeField] private GameObject resultPanel;
     [SerializeField] private TMP_Text resultText;
 
@@ -39,7 +42,7 @@ public class NetworkAppManager : MonoBehaviour
     // ✅ [QUAN TRỌNG NHẤT] VÒNG LẶP CỨU HỘ
     // Hàm này chạy mỗi frame. Nó sẽ tự động tìm xem có Manager nào chưa có UI không thì gán ngay.
     // Cách này giúp Client (không gọi Spawn) vẫn được gán UI.
-    private void Update()
+    private void FixedUpdate()
     {
         // 1. Cứu GameManagerNet
         if (GameManagerNet.Instance != null && !GameManagerNet.Instance.IsUIReady)
@@ -60,7 +63,7 @@ public class NetworkAppManager : MonoBehaviour
     // Hàm gán UI cho GameManager
     public void SetupGameManagerUI(GameManagerNet manager)
     {
-        manager.SetSceneReferences(slots, leftHandPos, rightHandPos, turnText);
+        manager.SetSceneReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
         Debug.Log("AppManager: Đã gán UI cho GameManagerNet.");
     }
 
