@@ -3324,8 +3324,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.1, y: 1.6}
-  m_SizeDelta: {x: 124.8611, y: 32.6328}
+  m_AnchoredPosition: {x: 0.0999, y: 0.1897}
+  m_SizeDelta: {x: 125.6669, y: 35.4532}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1712049027
 MonoBehaviour:
@@ -3466,6 +3466,7 @@ MonoBehaviour:
   leftHandPos: {fileID: 1177400707}
   rightHandPos: {fileID: 83980595}
   turnText: {fileID: 1155190365}
+  mainCanvas: {fileID: 1924306036}
   resultPanel: {fileID: 1191503140}
   resultText: {fileID: 1992765225}
 --- !u!4 &1860739868
