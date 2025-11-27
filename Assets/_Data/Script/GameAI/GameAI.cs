@@ -41,7 +41,7 @@ public class GameAI : MonoBehaviour
 
     private IEnumerator ThinkAndDecide(int aiPlayerID)
     {
-        Debug.Log($"[AI] Đang suy nghĩ cho Player {aiPlayerID}...");
+        Debug.Log("[AI] Đang suy nghĩ...");
         yield return new WaitForSeconds(thinkingTime);
 
         // Nếu GameManager bị null hoặc lượt đã đổi -> dừng
@@ -92,7 +92,7 @@ public class GameAI : MonoBehaviour
 
                 // Nếu nước đi này lật được nhiều hơn -> Chọn
                 // (Dùng >= để ưu tiên các nước đi sau, tạo chút ngẫu nhiên nhỏ do thứ tự duyệt)
-                if (potentialFlips > maxFlips)
+                if (potentialFlips >= maxFlips)
                 {
                     maxFlips = potentialFlips;
                     bestCard = card;

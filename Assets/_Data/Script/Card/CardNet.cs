@@ -1,7 +1,7 @@
-using Fusion;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using Fusion;
 
 public class CardNet : NetworkBehaviour
 {
@@ -13,58 +13,82 @@ public class CardNet : NetworkBehaviour
     [Networked] public int Right { get; set; }
     [Networked] public int Bottom { get; set; }
     [Networked] public int Left { get; set; }
-    [Networked] public int OwnerID { get; set; } // 0 = Blue/Host, 1 = Red/Client/AI
+
+    // ✅ FUSION 2: Sử dụng ChangeDetector thay vì attribute OnChanged
+    [Networked] public int OwnerID { get; set; }
     [Networked] public int HandIndex { get; set; }
 
-    private readonly Color colorP1 = new Color(0.2f, 0.4f, 1f); // Blue
-    private readonly Color colorP2 = new Color(1f, 0.3f, 0.3f); // Red
+    private ChangeDetector _changes;
+    private readonly Color colorP1 = new Color(0.2f, 0.4f, 1f);
+    private readonly Color colorP2 = new Color(1f, 0.3f, 0.3f);
 
     public override void Spawned()
     {
-        UpdateVisuals();
-        RefreshParentOnUIReady();
+        // Khởi tạo bộ theo dõi thay đổi
+        _changes = GetChangeDetector(ChangeDetector.Source.SimulationState);
+
+        // Reset Scale và tìm Canvas ngay lập tức để tránh lỗi hiển thị ban đầu (Fail-Safe)
+        transform.localScale = Vector3.one;
+        Canvas canvas = FindFirstObjectByType<Canvas>();
+        if (canvas != null)
+        {
+            transform.SetParent(canvas.transform, false);
+            transform.localScale = Vector3.one;
+            transform.localPosition = Vector3.zero;
+        }
+
+        // Gọi RefreshState ngay lập tức để cập nhật visual ban đầu
+        RefreshState();
     }
 
+    // ✅ Vòng lặp Render: Chạy mỗi frame để check thay đổi mạng
+    // Tối ưu hơn FixedUpdateNetwork vì chỉ chạy logic khi có dữ liệu thay đổi
     public override void Render()
     {
-        if (GameManagerNet.Instance == null || !GameManagerNet.Instance.IsUIReady) return;
-        UpdateVisuals();
-        RefreshParentOnUIReady();
+        // DetectChanges trả về danh sách các property đã thay đổi từ lần render trước
+        foreach (var change in _changes.DetectChanges(this))
+        {
+            switch (change)
+            {
+                case nameof(Top):
+                case nameof(OwnerID):
+                case nameof(HandIndex):
+                    RefreshState(); // Tự động cập nhật khi Server đổi dữ liệu
+                    break;
+            }
+        }
     }
 
-    private void RefreshParentOnUIReady()
+    // Hàm cập nhật tổng thể (Public để GameManager gọi khi cần)
+    public void RefreshState()
     {
-        if (HandIndex != -1) // Đang trên tay
+        // Nếu GameManager chưa sẵn sàng thì chưa xếp vị trí vội (để tránh lỗi null)
+        // Việc này an toàn vì Spawned đã xử lý việc hiển thị cơ bản rồi
+        if (GameManagerNet.Instance == null || !GameManagerNet.Instance.IsUIReady) return;
+
+        UpdateVisuals();
+        RefreshParentPosition();
+        UpdateBackgroundColor();
+    }
+
+    private void RefreshParentPosition()
+    {
+        if (HandIndex != -1) // Trên tay
         {
-            var gm = GameManagerNet.Instance;
-            int localPlayerId = gm.GetLocalPlayerID(); // Hàm này giờ trả về 0 hoặc 1
-            Transform targetParent = null;
-
-            // Logic hiển thị:
-            // Nếu đây là bài của tôi (OwnerID == localPlayerId) -> Hiện bên Phải
-            // Nếu đây là bài địch -> Hiện bên Trái
-            if (OwnerID == 0)
-            {
-                targetParent = gm.RightHandPos;
-            }
-            else
-            {
-                targetParent = gm.LeftHandPos;
-            }
-
+            Transform targetParent = (OwnerID == 0) ?
+                GameManagerNet.Instance.RightHandPos :
+                GameManagerNet.Instance.LeftHandPos;
             SetParentIfChanged(targetParent);
         }
-        else // Đã đánh xuống bàn
+        else // Xuống bàn
         {
-            // ... Code tìm Slot giữ nguyên như cũ ...
             for (int i = 0; i < 9; i++)
             {
                 if (GameManagerNet.Instance.BoardState[i] == Object.Id)
                 {
-                    if (GameManagerNet.Instance.Slots != null && i < GameManagerNet.Instance.Slots.Length)
+                    if (GameManagerNet.Instance.Slots != null && GameManagerNet.Instance.Slots.Length > i)
                     {
                         SetParentIfChanged(GameManagerNet.Instance.Slots[i]);
-                        UpdateBackgroundColor();
                     }
                     break;
                 }
@@ -78,13 +102,9 @@ public class CardNet : NetworkBehaviour
         {
             transform.SetParent(target, false);
             transform.localScale = Vector3.one;
-            transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
 
-            // Fix Z axis
-            Vector3 pos = transform.localPosition;
-            pos.z = 0;
-            transform.localPosition = pos;
+            transform.localPosition = Vector3.zero;
         }
     }
 
@@ -94,7 +114,6 @@ public class CardNet : NetworkBehaviour
         if (txtRight) txtRight.text = Right.ToString();
         if (txtBottom) txtBottom.text = Bottom.ToString();
         if (txtLeft) txtLeft.text = Left.ToString();
-        UpdateBackgroundColor();
     }
 
     private void UpdateBackgroundColor()
@@ -106,19 +125,6 @@ public class CardNet : NetworkBehaviour
         }
     }
 
-    // --- LOGIC LẬT BÀI SỬA LẠI ---
-    public void FlipOwner()
-    {
-        // KHÔNG dùng ActivePlayers vì Offline mode chỉ có 1 player -> lỗi count != 2
-        // KHÔNG dùng PlayerRef vì OwnerID đang dùng logic 0 và 1.
-
-        // Đảo ngược 0 thành 1, 1 thành 0
-        OwnerID = 1 - OwnerID;
-
-        UpdateBackgroundColor();
-    }
-
-    // ... Các hàm click giữ nguyên ...
     public void OnCardClicked()
     {
         if (HandIndex != -1 && GameManagerNet.Instance != null)
@@ -126,6 +132,13 @@ public class CardNet : NetworkBehaviour
             GameManagerNet.Instance.SelectCard(this);
         }
     }
+
+    public void FlipOwner()
+    {
+        // Server đổi giá trị -> ChangeDetector trên Client sẽ bắt được và gọi RefreshState
+        OwnerID = 1 - OwnerID;
+    }
+
     public void SetHighlight(bool isActive)
     {
         if (highlightObj != null) highlightObj.SetActive(isActive);

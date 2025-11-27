@@ -31,7 +31,7 @@ public class FloatingText : YamiMonoBehaviour
         timer -= Time.deltaTime;
 
         // 3. Hiệu ứng mờ dần (Fade Alpha)
-        if (timer <= lifeTime / 2) // Chỉ mờ ở nửa sau quãng đời
+        if (timer <= lifeTime / fadeSpeed) // Chỉ mờ ở nửa sau quãng đời
         {
             float alpha = Mathf.Clamp01(timer / (lifeTime / 2));
         }
