@@ -1,20 +1,22 @@
+using Fusion;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 public class AppController : MonoBehaviour
 {
-    public void QuitGame()
+    public void QuitToMenu()
     {
-        // Log ra console để biết nút hoạt động khi ở trong Editor
-        Debug.Log("Application Quit called!");
-
-        // Lệnh thoát game (chỉ chạy khi đã Build ra file .exe/.apk)
-        Application.Quit();
-
-        // Nếu đang chạy trong Editor thì dừng Play mode (tiện để test)
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #endif
+        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
+        if (runner != null)
+        {
+            // Lệnh này sẽ kích hoạt OnShutdown ở ConnectionHandler
+            runner.Shutdown();
+        }
+        else
+        {
+            SceneManager.LoadScene("MenuScene");
+        }
     }
     public void RestartGame()
     {
