@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class FusionConnectionStatus : MonoBehaviour
 {
-    private NetworkRunner _runner;
+    private NetworkRunner runner;
 
     private void Start()
     {
@@ -14,16 +14,16 @@ public class FusionConnectionStatus : MonoBehaviour
     void Update()
     {
         // Tự động tìm runner nếu chưa có
-        if (_runner == null)
+        if (runner == null)
         {
-            _runner = FindFirstObjectByType<NetworkRunner>();
+            runner = FindFirstObjectByType<NetworkRunner>();
         }
     }
 
     void OnGUI()
     {
         // Nếu chưa có Runner thì hiện thông báo nhỏ
-        if (_runner == null) return;
+        if (runner == null) return;
 
         // Tạo style cho chữ dễ đọc hơn
         GUIStyle style = new GUIStyle(GUI.skin.label);
@@ -33,13 +33,13 @@ public class FusionConnectionStatus : MonoBehaviour
 
         // Gom thông tin lại
         string status = "Disconnected";
-        if (_runner.IsCloudReady) status = "Cloud Ready";
-        if (_runner.IsConnectedToServer) status = "Connected";
+        if (runner.IsCloudReady) status = "Cloud Ready";
+        if (runner.IsConnectedToServer) status = "Connected";
 
         string mode = "Unknown";
-        if (_runner.GameMode == GameMode.Single) mode = "Offline (Single)";
-        else if (_runner.IsServer) mode = "Host";
-        else if (_runner.IsClient) mode = "Client";
+        if (runner.GameMode == GameMode.Single) mode = "Offline (Single)";
+        else if (runner.IsServer) mode = "Host";
+        else if (runner.IsClient) mode = "Client";
 
         // Vẽ bảng thông tin
         GUI.Box(new Rect(10, 10, 350, 130), "Network Debug Info");
@@ -47,11 +47,11 @@ public class FusionConnectionStatus : MonoBehaviour
         GUI.Label(new Rect(20, 30, 330, 20), $"Status: {status}", style);
         GUI.Label(new Rect(20, 50, 330, 20), $"Mode: {mode}", style);
 
-        if (_runner.SessionInfo.IsValid)
+        if (runner.SessionInfo.IsValid)
         {
-            GUI.Label(new Rect(20, 70, 330, 20), $"Room: {_runner.SessionInfo.Name}");
-            GUI.Label(new Rect(20, 90, 330, 20), $"Region: {_runner.SessionInfo.Region}");
-            GUI.Label(new Rect(20, 110, 330, 20), $"Players: {_runner.SessionInfo.PlayerCount}/{_runner.SessionInfo.MaxPlayers}");
+            GUI.Label(new Rect(20, 70, 330, 20), $"Room: {runner.SessionInfo.Name}");
+            GUI.Label(new Rect(20, 90, 330, 20), $"Region: {runner.SessionInfo.Region}");
+            GUI.Label(new Rect(20, 110, 330, 20), $"Players: {runner.SessionInfo.PlayerCount}/{runner.SessionInfo.MaxPlayers}");
         }
         else
         {

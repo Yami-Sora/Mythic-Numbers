@@ -158,16 +158,16 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         {
             Debug.Log("Đối thủ đã thoát trận!");
 
-            // Xử lý thắng luôn
-            // Ví dụ: Người thoát là Client (ID khác 0) -> Host (0) thắng
-            // Lưu ý logic ID 0/1 của bạn
-
             int winnerID = GameManagerNet.Instance.GetLocalPlayerID();
 
             // Hiển thị bảng kết quả: "Đối thủ đã ngắt kết nối!"
             RPC_ShowResult(winnerID, 0, 0);
 
-            if (ResultText) ResultText.text = "Opponent Disconnected!\nYou Win!";
+            if (ResultText)
+            { 
+                ResultText.text = "Opponent Disconnected!\nYou Win!";
+                ResultText.fontSize = 100;
+            }
         }
     }
 }

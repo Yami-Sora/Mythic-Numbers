@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 public class NetworkLauncher : MonoBehaviour
 {
-    private void Start()
+    private void Awake()
     {
-        // Đảm bảo chuột luôn hiển thị ở Menu
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        // Đảm bảo App chạy ngầm để test 2 cửa sổ trên 1 máy
+        Application.runInBackground = true;
     }
 
     public async void OnPlayOnlineClicked()
@@ -41,7 +40,12 @@ public class NetworkLauncher : MonoBehaviour
 
     async Task StartGame(GameMode mode)
     {
-        // 1. Tạo hoặc tìm Runner
+        // 1. Dọn dẹp GameManager cũ nếu còn sót lại từ lần chơi trước
+        if (GameManagerNet.Instance != null)
+        {
+            Destroy(GameManagerNet.Instance.gameObject);
+        }
+        // 2. Tạo hoặc tìm Runner
         NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
         if (runner == null)
         {
@@ -49,11 +53,20 @@ public class NetworkLauncher : MonoBehaviour
             GameObject go = new GameObject("NetworkRunner");
             runner = go.AddComponent<NetworkRunner>();
         }
-
-        // 2. Cấu hình Runner
+        // Đảm bảo Runner không đang chạy phiên cũ
+        if (runner.IsRunning)
+        {
+            await runner.Shutdown();
+        }
+        // Cấu hình Runner
         runner.ProvideInput = true;
 
-        // 3. Bắt đầu Game và Load Scene 1
+        // 3. Đăng ký ConnectionHandler (nếu có) để xử lý ngắt kết nối
+        ConnectionHandler handler = GetComponentInChildren<ConnectionHandler>();
+        if (handler == null) handler = FindFirstObjectByType<ConnectionHandler>();
+        if (handler != null) handler.RegisterRunner(runner);
+
+        // 4. Bắt đầu Game và Load Scene 1
         await runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
@@ -65,9 +78,5 @@ public class NetworkLauncher : MonoBehaviour
 
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
-
-        // 4. Lưu ý: Code Spawn Manager cũ đã bị xóa.
-        // Tại sao? Vì khi load sang Scene 1, NetworkAppManager có sẵn trong Scene 1 
-        // sẽ tự động chạy logic của nó
     }
 }
