@@ -1,6 +1,5 @@
 using UnityEngine;
 using Fusion;
-using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
 
 public class NetworkLauncher : MonoBehaviour

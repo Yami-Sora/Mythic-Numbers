@@ -1,5 +1,5 @@
+using Fusion;
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
@@ -7,19 +7,8 @@ public class GameUIManager : MonoBehaviour
     public static GameUIManager Instance { get; private set; }
 
     [Header("Launcher UI References")]
-    [SerializeField] private TMP_Text onlineButtonText;
-    [SerializeField] private TMP_Text offlineButtonText;
     [SerializeField] private Image LeftAiImage;
     [SerializeField] private Image LeftPlayer2;
-    [SerializeField] private Button btnVsAi;
-    [SerializeField] private Button btnVsPlayer;
-
-    [Header("Interactable Settings")]
-    bool isInteractable = false;
-
-    [Header("Color Settings")]
-    [SerializeField] private Color selectedColor = Color.green;
-    [SerializeField] private Color defaultColor = Color.white;
 
     private void Awake()
     {
@@ -30,31 +19,23 @@ public class GameUIManager : MonoBehaviour
         }
         Instance = this;
     }
-
-    // Hàm công khai để đổi màu nút chọn Mode
-    public void SetLauncherModeUI(bool isOnline)
+    private void Start()
     {
-        if (isOnline)
+        // Tìm NetworkRunner đang chạy (Nó được truyền từ Menu sang)
+        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
+
+        if (runner != null)
         {
-            SetTextColor(onlineButtonText, selectedColor);
-            SetTextColor(offlineButtonText, defaultColor);
-        }
-        else
-        {
-            SetTextColor(onlineButtonText, defaultColor);
-            SetTextColor(offlineButtonText, selectedColor);
+            if (runner.GameMode == GameMode.Single)
+            {
+                SetLeftImageActive(true); // Bật ảnh AI
+            }
+            else
+            {
+                SetLeftImageActive(false); // Bật ảnh Player 2 (Online)
+            }
         }
     }
-
-    // Hàm tiện ích nội bộ để set màu an toàn (tránh lỗi null)
-    private void SetTextColor(TMP_Text textComponent, Color color)
-    {
-        if (textComponent != null)
-        {
-            textComponent.color = color;
-        }
-    }
-
     public void SetLeftImageActive(bool isActive)
     {
         if (LeftAiImage != null)
@@ -67,15 +48,4 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    public void SetModeInteractable()
-    {
-        if (btnVsAi != null)
-        {
-            btnVsAi.interactable = isInteractable;
-        }
-        if (btnVsPlayer != null)
-        {
-            btnVsPlayer.interactable = isInteractable;
-        }
-    }
 }
