@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using TMPro;
 using UnityEngine;
@@ -37,8 +38,21 @@ public class GameManagerNet : NetworkBehaviour
     [Networked] public int CurrentTurn { get; set; }
 
     [Networked, Capacity(9)] public NetworkArray<NetworkId> BoardState { get; }
+
+    // Biến đồng bộ luật chơi (0: Normal, 1: Reverse...)
+    [Networked] public int CurrentRuleIndex { get; set; }
+
     private CardNet selectedLocalCard;
 
+    // --- STRATEGY PATTERN (QUẢN LÝ LUẬT) ---
+    private IRuleSet currentStrategy;
+
+    // Danh sách các luật có sẵn trong game
+    private List<IRuleSet> allRules = new List<IRuleSet>()
+    {
+        new NormalRule(),
+        new ReverseRule()
+    };
     // --- SETUP UI ---
     // Hàm này được NetworkAppManager gọi để "bơm" tham chiếu UI vào GameManager
     public void SetSceneReferences(Transform[] slots, Transform leftHandPos, Transform rightHandPos, TMP_Text turnText, Transform mainCanvas)
@@ -81,8 +95,25 @@ public class GameManagerNet : NetworkBehaviour
         // Chỉ Host (người có quyền StateAuthority) mới được chia bài và set lượt đầu
         if (Object.HasStateAuthority)
         {
+            // Random luật chơi (30% ra Reverse)
+            CurrentRuleIndex = (Random.Range(0, 100) < 30) ? 1 : 0;
+
             CurrentTurn = 0; // Player 1 đi trước
             DealCards();
+        }
+        // Áp dụng luật ngay khi sinh ra
+        UpdateRuleStrategy();
+    }
+    private void UpdateRuleStrategy()
+    {
+        if (CurrentRuleIndex >= 0 && CurrentRuleIndex < allRules.Count)
+        {
+            currentStrategy = allRules[CurrentRuleIndex];
+            Debug.Log($"[GameManager] Đang áp dụng luật: {currentStrategy.RuleName}");
+        }
+        else
+        {
+            currentStrategy = allRules[0]; // Fallback về Normal
         }
     }
 
@@ -96,15 +127,26 @@ public class GameManagerNet : NetworkBehaviour
                 NetworkAppManager.Instance.SetupGameManagerUI(this);
             return;
         }
-
+        // Kiểm tra thay đổi dữ liệu mạng
+        foreach (var change in _changes.DetectChanges(this))
+        {
+            if (change == nameof(BoardState)) RefreshAllCards(); // Bàn cờ đổi -> Refresh bài
+            if (change == nameof(CurrentRuleIndex)) UpdateRuleStrategy(); // Luật đổi -> Update chiến lược
+        }
+        this.DisplayTurnText();
+    }
+    protected void DisplayTurnText()
+    {
         // Hiển thị Text theo góc nhìn người chơi
         int localPlayerId = GetLocalPlayerID();
         if (turnText != null)
         {
+            string ruleName = currentStrategy != null ? $"[{currentStrategy.RuleName}]" : "";
+
             if (localPlayerId == 0)
-                turnText.text = (CurrentTurn == 0) ? "Lượt của bạn (Blue)" : "Lượt đối thủ (Red)";
-            else 
-                turnText.text = (CurrentTurn == 0) ? "Lượt đối thủ (Blue)" : "Lượt của bạn (Red)";
+                turnText.text = (CurrentTurn == 0) ? $"Lượt của bạn (Blue) {ruleName}" : $"Lượt đối thủ (Red) {ruleName}";
+            else
+                turnText.text = (CurrentTurn == 0) ? $"Lượt đối thủ (Blue) {ruleName}" : $"Lượt của bạn (Red) {ruleName}";
         }
     }
     private void RefreshAllCards()
@@ -112,7 +154,8 @@ public class GameManagerNet : NetworkBehaviour
         CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
         foreach (var card in allCards)
         {
-            card.RefreshState();
+            if (card != null && card.Object != null && card.Object.IsValid)
+                card.RefreshState();
         }
     }
     // --- LOGIC GAME ---
@@ -234,8 +277,16 @@ public class GameManagerNet : NetworkBehaviour
             // Việc này sẽ kích hoạt ChangeDetector trên Client -> Bài tự bay vào ô
             card.HandIndex = -1;
 
-            // 4. Xử lý lật bài (Luật chơi Triple Triad)
-            ResolveBattle(card, slotIndex);
+            // ✅ GỌI CHIẾN LƯỢC (STRATEGY) ĐỂ XỬ LÝ LUẬT
+            if (currentStrategy != null)
+            {
+                currentStrategy.ResolveBattle(this, card, slotIndex);
+            }
+            else
+            {
+                Debug.LogError("Lỗi: Chưa có luật nào được áp dụng! Dùng fallback Normal.");
+                new NormalRule().ResolveBattle(this, card, slotIndex);
+            }
 
             // 5. Kiểm tra kết thúc game
             if (GameRefereeNet.Instance != null) GameRefereeNet.Instance.CheckEndGame();
@@ -249,45 +300,6 @@ public class GameManagerNet : NetworkBehaviour
                 if (aiBrain != null) aiBrain.StartTurn(1);// 1 là aiPlayerID
             }
         }
-    }
-
-    // Hàm xử lý logic so điểm lật bài
-    void ResolveBattle(CardNet playedCard, int index)
-    {
-        int row = index / 3; 
-        int col = index % 3;
-        // Kiểm tra 4 hướng
-        CheckNeighbor(index - 3, playedCard.Top, "Bottom", row - 1, col, playedCard.OwnerID);
-        CheckNeighbor(index + 1, playedCard.Right, "Left", row, col + 1, playedCard.OwnerID);
-        CheckNeighbor(index + 3, playedCard.Bottom, "Top", row + 1, col, playedCard.OwnerID);
-        CheckNeighbor(index - 1, playedCard.Left, "Right", row, col - 1, playedCard.OwnerID);
-    }
-
-    // Hàm kiểm tra 1 hướng cụ thể
-    void CheckNeighbor(int nIdx, int myStat, string enemySide, int r, int c, int myOwner)
-    {
-        // Kiểm tra biên bàn cờ
-        if (nIdx < 0 || nIdx >= 9 || r < 0 || r > 2 || c < 0 || c > 2) return;
-
-        // Kiểm tra ô có bài không
-        NetworkId nId = BoardState[nIdx];
-        if (!nId.IsValid) return;
-
-        // Lấy bài địch
-        CardNet enemy = Runner.FindObject(nId).GetComponent<CardNet>();
-
-        // Nếu bài cùng phe -> Bỏ qua
-        if (enemy.OwnerID == myOwner) return;
-
-        // Lấy chỉ số của địch ở cạnh tiếp xúc
-        int enemyStat = 0;
-        if (enemySide == "Top") enemyStat = enemy.Top;
-        if (enemySide == "Bottom") enemyStat = enemy.Bottom;
-        if (enemySide == "Left") enemyStat = enemy.Left;
-        if (enemySide == "Right") enemyStat = enemy.Right;
-
-        // So điểm: Nếu mình lớn hơn -> Lật bài địch
-        if (myStat > enemyStat) enemy.FlipOwner();
     }
 
     // Hàm xác định ID người chơi trên máy cục bộ
@@ -308,6 +320,9 @@ public class GameManagerNet : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_Restart()
     {
+        if (playWithAI && aiBrain != null) aiBrain.StopThinking();
+        // Random lại luật khi chơi ván mới
+        CurrentRuleIndex = (Random.Range(0, 100) < 30) ? 1 : 0;
         // Xóa hết bài cũ
         CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
         foreach (var card in allCards) Runner.Despawn(card.Object);
