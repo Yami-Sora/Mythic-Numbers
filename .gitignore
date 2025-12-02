@@ -9,7 +9,8 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 /[Mm]emoryCaptures/
-
+Assets/_Data/Config/PhotonConfig.asset
+Assets/_Data/Config/PhotonConfig.asset.meta
 # File rác hệ thống sinh ra khi mở VS
 .vs/
 *.csproj

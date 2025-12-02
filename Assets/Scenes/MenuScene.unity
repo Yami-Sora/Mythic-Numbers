@@ -149,6 +149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 614622e6c1622ce46871370873445f44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkLauncher
+  photonConfig: {fileID: 11400000, guid: 6b38111b77f06cc4c9966aad4773bba6, type: 2}
 --- !u!4 &670189604
 Transform:
   m_ObjectHideFlags: 0
