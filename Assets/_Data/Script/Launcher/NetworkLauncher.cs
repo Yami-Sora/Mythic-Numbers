@@ -1,9 +1,12 @@
-using UnityEngine;
-using Fusion;
 using System.Threading.Tasks;
+using Fusion;
+using Fusion.Photon.Realtime;
+using UnityEngine;
 
 public class NetworkLauncher : MonoBehaviour
 {
+    [Header("Security")]
+    [SerializeField] private PhotonConfig photonConfig;
     private void Awake()
     {
         // Đảm bảo App chạy ngầm để test 2 cửa sổ trên 1 máy
@@ -65,17 +68,21 @@ public class NetworkLauncher : MonoBehaviour
         if (handler == null) handler = FindFirstObjectByType<ConnectionHandler>();
         if (handler != null) handler.RegisterRunner(runner);
 
+        var customAppSettings = new FusionAppSettings
+        {
+            AppIdFusion = photonConfig.appId,
+
+            FixedRegion = "asia",
+        };
         // 4. Bắt đầu Game và Load Scene 1
         await runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
-            SessionName = "TestRoom", // Hardcode để test hoặc Random tên
-
-            // QUAN TRỌNG: Dòng này bảo Fusion tự động load Scene có Index 1 (PlayCardScene)
-            // Khi Host load xong, Client sẽ tự động load theo!
+            SessionName = "TestRoom",
             Scene = SceneRef.FromIndex(1),
 
-            SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>()
+            SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
+            CustomPhotonAppSettings = customAppSettings
         });
     }
 }

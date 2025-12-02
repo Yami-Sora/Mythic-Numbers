@@ -78,6 +78,8 @@ public class GameAI : MonoBehaviour
         }
 
         // --- BƯỚC 2: THUẬT TOÁN GREEDY (TÌM NƯỚC ĐI TỐT NHẤT) ---
+        bool isReverseRule = GameManagerNet.Instance.CurrentRuleIndex != 0;
+
         CardNet bestCard = aiHand[0];
         int bestSlot = emptySlots[0];
         int maxFlips = -1;
@@ -88,7 +90,7 @@ public class GameAI : MonoBehaviour
             // Ướm thử vào từng ô trống
             foreach (var slotIndex in emptySlots)
             {
-                int potentialFlips = SimulateFlipCount(card, slotIndex, aiPlayerID);
+                int potentialFlips = SimulateFlipCount(card, slotIndex, aiPlayerID, isReverseRule);
 
                 // Nếu nước đi này lật được nhiều hơn -> Chọn
                 // (Dùng >= để ưu tiên các nước đi sau, tạo chút ngẫu nhiên nhỏ do thứ tự duyệt)
@@ -101,7 +103,7 @@ public class GameAI : MonoBehaviour
             }
         }
 
-        Debug.Log($"[AI] Quyết định: Dùng bài {bestCard.Top}/{bestCard.Right} đánh vào ô {bestSlot} (Ăn được {maxFlips} bài)");
+        Debug.Log($"[AI] Quyết định: Dùng bài {bestCard.Top}/{bestCard.Right} đánh vào ô {bestSlot} (Ăn được {maxFlips} bài). Luật Reverse: {isReverseRule}");
 
         // Trước khi gửi RPC, kiểm tra lại trạng thái: lá vẫn ở tay, ô vẫn rỗng, và vẫn là lượt AI
         if (bestCard == null || bestCard.HandIndex == -1 || gameManager.BoardState[bestSlot].IsValid || gameManager.CurrentTurn != aiPlayerID)
@@ -120,21 +122,21 @@ public class GameAI : MonoBehaviour
     // --- CÁC HÀM TÍNH TOÁN GIẢ LẬP (PURE LOGIC) ---
 
     // Đếm số lượng bài lật được (không thay đổi game state)
-    private int SimulateFlipCount(CardNet cardToPlay, int slotIndex, int ownerID)
+    private int SimulateFlipCount(CardNet cardToPlay, int slotIndex, int ownerID, bool isReverseRule)
     {
         int flips = 0;
         int row = slotIndex / 3;
         int col = slotIndex % 3;
 
-        flips += CheckFlipSim(slotIndex - 3, cardToPlay.Top, "Bottom", row - 1, col, ownerID);   // Top
-        flips += CheckFlipSim(slotIndex + 1, cardToPlay.Right, "Left", row, col + 1, ownerID);    // Right
-        flips += CheckFlipSim(slotIndex + 3, cardToPlay.Bottom, "Top", row + 1, col, ownerID);    // Bottom
-        flips += CheckFlipSim(slotIndex - 1, cardToPlay.Left, "Right", row, col - 1, ownerID);    // Left
+        flips += CheckFlipSim(slotIndex - 3, cardToPlay.Top, "Bottom", row - 1, col, ownerID, isReverseRule);   // Top
+        flips += CheckFlipSim(slotIndex + 1, cardToPlay.Right, "Left", row, col + 1, ownerID, isReverseRule);    // Right
+        flips += CheckFlipSim(slotIndex + 3, cardToPlay.Bottom, "Top", row + 1, col, ownerID, isReverseRule);    // Bottom
+        flips += CheckFlipSim(slotIndex - 1, cardToPlay.Left, "Right", row, col - 1, ownerID, isReverseRule);    // Left
 
         return flips;
     }
 
-    private int CheckFlipSim(int nIdx, int myStat, string enemySide, int r, int c, int myOwner)
+    private int CheckFlipSim(int nIdx, int myStat, string enemySide, int r, int c, int myOwner, bool isReverseRule)
     {
         // Check biên bàn cờ
         if (nIdx < 0 || nIdx >= 9 || r < 0 || r > 2 || c < 0 || c > 2) return 0;
@@ -158,7 +160,16 @@ public class GameAI : MonoBehaviour
         if (enemySide == "Left") enemyStat = enemy.Left;
         if (enemySide == "Right") enemyStat = enemy.Right;
 
-        if (myStat > enemyStat) return 1; // Lật được!
+        if (isReverseRule)
+        {
+            // Luật Reverse:
+            if (myStat < enemyStat) return 1;
+        }
+        else
+        {
+            // Luật Normal:
+            if (myStat > enemyStat) return 1;
+        }
 
         return 0;
     }
