@@ -62,8 +62,6 @@ public class CardNet : NetworkBehaviour
     // Hàm cập nhật tổng thể (Public để GameManager gọi khi cần)
     public void RefreshState()
     {
-        // Nếu GameManager chưa sẵn sàng thì chưa xếp vị trí vội (để tránh lỗi null)
-        // Việc này an toàn vì Spawned đã xử lý việc hiển thị cơ bản rồi
         if (GameManagerNet.Instance == null || !GameManagerNet.Instance.IsUIReady) return;
 
         UpdateVisuals();

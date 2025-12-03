@@ -342,4 +342,16 @@ public class GameManagerNet : NetworkBehaviour
         CurrentTurn = 0;
         DealCards();
     }
+    public string GetCurrentRuleName()
+    {
+        // Nếu chưa có strategy (lúc mới vào), lấy theo index mạng
+        if (currentStrategy == null)
+        {
+            if (CurrentRuleIndex >= 0 && CurrentRuleIndex < allRules.Count)
+                return allRules[CurrentRuleIndex].RuleName;
+            return "Unknown";
+        }
+
+        return currentStrategy.RuleName;
+    }
 }

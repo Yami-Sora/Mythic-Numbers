@@ -1,4 +1,5 @@
 using Fusion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,6 +10,9 @@ public class GameUIManager : MonoBehaviour
     [Header("Launcher UI References")]
     [SerializeField] private Image LeftAiImage;
     [SerializeField] private Image LeftPlayer2;
+    [SerializeField] private GameObject btnRule;
+    [SerializeField] private Image RulePanel;
+    [SerializeField] private TMP_Text RulePanelTxt;
 
     private void Awake()
     {
@@ -47,5 +51,26 @@ public class GameUIManager : MonoBehaviour
             LeftPlayer2.gameObject.SetActive(!isActive);
         }
     }
-
+    public void OnRuleButtonClicked()
+    {
+        if (RulePanel != null)
+        {
+            RulePanel.gameObject.SetActive(true);
+            this.UpdateRulePanelText();
+        }
+    }
+    public void OnCloseRulePanelClicked()
+    {
+        if (RulePanel != null)
+        {
+            RulePanel.gameObject.SetActive(false);
+        }
+    }
+    public void UpdateRulePanelText()
+    {
+        if (RulePanelTxt != null)
+        {
+            RulePanelTxt.text = GameManagerNet.Instance.GetCurrentRuleName();
+        }
+    }
 }
