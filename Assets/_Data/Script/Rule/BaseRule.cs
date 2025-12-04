@@ -4,6 +4,8 @@ using Fusion;
 public abstract class BaseRule : IRuleSet
 {
     public abstract string RuleName { get; }
+    public abstract string RuleDescription { get; }
+
 
     public virtual void ResolveBattle(GameManagerNet gm, CardNet playedCard, int slotIndex)
     {

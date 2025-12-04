@@ -12,7 +12,8 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] private Image LeftPlayer2;
     [SerializeField] private GameObject btnRule;
     [SerializeField] private Image RulePanel;
-    [SerializeField] private TMP_Text RulePanelTxt;
+    [SerializeField] private TMP_Text RuleName;
+    [SerializeField] private TMP_Text RuleDes;
 
     private void Awake()
     {
@@ -68,9 +69,11 @@ public class GameUIManager : MonoBehaviour
     }
     public void UpdateRulePanelText()
     {
-        if (RulePanelTxt != null)
+        if (RuleName != null)
         {
-            RulePanelTxt.text = GameManagerNet.Instance.GetCurrentRuleName();
+            IRuleSet ruleSet = GameManagerNet.Instance.GetCurrentRule();
+            RuleName.text = ruleSet.RuleName;
+            RuleDes.text = ruleSet.RuleDescription;
         }
     }
 }
