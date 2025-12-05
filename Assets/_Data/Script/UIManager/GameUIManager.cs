@@ -1,79 +1,72 @@
-using Fusion;
-using TMPro;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
     public static GameUIManager Instance { get; private set; }
 
-    [Header("Launcher UI References")]
-    [SerializeField] private Image LeftAiImage;
-    [SerializeField] private Image LeftPlayer2;
-    [SerializeField] private GameObject btnRule;
-    [SerializeField] private Image RulePanel;
-    [SerializeField] private TMP_Text RuleName;
-    [SerializeField] private TMP_Text RuleDes;
+    [Header("UI References")]
+    [SerializeField] private Transform[] slots;
+    [SerializeField] private Transform leftHandPos;
+    [SerializeField] private Transform rightHandPos;
+    [SerializeField] private TMP_Text turnText;
+
+    [SerializeField] private GameObject floatingTextPrefab;
+    [SerializeField] private Transform effectsCanvas;
+
+    public Transform[] Slots => slots;
+    public Transform LeftHandPos => leftHandPos;
+    public Transform RightHandPos => rightHandPos;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
         Instance = this;
     }
-    private void Start()
-    {
-        // Tìm NetworkRunner đang chạy (Nó được truyền từ Menu sang)
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
 
-        if (runner != null)
+    public void SetupReferences(Transform[] slots, Transform left, Transform right, TMP_Text turnTxt, Transform canvas)
+    {
+        this.slots = slots;
+        this.leftHandPos = left;
+        this.rightHandPos = right;
+        this.turnText = turnTxt;
+        this.effectsCanvas = canvas;
+    }
+
+    public void UpdateTurnText(int localPlayerId, int currentTurn, string ruleName)
+    {
+        if (turnText == null) return;
+
+        string ruleDisplay = string.IsNullOrEmpty(ruleName) ? "" : $"[{ruleName}]";
+        if (localPlayerId == 0)
+            turnText.text = (currentTurn == 0) ? $"Lượt của bạn (Blue) {ruleDisplay}" : $"Lượt đối thủ (Red) {ruleDisplay}";
+        else
+            turnText.text = (currentTurn == 0) ? $"Lượt đối thủ (Blue) {ruleDisplay}" : $"Lượt của bạn (Red) {ruleDisplay}";
+    }
+
+    public void ResetBoardUI()
+    {
+        if (slots == null) return;
+        for (int i = 0; i < slots.Length; i++)
         {
-            if (runner.GameMode == GameMode.Single)
+            if (slots[i] != null)
             {
-                SetLeftImageActive(true); // Bật ảnh AI
-            }
-            else
-            {
-                SetLeftImageActive(false); // Bật ảnh Player 2 (Online)
+                Image img = slots[i].GetComponent<Image>();
+                if (img) img.color = Color.white;
             }
         }
     }
-    public void SetLeftImageActive(bool isActive)
+
+    public void ShowFloatingText(string message, Vector3 position)
     {
-        if (LeftAiImage != null)
-        {
-            LeftAiImage.gameObject.SetActive(isActive);
-        }
-        if (LeftPlayer2 != null)
-        {
-            LeftPlayer2.gameObject.SetActive(!isActive);
-        }
-    }
-    public void OnRuleButtonClicked()
-    {
-        if (RulePanel != null)
-        {
-            RulePanel.gameObject.SetActive(true);
-            this.UpdateRulePanelText();
-        }
-    }
-    public void OnCloseRulePanelClicked()
-    {
-        if (RulePanel != null)
-        {
-            RulePanel.gameObject.SetActive(false);
-        }
-    }
-    public void UpdateRulePanelText()
-    {
-        if (RuleName != null)
-        {
-            IRuleSet ruleSet = GameManagerNet.Instance.GetCurrentRule();
-            RuleName.text = ruleSet.RuleName;
-            RuleDes.text = ruleSet.RuleDescription;
-        }
+        if (floatingTextPrefab == null || effectsCanvas == null) return;
+
+        GameObject go = Instantiate(floatingTextPrefab, position, Quaternion.identity);
+        // worldPositionStays = true để giữ vị trí tại chỗ lá bài
+        go.transform.SetParent(effectsCanvas, true);
+        go.transform.localScale = Vector3.one;  
+
+        FloatingText ft = go.GetComponent<FloatingText>();
+        if (ft != null) ft.Setup(message);
     }
 }

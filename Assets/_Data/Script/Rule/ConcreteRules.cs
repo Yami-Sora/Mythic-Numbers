@@ -23,3 +23,4 @@ public class ReverseRule : BaseRule
         return myStat < enemyStat;
     }
 }
+

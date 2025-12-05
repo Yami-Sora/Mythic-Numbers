@@ -25,7 +25,9 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private TMP_Text resultText;
 
     private NetworkRunner runner;
-
+    // Flag kiểm tra xem đã cấu hình UI xong chưa để tránh gọi liên tục trong Update
+    private bool _uiConfigured = false;
+    private bool _refereeConfigured = false;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -65,32 +67,33 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // ✅ [QUAN TRỌNG NHẤT] VÒNG LẶP CỨU HỘ
-    // Hàm này chạy mỗi frame. Nó sẽ tự động tìm xem có Manager nào chưa có UI không thì gán ngay.
-    // Cách này giúp Client (không gọi Spawn) vẫn được gán UI.
+    // ✅ VÒNG LẶP CẤU HÌNH UI (Đã sửa đổi)
     private void FixedUpdate()
     {
-        // 1. Cứu GameManagerNet
-        if (GameManagerNet.Instance != null && !GameManagerNet.Instance.IsUIReady)
+        // 1. Cấu hình cho GameUIManager (Thay vì GameManagerNet như cũ)
+        // Chúng ta kiểm tra _uiConfigured để chỉ thực hiện việc này 1 lần
+        if (!_uiConfigured && GameUIManager.Instance != null)
         {
-            Debug.Log("[AppManager] Phát hiện GameManager chưa có UI -> Đang gán...");
-            SetupGameManagerUI(GameManagerNet.Instance);
+            Debug.Log("[AppManager] Tìm thấy GameUIManager -> Đang chuyển giao tham chiếu UI...");
+            SetupUIManager();
+            _uiConfigured = true;
+        }
+
+        // 2. Cấu hình cho Referee (Giữ nguyên nếu Referee chưa tách file)
+        if (!_refereeConfigured && GameRefereeNet.Instance != null)
+        {
+            SetupRefereeUI(GameRefereeNet.Instance);
+            _refereeConfigured = true;
         }
     }
 
-    public void StartGame(NetworkRunner runner)
+    private void SetupUIManager()
     {
-        this.runner = runner;
-        // Spawn không cần callback nữa, vì hàm Update bên trên sẽ lo việc đó ngay lập tức
-        runner.Spawn(gameManagerNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
-        runner.Spawn(gameRefereeNetPrefab, Vector3.zero, Quaternion.identity, runner.LocalPlayer);
-    }
+        // Gọi hàm SetupReferences bên GameUIManager (bạn đã tạo ở bước 1)
+        GameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
 
-    // Hàm gán UI cho GameManager
-    public void SetupGameManagerUI(GameManagerNet manager)
-    {
-        manager.SetSceneReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
-        Debug.Log("AppManager: Đã gán UI cho GameManagerNet.");
+        // Reset lại UI bàn cờ cho sạch sẽ
+        GameUIManager.Instance.ResetBoardUI();
     }
 
     // Hàm gán UI cho Referee

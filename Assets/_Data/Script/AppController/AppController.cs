@@ -20,18 +20,18 @@ public class AppController : MonoBehaviour
     }
     public void RestartGame()
     {
-        // Tìm GameManagerNet đang hoạt động
-        if (GameManagerNet.Instance != null)
+        if (GameManagerNet.Instance == null)
         {
-            Debug.Log("Gửi yêu cầu Restart...");
-            GameManagerNet.Instance.RequestRestart();
+            Debug.LogError("[AppController] Không tìm thấy GameManagerNet để restart!");
+            return;
+        }
+        Debug.Log("[AppController] Gửi yêu cầu Restart...");
+        GameManagerNet.Instance.RPC_Restart();
+
+        if (GameRefereeNet.Instance != null && GameRefereeNet.Instance.ResultPanel != null)
+        {
             GameRefereeNet.Instance.ResultPanel.SetActive(false);
         }
-        else
-        {
-            Debug.LogError("Không tìm thấy GameManager để restart!");
-        }
     }
-
 }
 
