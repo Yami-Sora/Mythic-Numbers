@@ -55,7 +55,11 @@ public class CardNet : NetworkBehaviour
     public void RefreshState()
     {
         //Kiểm tra cả GameManager (Logic) và GameUIManager (Hiển thị)
-        if (GameManagerNet.Instance == null || GameUIManager.Instance == null) return;
+        if (GameManagerNet.Instance == null || GameUIManager.Instance == null) 
+        { 
+            Debug.LogWarning("GameManagerNet or GameUIManager is not ready yet.");
+            return; 
+        }
 
         UpdateVisuals();
         RefreshParentPosition();

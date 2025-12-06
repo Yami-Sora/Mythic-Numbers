@@ -89,7 +89,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void SetupUIManager()
     {
-        // Gọi hàm SetupReferences bên GameUIManager (bạn đã tạo ở bước 1)
+        // Gọi hàm SetupReferences bên GameUIManager
         GameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
 
         // Reset lại UI bàn cờ cho sạch sẽ
