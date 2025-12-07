@@ -116,6 +116,15 @@ public class GameManagerNet : NetworkBehaviour
         CardNet card = cardObj.GetComponent<CardNet>();
         if (card.HandIndex == -1) return;
 
+        if (currentStrategy == null) UpdateRuleStrategy();
+
+        // Kiểm tra luật Order
+        if (!currentStrategy.CanPlayCard(this, card))
+        {
+            Debug.LogWarning($"[Server] Nước đi bị từ chối bởi luật: {currentStrategy.RuleName}");
+            return;
+        }
+
         // Update Data
         BoardState.Set(slotIndex, cardId);
         card.HandIndex = -1;
@@ -203,6 +212,7 @@ public class GameManagerNet : NetworkBehaviour
 
         Debug.Log($"[GameManager] RuleIndex: {CurrentRuleIndex}");
     }
+    public IRuleSet GetCurrentRule() => currentStrategy;
     public void SetCurrenRule()
     {
         if (GameUIManager.Instance != null && currentStrategy != null)
@@ -228,7 +238,7 @@ public class GameManagerNet : NetworkBehaviour
                 subRuleName = "";
                 subRuleDesc = "";
             }
-
+            
             // Gửi tất cả thông tin sang UI Manager
             CanvasManager.Instance.UpdateRulePanelText(baseRuleName, subRuleName, baseRuleDesc, subRuleDesc);
         }

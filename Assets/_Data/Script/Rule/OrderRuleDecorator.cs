@@ -28,7 +28,7 @@ public class OrderRuleDecorator : RuleDecorator
         int currentPlayerID = cardToPlay.OwnerID;
         var allCards = Object.FindObjectsByType<CardNet>(FindObjectsSortMode.None);
 
-        int minIndex = int.MaxValue;
+        int minIndex = 20;
 
         foreach (var card in allCards)
         {

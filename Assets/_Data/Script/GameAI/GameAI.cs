@@ -62,7 +62,19 @@ public class GameAI : MonoBehaviour
                 aiHand.Add(card);
             }
         }
+        // 1b. ✅ QUAN TRỌNG: Lọc ra các lá bài HỢP LỆ (Legal Moves)
+        // Nếu có luật Order, danh sách này sẽ chỉ còn 1 lá duy nhất.
+        List<CardNet> legalCards = new List<CardNet>();
+        IRuleSet currentRule = gameManager.GetCurrentRule();
 
+        foreach (var card in aiHand)
+        {
+            // Nếu chưa có luật (fallback) hoặc luật cho phép đánh lá này -> Thêm vào list
+            if (currentRule == null || currentRule.CanPlayCard(gameManager, card))
+            {
+                legalCards.Add(card);
+            }
+        }
         // Tìm ô trống
         List<int> emptySlots = new List<int>();
         for (int i = 0; i < 9; i++)
@@ -71,21 +83,22 @@ public class GameAI : MonoBehaviour
         }
 
         // Nếu không còn bài hoặc không còn chỗ -> Dừng
-        if (aiHand.Count == 0 || emptySlots.Count == 0)
+        if (legalCards.Count == 0 || emptySlots.Count == 0)
         {
             currentThinkingCoroutine = null; // Kết thúc
             yield break;
         }
 
         // --- BƯỚC 2: THUẬT TOÁN GREEDY (TÌM NƯỚC ĐI TỐT NHẤT) ---
-        bool isReverseRule = GameManagerNet.Instance.CurrentRuleIndex != 0;
+        // ID 1 (Reverse) hoặc ID 3 (Reverse + Order) là Reverse
+        bool isReverseRule = (gameManager.CurrentRuleIndex == 1 || gameManager.CurrentRuleIndex == 3);
 
-        CardNet bestCard = aiHand[0];
+        CardNet bestCard = legalCards[0];
         int bestSlot = emptySlots[0];
         int maxFlips = -1;
 
         // Duyệt qua từng lá bài đang có
-        foreach (var card in aiHand)
+        foreach (var card in legalCards)
         {
             // Ướm thử vào từng ô trống
             foreach (var slotIndex in emptySlots)

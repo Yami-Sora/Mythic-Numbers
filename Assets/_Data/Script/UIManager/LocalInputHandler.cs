@@ -20,6 +20,16 @@ public class LocalInputHandler
             return;
         }
 
+        IRuleSet currentRule = _gameManager.GetCurrentRule();
+        if (currentRule != null)
+        {
+            if (!currentRule.CanPlayCard(_gameManager, card))
+            {
+                // Hiển thị thông báo lỗi ngay tại vị trí lá bài
+                GameUIManager.Instance?.ShowFloatingText("Đánh bài theo đúng thứ tự!", card.transform.position);
+                return;
+            }
+        }
         // Logic Highlight
         if (_selectedLocalCard != null) _selectedLocalCard.SetHighlight(false);
         _selectedLocalCard = card;
