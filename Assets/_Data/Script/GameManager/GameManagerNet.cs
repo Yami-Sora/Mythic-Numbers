@@ -21,9 +21,7 @@ public class GameManagerNet : NetworkBehaviour
     [Networked, Capacity(9)] public NetworkArray<NetworkId> BoardState { get; }
     [Networked] public int CurrentRuleIndex { get; set; }
 
-    // --- LOGIC LUẬT ---
     private IRuleSet currentStrategy;
-    private List<IRuleSet> allRules = new List<IRuleSet>() { new NormalRule(), new ReverseRule() };
 
     // --- SETUP ---
     public override void Spawned()
@@ -47,7 +45,7 @@ public class GameManagerNet : NetworkBehaviour
 
         if (Object.HasStateAuthority)
         {
-            CurrentRuleIndex = (Random.Range(0, 100) < 30) ? 1 : 0;
+            RandomizeRule();
             CurrentTurn = 0;
             DealCards();
         }
@@ -143,16 +141,12 @@ public class GameManagerNet : NetworkBehaviour
         if (playWithAI) aiBrain?.StopThinking();
 
         // Reset Logic
-        CurrentRuleIndex = (Random.Range(0, 100) < 30) ? 1 : 0;
+        RandomizeRule();
         CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
         foreach (var card in allCards) Runner.Despawn(card.Object);
 
         for (int i = 0; i < 9; i++) BoardState.Set(i, default);
 
-        // Reset UI (Gọi qua RPC cho client biết, hoặc client tự detect qua BoardState)
-        // Ở đây BoardState thay đổi sẽ kích hoạt Render, nhưng màu sắc ô cần reset thủ công
-        // Ta có thể thêm RPC Client để reset màu, hoặc để đơn giản ta dựa vào BoardState change
-        // Nhưng tốt nhất là Reset UI trên Client
         RPC_ResetUIOnClients();
 
         CurrentTurn = 0;
@@ -170,15 +164,26 @@ public class GameManagerNet : NetworkBehaviour
     // --- UTILS ---
     private void UpdateRuleStrategy()
     {
-        currentStrategy = (CurrentRuleIndex >= 0 && CurrentRuleIndex < allRules.Count)
-            ? allRules[CurrentRuleIndex] : allRules[0];
+        IRuleSet baseRule = null;
+        if (CurrentRuleIndex == 0 || CurrentRuleIndex == 2)
+            baseRule = new NormalRule();
+        else
+            baseRule = new ReverseRule();
+
+        if (CurrentRuleIndex == 2 || CurrentRuleIndex == 3)
+            currentStrategy = new OrderRuleDecorator(baseRule);
+        else
+            currentStrategy = baseRule;
+
+        Debug.Log($"[GameManager] Applied Strategy: {currentStrategy.RuleName}");
     }
 
     private void RefreshAllCards()
     {
         // Tìm tất cả bài và refresh
         CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
-        foreach (var c in allCards) if (c && c.Object && c.Object.IsValid) c.RefreshState();
+        foreach (var card in allCards) 
+            if (card && card.Object && card.Object.IsValid) card.RefreshState();
     }
 
     public int GetLocalPlayerID()
@@ -186,6 +191,46 @@ public class GameManagerNet : NetworkBehaviour
         if (Runner.GameMode == GameMode.Single) return 0;
         return Runner.IsServer ? 0 : 1;
     }
+    private void RandomizeRule()
+    {
+        bool isReverse = Random.Range(0, 100) < 50;
+        bool hasOrder = Random.Range(0, 100) < 70; // 70% có Order
 
-    public IRuleSet GetCurrentRule() => currentStrategy;
+        if (!isReverse && !hasOrder) CurrentRuleIndex = 0;
+        else if (isReverse && !hasOrder) CurrentRuleIndex = 1;
+        else if (!isReverse && hasOrder) CurrentRuleIndex = 2;
+        else if (isReverse && hasOrder) CurrentRuleIndex = 3;
+
+        Debug.Log($"[GameManager] RuleIndex: {CurrentRuleIndex}");
+    }
+    public void SetCurrenRule()
+    {
+        if (GameUIManager.Instance != null && currentStrategy != null)
+        {
+            string baseRuleName = "";
+            string baseRuleDesc = "";
+            string subRuleName = "";
+            string subRuleDesc = "";
+
+            if (currentStrategy is RuleDecorator decorator)
+            {
+                subRuleName = decorator.RuleName;
+                subRuleDesc = decorator.RuleDescription;
+
+                // -- Lấy thông tin Luật Chính (Ruột) thông qua InnerRule --
+                baseRuleName = decorator.InnerRule.RuleName;
+                baseRuleDesc = decorator.InnerRule.RuleDescription;
+            }
+            else
+            {
+                baseRuleName = currentStrategy.RuleName;
+                baseRuleDesc = currentStrategy.RuleDescription;
+                subRuleName = "";
+                subRuleDesc = "";
+            }
+
+            // Gửi tất cả thông tin sang UI Manager
+            CanvasManager.Instance.UpdateRulePanelText(baseRuleName, subRuleName, baseRuleDesc, subRuleDesc);
+        }
+    }
 }

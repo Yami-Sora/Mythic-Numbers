@@ -12,8 +12,14 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private Image LeftPlayer2;
     [SerializeField] private GameObject btnRule;
     [SerializeField] private Image RulePanel;
-    [SerializeField] private TMP_Text RuleName;
-    [SerializeField] private TMP_Text RuleDes;
+
+    [Header("Base Rule References")]
+    [SerializeField] private TMP_Text BaseRuleName;
+    [SerializeField] private TMP_Text BaseRuleDes;
+
+    [Header("Sub Rule References")]
+    [SerializeField] private TMP_Text SubRuleName;
+    [SerializeField] private TMP_Text SubRuleDes;
 
     private void Awake()
     {
@@ -56,8 +62,8 @@ public class CanvasManager : MonoBehaviour
     {
         if (RulePanel != null)
         {
+            GameManagerNet.Instance.SetCurrenRule();
             RulePanel.gameObject.SetActive(true);
-            this.UpdateRulePanelText();
         }
     }
     public void OnCloseRulePanelClicked()
@@ -67,13 +73,13 @@ public class CanvasManager : MonoBehaviour
             RulePanel.gameObject.SetActive(false);
         }
     }
-    public void UpdateRulePanelText()
+    public void UpdateRulePanelText(string baseRuleNameStr, string subRuleNameStr,
+                                    string baseRuleDescStr, string subRuleDescStr)
     {
-        if (RuleName != null)
-        {
-            IRuleSet ruleSet = GameManagerNet.Instance.GetCurrentRule();
-            RuleName.text = ruleSet.RuleName;
-            RuleDes.text = ruleSet.RuleDescription;
-        }
+        if (BaseRuleName != null) BaseRuleName.text = baseRuleNameStr;
+        if (BaseRuleDes != null) BaseRuleDes.text = baseRuleDescStr;
+
+        if (SubRuleName != null) SubRuleName.text = subRuleNameStr;
+        if (SubRuleDes != null) SubRuleDes.text = subRuleDescStr;
     }
 }

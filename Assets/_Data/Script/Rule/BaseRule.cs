@@ -17,7 +17,11 @@ public abstract class BaseRule : IRuleSet
         CheckOneDirection(gm, playedCard, slotIndex + 3, "Top", row + 1, col);      // Bottom
         CheckOneDirection(gm, playedCard, slotIndex - 1, "Right", row, col - 1);    // Left
     }
-
+    //Các luật thường(Normal/Reverse) luôn cho phép đánh bất kỳ lá nào
+    public virtual bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay)
+    {
+        return true;
+    }
     protected void CheckOneDirection(GameManagerNet gm, CardNet myCard, int nIdx, string enemySide, int r, int c)
     {
         // 1. Check biên
