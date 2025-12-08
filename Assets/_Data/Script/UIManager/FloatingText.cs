@@ -1,44 +1,55 @@
-using UnityEngine;
+using System.Collections;
 using TMPro;
+using UnityEngine;
 
 public class FloatingText : YamiMonoBehaviour
 {
-    [Header("Settings")]
-    [SerializeField] private float moveSpeed = 200f; // Tốc độ bay lên (pixel/s)
-    [SerializeField] private float fadeSpeed = 2f;   // Tốc độ mờ dần
-    [SerializeField] private float lifeTime = 1.5f;  // Thời gian tồn tại tối đa
+    [SerializeField] private TextMeshProUGUI textMesh;
+    [SerializeField] private float moveSpeed = 1.0f;
+    [SerializeField] private float lifeTime = 1.5f;
 
-    private TextMeshProUGUI tmpText;
-    private float timer;
+    // Callback để trả object về pool (chứa method do GameUIManager cung cấp)
+    private System.Action<GameObject> _returnToPoolCallback;
 
     protected override void Awake()
     {
-        tmpText = GetComponent<TextMeshProUGUI>();
+        textMesh = GetComponent<TextMeshProUGUI>();
     }
-
-    public void Setup(string message)
+    public void Setup(string message, System.Action<GameObject> returnCallback = null)
     {
-        tmpText.text = message;
-        timer = lifeTime;
-    }
+        _returnToPoolCallback = returnCallback;
 
-    private void Update()
-    {
-        // 1. Bay lên
-        transform.Translate(Vector3.up * moveSpeed * Time.deltaTime);
-
-        // 2. Giảm thời gian sống
-        timer -= Time.deltaTime;
-
-        // 3. Hiệu ứng mờ dần (Fade Alpha)
-        if (timer <= lifeTime / fadeSpeed) // Chỉ mờ ở nửa sau quãng đời
+        if (textMesh != null)
         {
-            float alpha = Mathf.Clamp01(timer / (lifeTime / 2));
+            textMesh.text = message;
         }
 
-        // 4. Tự hủy
-        if (timer <= 0)
+        transform.localScale = Vector3.one;
+
+        StartCoroutine(FloatUp());
+    }
+
+    private IEnumerator FloatUp()
+    {
+        float timer = 0f;
+
+        while (timer < lifeTime)
         {
+            // Chỉ di chuyển lên trên theo thời gian
+            transform.position += Vector3.up * moveSpeed * Time.deltaTime;
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        // KẾT THÚC: Trả về pool thay vì Destroy
+        if (_returnToPoolCallback != null)
+        {
+            _returnToPoolCallback(this.gameObject);
+        }
+        else
+        {
+            // Fallback: Nếu không có pool (dùng lẻ) thì mới destroy
             Destroy(gameObject);
         }
     }

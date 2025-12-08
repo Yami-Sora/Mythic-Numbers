@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -14,6 +15,8 @@ public class GameUIManager : MonoBehaviour
 
     [SerializeField] private GameObject floatingTextPrefab;
     [SerializeField] private Transform effectsCanvas;
+
+    private Queue<GameObject> _textPool = new Queue<GameObject>();
 
     public Transform[] Slots => slots;
     public Transform LeftHandPos => leftHandPos;
@@ -61,12 +64,33 @@ public class GameUIManager : MonoBehaviour
     {
         if (floatingTextPrefab == null || effectsCanvas == null) return;
 
-        GameObject go = Instantiate(floatingTextPrefab, position, Quaternion.identity);
-        // worldPositionStays = true để giữ vị trí tại chỗ lá bài
-        go.transform.SetParent(effectsCanvas, true);
-        go.transform.localScale = Vector3.one;  
+        GameObject go;
+        if (_textPool.Count > 0)
+        {
+            go = _textPool.Dequeue();
+            go.SetActive(true);
+        }
+        else
+        {
+            // Nếu không có, tạo mới
+            go = Instantiate(floatingTextPrefab, Vector3.zero, Quaternion.identity);
+            go.transform.SetParent(effectsCanvas, true);
+        }
+
+        go.transform.position = position;
+        go.transform.localScale = Vector3.one;
 
         FloatingText ft = go.GetComponent<FloatingText>();
-        if (ft != null) ft.Setup(message);
+        if (ft != null)
+        {
+            // Truyền hàm callback ReturnTextToPool vào
+            ft.Setup(message, ReturnTextToPool);
+        }
+    }
+    // 7. Hàm Callback nhận lại object khi hiệu ứng bay kết thúc
+    private void ReturnTextToPool(GameObject textObj)
+    {
+        textObj.SetActive(false);
+        _textPool.Enqueue(textObj); // Đưa lại vào hàng đợi
     }
 }

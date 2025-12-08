@@ -10,7 +10,7 @@ public class OrderRuleDecorator : RuleDecorator
     public override string RuleName => "Order Rule";
 
     // Ghi đè mô tả: Thêm dòng giải thích về Order
-    public override string RuleDescription => "Bạn buộc phải đánh quân bài theo thứ tự từ trái sang phải (trên tay).";
+    public override string RuleDescription => "Bạn buộc phải đánh quân bài theo thứ tự được sắp xếp.";
 
     public override bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay)
     {
@@ -40,7 +40,6 @@ public class OrderRuleDecorator : RuleDecorator
 
         if (cardToPlay.HandIndex == minIndex) return true;
 
-        Debug.Log($"[OrderRule] Phạm quy! Phải đánh lá vị trí {minIndex} trước.");
         return false;
     }
 }

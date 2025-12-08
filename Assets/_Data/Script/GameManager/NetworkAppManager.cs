@@ -3,8 +3,9 @@ using Fusion;
 using Fusion.Sockets;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-// Thêm interface INetworkRunnerCallbacks để biết khi nào Scene load xong
+[RequireComponent(typeof(FusionObjectPool))]
 public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static NetworkAppManager Instance;
@@ -25,6 +26,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private TMP_Text resultText;
 
     private NetworkRunner runner;
+    private FusionObjectPool _objectProvider;
     // Flag kiểm tra xem đã cấu hình UI xong chưa để tránh gọi liên tục trong Update
     private bool _uiConfigured = false;
     private bool _refereeConfigured = false;
@@ -36,6 +38,8 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
         }
         Instance = this;
+        // Lấy component Pool đã gắn trên cùng GameObject
+        _objectProvider = GetComponent<FusionObjectPool>();
     }
 
     private void Start()
@@ -56,6 +60,25 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (resultPanel) resultPanel.SetActive(false);
     }
+    public async void StartGame(NetworkRunner runner, GameMode mode)
+    {
+        this.runner = runner;
+
+        var scene = SceneManager.GetActiveScene();
+        var sceneInfo = new NetworkSceneInfo();
+        if (scene.IsValid())
+        {
+            sceneInfo.AddSceneRef(SceneRef.FromIndex(scene.buildIndex));
+        }
+
+        await runner.StartGame(new StartGameArgs()
+        {
+            GameMode = mode,
+            Scene = sceneInfo,
+            //Gán Pool vào đây để Fusion dùng nó thay vì Instantiate/Destroy
+            ObjectProvider = _objectProvider
+        });
+    }
     private void SpawnGameManagers()
     {
         // Kiểm tra xem đã spawn chưa để tránh trùng lặp
@@ -67,10 +90,9 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // ✅ VÒNG LẶP CẤU HÌNH UI (Đã sửa đổi)
+    // VÒNG LẶP CẤU HÌNH UI
     private void FixedUpdate()
     {
-        // 1. Cấu hình cho GameUIManager (Thay vì GameManagerNet như cũ)
         // Chúng ta kiểm tra _uiConfigured để chỉ thực hiện việc này 1 lần
         if (!_uiConfigured && GameUIManager.Instance != null)
         {

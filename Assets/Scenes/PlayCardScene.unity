@@ -3646,6 +3646,8 @@ GameObject:
   - component: {fileID: 1860739868}
   - component: {fileID: 1860739867}
   - component: {fileID: 1860739869}
+  - component: {fileID: 1860739871}
+  - component: {fileID: 1860739870}
   m_Layer: 0
   m_Name: NetworkAppManager
   m_TagString: Untagged
@@ -3710,6 +3712,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a58b7f99b2c37d449c123d6c8a64e0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConnectionHandler
+--- !u!114 &1860739870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1860739866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2d62da30828b004d9cafd7f23e028e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FusionObjectPool
+  DelayIfSceneManagerIsBusy: 1
+  _maxPoolCount: 0
+--- !u!114 &1860739871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1860739866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2d62da30828b004d9cafd7f23e028e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FusionObjectPool
+  DelayIfSceneManagerIsBusy: 1
+  _maxPoolCount: 0
 --- !u!1 &1924306032
 GameObject:
   m_ObjectHideFlags: 0

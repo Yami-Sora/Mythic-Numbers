@@ -55,6 +55,13 @@ public class NetworkLauncher : MonoBehaviour
             GameObject go = new GameObject("NetworkRunner");
             runner = go.AddComponent<NetworkRunner>();
         }
+
+        var pool = runner.GetComponent<FusionObjectPool>();
+        if (pool == null)
+        {
+            pool = runner.gameObject.AddComponent<FusionObjectPool>();
+        }
+
         // Đảm bảo Runner không đang chạy phiên cũ
         if (runner.IsRunning)
         {
@@ -82,7 +89,10 @@ public class NetworkLauncher : MonoBehaviour
             Scene = SceneRef.FromIndex(1),
 
             SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
-            CustomPhotonAppSettings = customAppSettings
+            CustomPhotonAppSettings = customAppSettings,
+
+            // Fusion sẽ dùng component pool này để sinh ra CardNet thay vì Instantiate/Destroy
+            ObjectProvider = pool
         });
     }
 }
