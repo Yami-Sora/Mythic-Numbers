@@ -1,5 +1,5 @@
 using UnityEngine;
-using Fusion;
+using UnityEngine.InputSystem;
 // Class này xử lý logic chọn bài của người chơi Local
 public class LocalInputHandler
 {
@@ -41,7 +41,12 @@ public class LocalInputHandler
         if (_selectedLocalCard == null) return;
 
         // Kiểm tra lượt thông qua GameManager
-        if (_gameManager.GetLocalPlayerID() != _gameManager.CurrentTurn) return;
+        if (_gameManager.GetLocalPlayerID() != _gameManager.CurrentTurn) 
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            GameUIManager.Instance?.ShowFloatingText("Chưa đến lượt bạn!", mousePos);
+            return; 
+        };
 
         // Tắt highlight và gửi lệnh
         _selectedLocalCard.SetHighlight(false);
