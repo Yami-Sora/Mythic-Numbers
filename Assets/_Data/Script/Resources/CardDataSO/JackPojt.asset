@@ -19,4 +19,4 @@ MonoBehaviour:
   right: 5
   bottom: 5
   left: 5
-  skill: 0
+  skill: {fileID: 11400000, guid: 99ba8f6031bc5044c80e7ade955027dd, type: 2}

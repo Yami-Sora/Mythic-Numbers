@@ -13,4 +13,5 @@ public class CardDataSO : ScriptableObject
     [Range(1, 10)] public int bottom;
     [Range(1, 10)] public int left;
 
+    public BaseSkillSO skill;
 }

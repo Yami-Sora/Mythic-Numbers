@@ -18,6 +18,8 @@ public class CardNet : NetworkBehaviour
     [Networked] public int HandIndex { get; set; }
     [Networked] public int CardID { get; set; }
 
+    public BaseSkillSO CurrentSkill { get; private set; }
+
     private ChangeDetector _changes;
     private bool _isInitialized = false;
     private readonly Color colorP1 = new Color(0.2f, 0.4f, 1f);
@@ -89,6 +91,7 @@ public class CardNet : NetworkBehaviour
             if (cardImage != null) cardImage.sprite = data.artwork;
 
             gameObject.name = $"Card_{data.cardName}_{Object.Id}";
+            CurrentSkill = data.skill;
         }
     }
     private void RefreshParentPosition()

@@ -94,19 +94,21 @@ public class GameManagerNet : NetworkBehaviour
 
     void SpawnCard(int ownerID, int index)
     {
-        CardDataSO data = CardDatabase.Instance.GetRandomCard();
-
-        if (data == null)
+        if (CardDatabase.Instance == null)
         {
-            Debug.LogError("CardDatabase chưa khởi tạo hoặc rỗng!");
+            Debug.LogError("CardDatabase not found! Make sure it exists in the scene.");
             return;
         }
 
-        // 2. Spawn Network Object
+        CardDataSO data = CardDatabase.Instance.GetRandomCard();
+
+        if (data == null) return;
+
+        // Spawn Network Object
         var no = Runner.Spawn(cardPrefab, Vector3.zero, Quaternion.identity);
         CardNet card = no.GetComponent<CardNet>();
 
-        // 3. Gán dữ liệu Networked
+        // Gán dữ liệu Networked
         card.OwnerID = ownerID;
         card.HandIndex = index;
         card.CardID = data.id;
@@ -141,6 +143,14 @@ public class GameManagerNet : NetworkBehaviour
         // Update Data
         BoardState.Set(slotIndex, cardId);
         card.HandIndex = -1;
+
+        if (card.CurrentSkill != null)
+        {
+            Debug.LogWarning($"[GameManager] Kích hoạt Skill: {card.CurrentSkill.name} của bài {card.CardID}");
+
+            // Gọi hàm Execute trong ScriptableObject của Skill
+            card.CurrentSkill.Execute(this, card, slotIndex);
+        }
 
         // Xử lý luật
         if (currentStrategy == null) currentStrategy = new NormalRule();

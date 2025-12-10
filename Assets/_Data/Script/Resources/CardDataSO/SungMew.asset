@@ -16,7 +16,7 @@ MonoBehaviour:
   cardName: SungMew
   artwork: {fileID: -4791965999925121907, guid: 42ae2dd8ba4dc3a438020639b3da4902, type: 3}
   top: 7
-  right: 2
-  bottom: 5
-  left: 4
-  skill: 0
+  right: 3
+  bottom: 3
+  left: 3
+  skill: {fileID: 11400000, guid: e0147edebb0b2a141a732fad7be2087b, type: 2}
