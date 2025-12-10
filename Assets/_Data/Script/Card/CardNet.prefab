@@ -653,6 +653,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a33598eff58d13b4192226ad913e7ac7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardNet
+  cardImage: {fileID: 6663522439955511047}
   txtTop: {fileID: 2426128315718175314}
   txtRight: {fileID: 7645033774585155405}
   txtBottom: {fileID: 647359396558260722}
@@ -664,6 +665,7 @@ MonoBehaviour:
   _Left: 0
   _OwnerID: 0
   _HandIndex: 0
+  _CardID: 0
 --- !u!1 &7645814581250304439
 GameObject:
   m_ObjectHideFlags: 0

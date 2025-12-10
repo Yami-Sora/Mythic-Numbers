@@ -6,6 +6,7 @@ using Fusion;
 public class CardNet : NetworkBehaviour
 {
     [Header("UI References")]
+    [SerializeField] private Image cardImage;
     [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
     [SerializeField] private GameObject highlightObj;
 
@@ -15,8 +16,10 @@ public class CardNet : NetworkBehaviour
     [Networked] public int Left { get; set; }
     [Networked] public int OwnerID { get; set; }
     [Networked] public int HandIndex { get; set; }
+    [Networked] public int CardID { get; set; }
 
     private ChangeDetector _changes;
+    private bool _isInitialized = false;
     private readonly Color colorP1 = new Color(0.2f, 0.4f, 1f);
     private readonly Color colorP2 = new Color(1f, 0.3f, 0.3f);
 
@@ -39,11 +42,21 @@ public class CardNet : NetworkBehaviour
 
     public override void Render()
     {
+        if (!_isInitialized) RefreshState();
+
         foreach (var change in _changes.DetectChanges(this))
         {
             switch (change)
             {
+                case nameof(CardID): // Nếu ID thay đổi -> Load lại hình ảnh
+                    LoadVisualsFromID();
+                    break;
                 case nameof(Top):
+                case nameof(Right):
+                case nameof(Bottom):
+                case nameof(Left):
+                    UpdateStatTexts();
+                    break;
                 case nameof(OwnerID):
                 case nameof(HandIndex):
                     RefreshState();
@@ -54,18 +67,30 @@ public class CardNet : NetworkBehaviour
 
     public void RefreshState()
     {
-        //Kiểm tra cả GameManager (Logic) và GameUIManager (Hiển thị)
         if (GameManagerNet.Instance == null || GameUIManager.Instance == null) 
         { 
             Debug.LogWarning("GameManagerNet or GameUIManager is not ready yet.");
+            _isInitialized = false;
             return; 
         }
-
-        UpdateVisuals();
+        LoadVisualsFromID();
+        UpdateStatTexts();
         RefreshParentPosition();
         UpdateBackgroundColor();
+        _isInitialized = true;
     }
+    private void LoadVisualsFromID()
+    {
+        if (CardDatabase.Instance == null) return;
 
+        CardDataSO data = CardDatabase.Instance.GetCardData(CardID);
+        if (data != null)
+        {
+            if (cardImage != null) cardImage.sprite = data.artwork;
+
+            gameObject.name = $"Card_{data.cardName}_{Object.Id}";
+        }
+    }
     private void RefreshParentPosition()
     {
         // 1. Nếu bài đang trên tay -> Lấy vị trí tay từ GameUIManager
@@ -110,7 +135,7 @@ public class CardNet : NetworkBehaviour
         }
     }
 
-    private void UpdateVisuals()
+    private void UpdateStatTexts()
     {
         if (txtTop) txtTop.text = Top.ToString();
         if (txtRight) txtRight.text = Right.ToString();

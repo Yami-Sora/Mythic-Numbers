@@ -94,14 +94,27 @@ public class GameManagerNet : NetworkBehaviour
 
     void SpawnCard(int ownerID, int index)
     {
-        int t = Random.Range(1, 10); int r = Random.Range(1, 10);
-        int b = Random.Range(1, 10); int l = Random.Range(1, 10);
+        CardDataSO data = CardDatabase.Instance.GetRandomCard();
 
+        if (data == null)
+        {
+            Debug.LogError("CardDatabase chưa khởi tạo hoặc rỗng!");
+            return;
+        }
+
+        // 2. Spawn Network Object
         var no = Runner.Spawn(cardPrefab, Vector3.zero, Quaternion.identity);
         CardNet card = no.GetComponent<CardNet>();
-        card.Top = t; card.Right = r; card.Bottom = b; card.Left = l;
-        card.OwnerID = ownerID; 
+
+        // 3. Gán dữ liệu Networked
+        card.OwnerID = ownerID;
         card.HandIndex = index;
+        card.CardID = data.id;
+
+        card.Top = data.top;
+        card.Right = data.right;
+        card.Bottom = data.bottom;
+        card.Left = data.left;
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
+  m_Name: SungMew 2
+  m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
+  id: 3
+  cardName: SungMew2
+  artwork: {fileID: 2743281435208146567, guid: 3213a5b0c0ecf7d4c82d0fa10d209c29, type: 3}
+  top: 2
+  right: 7
+  bottom: 1
+  left: 8
+  skill: 0

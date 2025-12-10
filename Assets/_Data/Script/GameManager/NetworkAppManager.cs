@@ -101,7 +101,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
             _uiConfigured = true;
         }
 
-        // 2. Cấu hình cho Referee (Giữ nguyên nếu Referee chưa tách file)
+        // 2. Cấu hình cho Referee
         if (!_refereeConfigured && GameRefereeNet.Instance != null)
         {
             SetupRefereeUI(GameRefereeNet.Instance);
@@ -111,10 +111,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void SetupUIManager()
     {
-        // Gọi hàm SetupReferences bên GameUIManager
         GameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
-
-        // Reset lại UI bàn cờ cho sạch sẽ
         GameUIManager.Instance.ResetBoardUI();
     }
 
@@ -132,7 +129,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     }
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-        // Dự phòng: Nếu Start chưa chạy kịp hoặc logic load scene bất đồng bộ
+        //// Dự phòng: Nếu Start chưa chạy kịp hoặc logic load scene bất đồng bộ
         if (runner.IsServer && GameManagerNet.Instance == null)
         {
             SpawnGameManagers();
