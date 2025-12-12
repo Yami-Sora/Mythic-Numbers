@@ -6,16 +6,16 @@ using UnityEngine;
 public class GameAI : MonoBehaviour
 {
     [Header("AI Settings")]
-    [SerializeField] private float thinkingTime = 1.5f; // Thời gian giả vờ suy nghĩ
+    [SerializeField] private float thinkingTime = 3f; // Thời gian giả vờ suy nghĩ
 
     private GameManagerNet gameManager;
-    // ✅ THÊM: Biến lưu trữ luồng suy nghĩ hiện tại, fix bug tự động đánh 2 lá sau khi reset
+    //Biến lưu trữ luồng suy nghĩ hiện tại, fix bug tự động đánh 2 lá sau khi reset
     private Coroutine currentThinkingCoroutine;
     public void Init(GameManagerNet manager)
     {
         this.gameManager = manager;
     }
-    // ✅ THÊM: Hàm cưỡng chế dừng suy nghĩ
+    // Hàm cưỡng chế dừng suy nghĩ
     public void StopThinking()
     {
         if (currentThinkingCoroutine != null)

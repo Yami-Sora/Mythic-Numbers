@@ -120,12 +120,13 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
     {
         Debug.Log("Game Over! Đang kiểm tra trạng thái CardFocus UI...");
 
+        yield return new WaitForSeconds(1f);
         // Kiểm tra xem CanvasManager có tồn tại không
         if (CanvasManager.Instance != null)
         {
             // Timeout an toàn: Nếu sau 3 giây mà UI vẫn chưa tắt (do lỗi gì đó), thì cứ hiện bảng kết quả luôn
             // để tránh game bị treo vĩnh viễn.
-            float timeOut = 3.0f;
+            float timeOut = 15f;
 
             // Vòng lặp chờ: Chừng nào isCardFocusUIOpen còn TRUE thì còn đợi
             while (CanvasManager.Instance.isCardFocusUIOpen && timeOut > 0)
@@ -136,8 +137,8 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         }
         else
         {
-            // Nếu không tìm thấy CanvasManager, chờ tạm 1 giây
-            yield return new WaitForSeconds(1.0f);
+            // Nếu không tìm thấy CanvasManager, chờ tạm 3 giây
+            yield return new WaitForSeconds(3.0f);
         }
 
         // --- SAU KHI ĐÃ CHỜ XONG ---
