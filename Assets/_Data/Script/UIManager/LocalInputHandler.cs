@@ -47,12 +47,14 @@ public class LocalInputHandler
             GameUIManager.Instance?.ShowFloatingText("Chưa đến lượt bạn!", mousePos);
             return; 
         };
-
         // Tắt highlight và gửi lệnh
         _selectedLocalCard.SetHighlight(false);
 
         // Gọi RPC bên GameManager để xử lý logic mạng
         _gameManager.RPC_PlayCard(_selectedLocalCard.Object.Id, slotIndex);
+
+        // Gọi UI Manager để hiển thị panel phóng to lá bài vừa đánh
+        CanvasManager.Instance?.ShowCardFocus(_selectedLocalCard);
 
         _selectedLocalCard = null;
     }

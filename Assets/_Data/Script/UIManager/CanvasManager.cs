@@ -12,6 +12,8 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private Image LeftPlayer2;
     [SerializeField] private GameObject btnRule;
     [SerializeField] private Image RulePanel;
+    [SerializeField] private CardFocusUI cardFocusPanel;
+    public bool isCardFocusUIOpen = false;
 
     [Header("Base Rule References")]
     [SerializeField] private TMP_Text BaseRuleName;
@@ -81,5 +83,12 @@ public class CanvasManager : MonoBehaviour
 
         if (SubRuleName != null) SubRuleName.text = subRuleNameStr;
         if (SubRuleDes != null) SubRuleDes.text = subRuleDescStr;
+    }
+    public void ShowCardFocus(CardNet card)
+    {
+        if (cardFocusPanel != null)
+        {
+            cardFocusPanel.Show(card);
+        }
     }
 }

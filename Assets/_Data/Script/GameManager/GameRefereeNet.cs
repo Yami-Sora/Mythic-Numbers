@@ -1,5 +1,6 @@
 using Fusion;
 using TMPro;
+using System.Collections;
 using UnityEngine;
 
 public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
@@ -17,7 +18,6 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         resultPanel = panel;
         resultText = text;
 
-        // Đảm bảo lúc đầu nó tắt đi, CHỈ CHẠY MỘT LẦN KHI GÁN
         if (resultPanel != null)
         {
             resultPanel.SetActive(false);
@@ -62,7 +62,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
     {
         // Chỉ Server (StateAuthority) mới có quyền kiểm tra và quyết định thắng thua
         if (!Object.HasStateAuthority) return;
-
+        if (CanvasManager.Instance.isCardFocusUIOpen) return;
         // Kiểm tra xem bàn cờ đã đầy chưa thông qua GameManager
         bool isFull = true;
         var board = GameManagerNet.Instance.BoardState; // Truy cập dữ liệu từ Manager
@@ -105,50 +105,83 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         else if (p2Score > p1Score) winnerID = 1;
 
         // Bắn pháo hiệu cho tất cả người chơi
-        RPC_ShowResult(winnerID, p1Score, p2Score);
+        RPC_ShowResult(winnerID, p1Score, p2Score, "");
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ShowResult(int winnerID, int s1, int s2)
+    public void RPC_ShowResult(int winnerID, int s1, int s2, string customMessage)
     {
-        Debug.Log($"RPC_ShowResult Đã nhận lệnh! Winner: {winnerID}");
-        // Kiểm tra null trước khi dùng để tránh lỗi
-        // Kiểm tra null và báo lỗi nếu thiếu UI
-        if (resultPanel == null)
-        {
-            Debug.LogError("LỖI: resultPanel đang bị NULL! Chưa được gán từ NetworkAppManager.");
-            return;
-        }
-        if (resultText == null)
-        {
-            Debug.LogError("LỖI: resultText đang bị NULL!");
-            return;
-        }
+        // Thay vì hiện ngay, ta chạy Coroutine để chờ UI CardFocus tắt
+        StartCoroutine(ShowResultSequence(winnerID, s1, s2, customMessage));
+    }
 
-        resultPanel.SetActive(true); // Bật Panel lên
+    // ✅ [LOGIC QUAN TRỌNG]: Chờ isCardFocusUIOpen == false
+    private IEnumerator ShowResultSequence(int winnerID, int s1, int s2, string customMessage)
+    {
+        Debug.Log("Game Over! Đang kiểm tra trạng thái CardFocus UI...");
 
-        // Lấy ID người chơi hiện tại từ GameManager để hiển thị text cho đúng
-        // (Lưu ý: Hàm GetLocalPlayerID cần phải đúng logic như bài trước đã bàn)
-        int myID = GameManagerNet.Instance.GetLocalPlayerID();
+        // Kiểm tra xem CanvasManager có tồn tại không
+        if (CanvasManager.Instance != null)
+        {
+            // Timeout an toàn: Nếu sau 3 giây mà UI vẫn chưa tắt (do lỗi gì đó), thì cứ hiện bảng kết quả luôn
+            // để tránh game bị treo vĩnh viễn.
+            float timeOut = 3.0f;
 
-        string message = "";
-        if (winnerID == 2)
-        {
-            message = $"Draw\n ({s2} - {s1})";
-            if (resultText) resultText.color = Color.yellow;
-        }
-        else if (winnerID == myID)
-        {
-            message = $"You Win\n ({s2} - {s1})";
-            if (resultText) resultText.color = Color.green;
+            // Vòng lặp chờ: Chừng nào isCardFocusUIOpen còn TRUE thì còn đợi
+            while (CanvasManager.Instance.isCardFocusUIOpen && timeOut > 0)
+            {
+                timeOut -= Time.deltaTime;
+                yield return null; // Đợi 1 frame rồi check tiếp
+            }
         }
         else
         {
-            message = $"You Lose\n ({s2} - {s1})";
-            if (resultText) resultText.color = Color.red;
+            // Nếu không tìm thấy CanvasManager, chờ tạm 1 giây
+            yield return new WaitForSeconds(1.0f);
         }
 
-        if (resultText) resultText.text = message;
+        // --- SAU KHI ĐÃ CHỜ XONG ---
+
+        if (resultPanel == null || resultText == null)
+        {
+            Debug.LogError("LỖI: Result UI chưa được gán!");
+            yield break;
+        }
+
+        resultPanel.SetActive(true); // BẬT BẢNG KẾT QUẢ
+
+        // Xử lý hiển thị text
+        if (!string.IsNullOrEmpty(customMessage))
+        {
+            // Trường hợp đặc biệt (ví dụ: đối thủ thoát)
+            resultText.text = customMessage;
+            if (customMessage.Contains("Win")) resultText.color = Color.green;
+            else resultText.color = Color.red;
+        }
+        else
+        {
+            // Trường hợp kết thúc game bình thường
+            int myID = GameManagerNet.Instance.GetLocalPlayerID();
+            string message = "";
+
+            if (winnerID == 2)
+            {
+                message = $"Draw\n ({s2} - {s1})";
+                resultText.color = Color.yellow;
+            }
+            else if (winnerID == myID)
+            {
+                message = $"You Win\n ({s2} - {s1})";
+                resultText.color = Color.green;
+            }
+            else
+            {
+                message = $"You Lose\n ({s2} - {s1})";
+                resultText.color = Color.red;
+            }
+
+            resultText.text = message;
+        }
     }
 
     public void PlayerLeft(PlayerRef player)
@@ -161,13 +194,8 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             int winnerID = GameManagerNet.Instance.GetLocalPlayerID();
 
             // Hiển thị bảng kết quả: "Đối thủ đã ngắt kết nối!"
-            RPC_ShowResult(winnerID, 0, 0);
-
-            if (ResultText)
-            { 
-                ResultText.text = "Opponent Disconnected!\nYou Win!";
-                ResultText.fontSize = 100;
-            }
+            string msg = "Opponent Disconnected!\nYou Win!";
+            RPC_ShowResult(winnerID, 0, 0, msg);
         }
     }
 }
