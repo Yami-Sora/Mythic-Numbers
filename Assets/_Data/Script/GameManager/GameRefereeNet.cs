@@ -195,7 +195,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             int winnerID = GameManagerNet.Instance.GetLocalPlayerID();
 
             // Hiển thị bảng kết quả: "Đối thủ đã ngắt kết nối!"
-            string msg = "Opponent Disconnected!\nYou Win!";
+            string msg = "Opponent Disconnected\nYou Win!";
             RPC_ShowResult(winnerID, 0, 0, msg);
         }
     }

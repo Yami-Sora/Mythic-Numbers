@@ -5,7 +5,7 @@ using System.Collections;
 
 public class CardFocusUI : YamiMonoBehaviour
 {
-    [Header("References (Kéo từ đối tượng lá bài mẫu trong Panel)")]
+    [Header("References")]
     [SerializeField] private Image cardImage;
     [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
     [Header("Mod Stats")]
@@ -19,29 +19,73 @@ public class CardFocusUI : YamiMonoBehaviour
     [SerializeField] private float closeDuration = 0.4f; // Thời gian bay về
     [SerializeField] private Transform cardContainer; // Đối tượng cha chứa hình ảnh lá bài để scale
 
-    private Coroutine _currentRoutine;
+    private Coroutine _currentAnimRoutine;
+    private Coroutine _monitoringRoutine; // Coroutine theo dõi chỉ số
     private CardNet _currentSourceCard;
 
+    private int _baseTop, _baseRight, _baseBottom, _baseLeft;
+    private int _displayedTop, _displayedRight, _displayedBottom, _displayedLeft;
     // Hàm này được GameUIManager gọi
     public void Show(CardNet sourceCard)
     {
         gameObject.SetActive(true);
         if (CanvasManager.Instance != null)
             CanvasManager.Instance.isCardFocusUIOpen = true;
-        // 1. Copy dữ liệu từ lá bài gốc sang lá bài hiển thị
-        CopyData(sourceCard);
 
-        // 2. Chạy animation
-        if (_currentRoutine != null) StopCoroutine(_currentRoutine);
-        _currentRoutine = StartCoroutine(AnimateOpenRoutine());
+        _currentSourceCard = sourceCard;
+
+        // 1. Lấy Base Stats
+        FetchBaseStats(sourceCard);
+
+        // 2. Reset cache và Update ngay lập tức để không bị trắng thông tin frame đầu
+        ResetDisplayCache();
+        ForceUpdateUI();
+
+        // 3. Bắt đầu Coroutine theo dõi thay đổi (Thay cho Update)
+        if (_monitoringRoutine != null) StopCoroutine(_monitoringRoutine);
+        _monitoringRoutine = StartCoroutine(MonitorStatsRoutine());
+
+        // 4. Chạy animation
+        if (_currentAnimRoutine != null) StopCoroutine(_currentAnimRoutine);
+        _currentAnimRoutine = StartCoroutine(AnimateOpenRoutine());
     }
+
     public void ClosePanel()
     {
         if (!gameObject.activeSelf) return;
-        if (_currentRoutine != null) StopCoroutine(_currentRoutine);
-        _currentRoutine = StartCoroutine(AnimateCloseRoutine());
+
+        // Dừng theo dõi khi đóng panel
+        if (_monitoringRoutine != null) StopCoroutine(_monitoringRoutine);
+
+        if (_currentAnimRoutine != null) StopCoroutine(_currentAnimRoutine);
+        _currentAnimRoutine = StartCoroutine(AnimateCloseRoutine());
     }
-    private void CopyData(CardNet source)
+
+    private IEnumerator MonitorStatsRoutine()
+    {
+        // Vòng lặp vô tận, chạy cho đến khi Coroutine bị Stop (lúc đóng Panel)
+        while (true)
+        {
+            // Kiểm tra Card còn tồn tại không
+            if (_currentSourceCard == null || _currentSourceCard.Object == null || !_currentSourceCard.Object.IsValid)
+            {
+                ClosePanel();
+                yield break;
+            }
+
+            // Kiểm tra thay đổi
+            if (HasStatsChanged())
+            {
+                ForceUpdateUI();
+            }
+
+            // Đợi 0.1 giây rồi mới check lại -> Tiết kiệm hiệu năng hơn Update (chạy mỗi frame)
+            // 0.1s là đủ nhanh để mắt người không nhận ra độ trễ
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private void FetchBaseStats(CardNet source)
     {
         CardDataSO data = null;
         if (CardDatabase.Instance != null)
@@ -52,24 +96,51 @@ public class CardFocusUI : YamiMonoBehaviour
         if (data != null)
         {
             cardImage.sprite = data.artwork;
-
-            // Cập nhật text và màu sắc dựa trên so sánh Current vs Base
-            UpdateStatUI(txtTop, modTxtTop, source.Top, data.top);
-            UpdateStatUI(txtRight, modTxtRight, source.Right, data.right);
-            UpdateStatUI(txtBottom, modTxtBottom, source.Bottom, data.bottom);
-            UpdateStatUI(txtLeft, modTxtLeft, source.Left, data.left);
+            _baseTop = data.top;
+            _baseRight = data.right;
+            _baseBottom = data.bottom;
+            _baseLeft = data.left;
         }
         else
         {
-            // Fallback nếu không tìm thấy data (chỉ hiện số trắng)
-            UpdateStatUI(txtTop, modTxtTop, source.Top, source.Top);
-            UpdateStatUI(txtRight, modTxtRight, source.Right, source.Right);
-            UpdateStatUI(txtBottom, modTxtBottom, source.Bottom, source.Bottom);
-            UpdateStatUI(txtLeft, modTxtLeft, source.Left, source.Left);
+            _baseTop = source.Top;
+            _baseRight = source.Right;
+            _baseBottom = source.Bottom;
+            _baseLeft = source.Left;
         }
-
-        _currentSourceCard = source;
     }
+
+    private void ResetDisplayCache()
+    {
+        _displayedTop = -999;
+        _displayedRight = -999;
+        _displayedBottom = -999;
+        _displayedLeft = -999;
+    }
+
+    private bool HasStatsChanged()
+    {
+        return _currentSourceCard.Top != _displayedTop ||
+               _currentSourceCard.Right != _displayedRight ||
+               _currentSourceCard.Bottom != _displayedBottom ||
+               _currentSourceCard.Left != _displayedLeft;
+    }
+
+    private void ForceUpdateUI()
+    {
+        if (_currentSourceCard == null) return;
+
+        _displayedTop = _currentSourceCard.Top;
+        _displayedRight = _currentSourceCard.Right;
+        _displayedBottom = _currentSourceCard.Bottom;
+        _displayedLeft = _currentSourceCard.Left;
+
+        UpdateStatUI(txtTop, modTxtTop, _displayedTop, _baseTop);
+        UpdateStatUI(txtRight, modTxtRight, _displayedRight, _baseRight);
+        UpdateStatUI(txtBottom, modTxtBottom, _displayedBottom, _baseBottom);
+        UpdateStatUI(txtLeft, modTxtLeft, _displayedLeft, _baseLeft);
+    }
+
     private void UpdateStatUI(TextMeshProUGUI mainText, TextMeshProUGUI modText, int currentVal, int baseVal)
     {
         if (mainText == null) return;
@@ -79,7 +150,6 @@ public class CardFocusUI : YamiMonoBehaviour
 
         if (diff > 0)
         {
-            // BUFF: Xanh
             mainText.color = Color.green;
             if (modText != null)
             {
@@ -90,7 +160,6 @@ public class CardFocusUI : YamiMonoBehaviour
         }
         else if (diff < 0)
         {
-            // DEBUFF: Đỏ
             mainText.color = Color.red;
             if (modText != null)
             {
@@ -101,15 +170,13 @@ public class CardFocusUI : YamiMonoBehaviour
         }
         else
         {
-            // BÌNH THƯỜNG: Trắng
             mainText.color = Color.white;
             if (modText != null) modText.gameObject.SetActive(false);
         }
     }
-    // Hiệu ứng mở: Phóng to từ giữa màn hình
+
     private IEnumerator AnimateOpenRoutine()
     {
-        // 1. Reset vị trí về giữa (Quan trọng! vì hàm Close đã làm nó lệch đi)
         cardContainer.localPosition = Vector3.zero;
         cardContainer.localScale = Vector3.zero;
 
@@ -117,33 +184,27 @@ public class CardFocusUI : YamiMonoBehaviour
         while (elapsed < appearDuration)
         {
             float t = elapsed / appearDuration;
-            // Lerp từ 0 -> 2
             cardContainer.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * 2f, t);
-
             elapsed += Time.deltaTime;
             yield return null;
         }
         cardContainer.localScale = Vector3.one * 2f;
     }
 
-    // Hiệu ứng đóng: Thu nhỏ và bay về vị trí slot
     private IEnumerator AnimateCloseRoutine()
     {
         Vector3 startPos = cardContainer.position;
         Vector3 startScale = cardContainer.localScale;
 
-        // Nếu lá bài thật bị mất (do lỗi mạng/reset), thì bay về chỗ cũ hoặc giữ nguyên
         Vector3 targetPos = (_currentSourceCard != null) ? _currentSourceCard.transform.position : startPos;
-        Vector3 targetScale = Vector3.one; // Thu về scale 1
+        Vector3 targetScale = Vector3.one;
 
         float elapsed = 0f;
         while (elapsed < closeDuration)
         {
             float t = elapsed / closeDuration;
-            // Làm mượt chuyển động (SmoothStep)
             t = t * t * (3f - 2f * t);
 
-            // Cập nhật lại targetPos liên tục phòng trường hợp Camera di chuyển hoặc Slot bị rung lắc
             if (_currentSourceCard != null) targetPos = _currentSourceCard.transform.position;
 
             cardContainer.position = Vector3.Lerp(startPos, targetPos, t);
@@ -156,6 +217,6 @@ public class CardFocusUI : YamiMonoBehaviour
         gameObject.SetActive(false);
         if (CanvasManager.Instance != null)
             CanvasManager.Instance.isCardFocusUIOpen = false;
-        _currentRoutine = null;
+        _currentAnimRoutine = null;
     }
 }
