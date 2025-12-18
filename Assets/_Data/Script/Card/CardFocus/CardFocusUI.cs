@@ -7,17 +7,22 @@ public class CardFocusUI : YamiMonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Image cardImage;
+    [SerializeField] private Transform cardContainer; // Đối tượng cha chứa hình ảnh lá bài để scale
+
+    [Header("Stats References")]
     [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
-    [Header("Mod Stats")]
-    [SerializeField] private TextMeshProUGUI modTxtTop;
-    [SerializeField] private TextMeshProUGUI modTxtRight;
-    [SerializeField] private TextMeshProUGUI modTxtBottom;
-    [SerializeField] private TextMeshProUGUI modTxtLeft;
+    [SerializeField] private TextMeshProUGUI modTxtTop, modTxtRight, modTxtBottom, modTxtLeft;
+
+    [Header("New Info Panel References")]
+    [SerializeField] private CanvasGroup infoPanelGroup; // Kéo Panel chứa Tên và Mô tả vào đây
+    [SerializeField] private Transform infoPanelContainer; // Transform của Panel chứa Tên/Mô tả (để làm animation trượt)
+    [SerializeField] private TextMeshProUGUI txtCardName;
+    [SerializeField] private TextMeshProUGUI txtSkillDescription;
 
     [Header("Animation Settings")]
     [SerializeField] private float appearDuration = 0.3f;
     [SerializeField] private float closeDuration = 0.4f; // Thời gian bay về
-    [SerializeField] private Transform cardContainer; // Đối tượng cha chứa hình ảnh lá bài để scale
+    [SerializeField] private float slideOffset = 350f;
 
     private Coroutine _currentAnimRoutine;
     private Coroutine _monitoringRoutine; // Coroutine theo dõi chỉ số
@@ -25,7 +30,7 @@ public class CardFocusUI : YamiMonoBehaviour
 
     private int _baseTop, _baseRight, _baseBottom, _baseLeft;
     private int _displayedTop, _displayedRight, _displayedBottom, _displayedLeft;
-    // Hàm này được GameUIManager gọi
+
     public void Show(CardNet sourceCard)
     {
         gameObject.SetActive(true);
@@ -41,7 +46,7 @@ public class CardFocusUI : YamiMonoBehaviour
         ResetDisplayCache();
         ForceUpdateUI();
 
-        // 3. Bắt đầu Coroutine theo dõi thay đổi (Thay cho Update)
+        // 3. Bắt đầu Coroutine theo dõi thay đổi
         if (_monitoringRoutine != null) StopCoroutine(_monitoringRoutine);
         _monitoringRoutine = StartCoroutine(MonitorStatsRoutine());
 
@@ -59,6 +64,124 @@ public class CardFocusUI : YamiMonoBehaviour
 
         if (_currentAnimRoutine != null) StopCoroutine(_currentAnimRoutine);
         _currentAnimRoutine = StartCoroutine(AnimateCloseRoutine());
+    }
+
+    
+    private void FetchBaseStats(CardNet source)
+    {
+        CardDataSO data = null;
+        if (CardDatabase.Instance != null)
+        {
+            data = CardDatabase.Instance.GetCardData(source.CardID);
+        }
+
+        if (data != null)
+        {
+            cardImage.sprite = data.artwork;
+            _baseTop = data.top;
+            _baseRight = data.right;
+            _baseBottom = data.bottom;
+            _baseLeft = data.left;
+
+            if (txtCardName != null) txtCardName.text = data.cardName;
+
+            if (txtSkillDescription != null)
+            {
+                if (data.skill != null)
+                    txtSkillDescription.text = data.skill.description;
+                else
+                    txtSkillDescription.text = "Không có kỹ năng đặc biệt.";
+            }
+        }
+        else
+        {
+            _baseTop = source.Top;
+            _baseRight = source.Right;
+            _baseBottom = source.Bottom;
+            _baseLeft = source.Left;
+            if (txtCardName) txtCardName.text = "Unknown Card";
+            if (txtSkillDescription) txtSkillDescription.text = "";
+        }
+    }
+
+    private IEnumerator AnimateOpenRoutine()
+    {
+        cardContainer.localPosition = Vector3.zero;
+        cardContainer.localScale = Vector3.zero;
+
+        // Info Panel bắt đầu ẩn và nằm lệch sang phải một chút
+        if (infoPanelGroup != null) infoPanelGroup.alpha = 0f;
+        if (infoPanelContainer != null)
+            infoPanelContainer.localPosition = new Vector3(slideOffset + 100f, 0, 0); // Lệch phải hơn đích đến 1 chút để trượt vào
+
+        // Card trượt sang TRÁI (-X)
+        Vector3 targetCardPos = new Vector3(-slideOffset * 0.8f, 0, 0); // 0.8 để nó không quá xa
+        Vector3 targetCardScale = Vector3.one * 2f; // Phóng to
+
+        // Info trượt về vị trí BÊN PHẢI (+X)
+        Vector3 targetInfoPos = new Vector3(slideOffset * 0.8f, 0, 0);
+
+        float elapsed = 0f;
+        while (elapsed < appearDuration)
+        {
+            float t = elapsed / appearDuration;
+            // Easing Out Back cho nảy nhẹ
+            float tSmooth = Mathf.Sin(t * Mathf.PI * 0.5f);
+
+            // Animate Card
+            cardContainer.localScale = Vector3.Lerp(Vector3.zero, targetCardScale, tSmooth);
+            cardContainer.localPosition = Vector3.Lerp(Vector3.zero, targetCardPos, tSmooth);
+
+            // Animate Info Panel (Fade in + Slide in)
+            if (infoPanelGroup != null)
+                infoPanelGroup.alpha = Mathf.Lerp(0f, 1f, t * 1.5f); // Fade nhanh hơn chút
+
+            if (infoPanelContainer != null)
+                infoPanelContainer.localPosition = Vector3.Lerp(new Vector3(slideOffset + 100f, 0, 0), targetInfoPos, tSmooth);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Final set
+        cardContainer.localScale = targetCardScale;
+        cardContainer.localPosition = targetCardPos;
+        if (infoPanelGroup) infoPanelGroup.alpha = 1f;
+        if (infoPanelContainer) infoPanelContainer.localPosition = targetInfoPos;
+    }
+
+    private IEnumerator AnimateCloseRoutine()
+    {
+        Vector3 startCardPos = cardContainer.localPosition;
+        Vector3 startCardScale = cardContainer.localScale;
+
+        // Đích đến: Vị trí Slot trên bàn cờ
+        Vector3 targetSlotPos = (_currentSourceCard != null) ? _currentSourceCard.transform.position : Vector3.zero;
+
+        float elapsed = 0f;
+        while (elapsed < closeDuration)
+        {
+            float t = elapsed / closeDuration;
+            // Easing In Back (thu lại đà)
+            t = t * t * (3f - 2f * t);
+
+            // Card bay từ vị trí lệch trái -> Về vị trí gốc trên bàn cờ
+            cardContainer.position = Vector3.Lerp(transform.TransformPoint(startCardPos), targetSlotPos, t);
+            cardContainer.localScale = Vector3.Lerp(startCardScale, Vector3.one, t);
+
+            // Info Panel Fade Out nhanh
+            if (infoPanelGroup != null)
+                infoPanelGroup.alpha = Mathf.Lerp(1f, 0f, t * 2f);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // --- PHẦN POLLING & UPDATE STATS ---
+        gameObject.SetActive(false);
+        if (CanvasManager.Instance != null)
+            CanvasManager.Instance.isCardFocusUIOpen = false;
+        _currentAnimRoutine = null;
     }
 
     private IEnumerator MonitorStatsRoutine()
@@ -84,32 +207,6 @@ public class CardFocusUI : YamiMonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
     }
-
-    private void FetchBaseStats(CardNet source)
-    {
-        CardDataSO data = null;
-        if (CardDatabase.Instance != null)
-        {
-            data = CardDatabase.Instance.GetCardData(source.CardID);
-        }
-
-        if (data != null)
-        {
-            cardImage.sprite = data.artwork;
-            _baseTop = data.top;
-            _baseRight = data.right;
-            _baseBottom = data.bottom;
-            _baseLeft = data.left;
-        }
-        else
-        {
-            _baseTop = source.Top;
-            _baseRight = source.Right;
-            _baseBottom = source.Bottom;
-            _baseLeft = source.Left;
-        }
-    }
-
     private void ResetDisplayCache()
     {
         _displayedTop = -999;
@@ -175,48 +272,4 @@ public class CardFocusUI : YamiMonoBehaviour
         }
     }
 
-    private IEnumerator AnimateOpenRoutine()
-    {
-        cardContainer.localPosition = Vector3.zero;
-        cardContainer.localScale = Vector3.zero;
-
-        float elapsed = 0f;
-        while (elapsed < appearDuration)
-        {
-            float t = elapsed / appearDuration;
-            cardContainer.localScale = Vector3.Lerp(Vector3.zero, Vector3.one * 2f, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-        cardContainer.localScale = Vector3.one * 2f;
-    }
-
-    private IEnumerator AnimateCloseRoutine()
-    {
-        Vector3 startPos = cardContainer.position;
-        Vector3 startScale = cardContainer.localScale;
-
-        Vector3 targetPos = (_currentSourceCard != null) ? _currentSourceCard.transform.position : startPos;
-        Vector3 targetScale = Vector3.one;
-
-        float elapsed = 0f;
-        while (elapsed < closeDuration)
-        {
-            float t = elapsed / closeDuration;
-            t = t * t * (3f - 2f * t);
-
-            if (_currentSourceCard != null) targetPos = _currentSourceCard.transform.position;
-
-            cardContainer.position = Vector3.Lerp(startPos, targetPos, t);
-            cardContainer.localScale = Vector3.Lerp(startScale, targetScale, t);
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        gameObject.SetActive(false);
-        if (CanvasManager.Instance != null)
-            CanvasManager.Instance.isCardFocusUIOpen = false;
-        _currentAnimRoutine = null;
-    }
 }
