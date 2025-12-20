@@ -51,14 +51,8 @@ public class CanvasManager : MonoBehaviour
     }
     public void SetLeftImageActive(bool isActive)
     {
-        if (LeftAiImage != null)
-        {
-            LeftAiImage.gameObject.SetActive(isActive);
-        }
-        if (LeftPlayer2 != null)
-        {
-            LeftPlayer2.gameObject.SetActive(!isActive);
-        }
+        if (LeftAiImage != null) LeftAiImage.gameObject.SetActive(isActive);
+        if (LeftPlayer2 != null) LeftPlayer2.gameObject.SetActive(!isActive);
     }
     public void OnRuleButtonClicked()
     {

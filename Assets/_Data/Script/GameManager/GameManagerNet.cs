@@ -75,12 +75,15 @@ public class GameManagerNet : NetworkBehaviour
         {
             GameUIManager.Instance.UpdateTurnText(GetLocalPlayerID(), CurrentTurn, currentStrategy?.RuleName);
         }
+        _inputHandler?.Update();
     }
 
     // --- INPUT FORWARDING ---
     // Các button sẽ gọi vào đây, ta chuyển tiếp sang InputHandler
-    public void SelectCard(CardNet card) => _inputHandler.SelectCard(card);
     public void OnSlotClicked(int slotIndex) => _inputHandler.OnSlotClicked(slotIndex);
+    public void OnCardInputDown(CardNet card) => _inputHandler?.OnPointerDown(card);
+    public void OnCardInputUp(CardNet card) => _inputHandler?.OnPointerUp(card);
+    public void OnCardInputExit(CardNet card) => _inputHandler?.OnPointerExit(card);
 
     // --- GAME LOGIC ---
     void DealCards()

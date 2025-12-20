@@ -1,9 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using Fusion;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class CardNet : NetworkBehaviour
+public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     [Header("UI References")]
     [SerializeField] private Image cardImage;
@@ -156,15 +157,6 @@ public class CardNet : NetworkBehaviour
         }
     }
 
-    public void OnCardClicked()
-    {
-        // Gọi về GameManagerNet, nó sẽ tự chuyển tiếp sang InputHandler
-        if (HandIndex != -1 && GameManagerNet.Instance != null)
-        {
-            GameManagerNet.Instance.SelectCard(this);
-        }
-    }
-
     public void FlipOwner()
     {
         OwnerID = 1 - OwnerID;
@@ -174,5 +166,26 @@ public class CardNet : NetworkBehaviour
     public void SetHighlight(bool isActive)
     {
         if (highlightObj != null) highlightObj.SetActive(isActive);
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        // Khi nhấn xuống -> Báo Manager để bắt đầu đếm giờ Long Press
+        if (GameManagerNet.Instance != null)
+            GameManagerNet.Instance.OnCardInputDown(this);
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        // Khi nhấc tay lên -> Báo Manager để quyết định là Click hay kết thúc Long Press
+        if (GameManagerNet.Instance != null)
+            GameManagerNet.Instance.OnCardInputUp(this);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        // Khi kéo chuột ra khỏi bài -> Hủy Long Press nếu đang giữ
+        if (GameManagerNet.Instance != null)
+            GameManagerNet.Instance.OnCardInputExit(this);
     }
 }
