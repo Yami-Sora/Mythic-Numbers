@@ -116,6 +116,7 @@ public class LocalInputHandler
     public void OnSlotClicked(int slotIndex)
     {
         if (_selectedLocalCard == null) return;
+        if (slotIndex < 0 || slotIndex >= 9 || GameManagerNet.Instance.BoardState[slotIndex].IsValid) return;
 
         if (_gameManager.GetLocalPlayerID() != _gameManager.CurrentTurn) 
         {

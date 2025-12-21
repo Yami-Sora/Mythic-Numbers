@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f44c81be5abefac4493786b8f63feb63, type: 3}
   m_Name: JackPojtSkill
   m_EditorClassIdentifier: Assembly-CSharp::JackPoltSO
-  description: "Jack 5 tri\u1EC7u t\u0103ng cho b\u1EA3n th\xE2n 5 \u1EDF 2 c\u1EA1nh
-    ng\u1EABu nhi\xEAn v\xE0 gi\u1EA3m c\xE1c c\u1EA1nh c\xF2n l\u1EA1i v\u1EC1 0."
+  description: "V\xEC tinh t\xFA \u0111\xE1p xu\u1ED1ng v\xE0 t\u0103ng cho l\xE1
+    b\xE0i 5 \u0111\u01A1n v\u1ECB \u1EDF 2 c\u1EA1nh ng\u1EABu nhi\xEAn v\xE0 gi\u1EA3m
+    c\xE1c c\u1EA1nh c\xF2n l\u1EA1i v\u1EC1 0."
   buffAmount: 5
