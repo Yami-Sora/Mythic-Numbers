@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
   id: 1
   cardName: SungMew
-  artwork: {fileID: -6735574409870262978, guid: d7c01f0cf009f494da93a6ce8c87ca8a, type: 3}
+  artwork: {fileID: -3045914649768131082, guid: 7501ef4094a2c9c43a7e08524df185c5, type: 3}
   top: 7
   right: 3
   bottom: 3
