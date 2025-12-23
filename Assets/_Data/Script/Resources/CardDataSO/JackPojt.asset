@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
   id: 0
   cardName: JackPojt
-  artwork: {fileID: -5070363216618500059, guid: 60168ea1ea7ba0f44be3ae8837cca052, type: 3}
+  artwork: {fileID: -2366965408156117902, guid: e8bf40d257a404244a59dbd906d8cb8d, type: 3}
   top: 5
   right: 5
   bottom: 5
