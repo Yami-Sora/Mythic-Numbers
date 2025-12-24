@@ -154,7 +154,6 @@ public class GameManagerNet : NetworkBehaviour
             // Gọi hàm Execute trong ScriptableObject của Skill
             card.CurrentSkill.Execute(this, card, slotIndex);
         }
-
         // Xử lý luật
         if (currentStrategy == null) currentStrategy = new NormalRule();
         currentStrategy.ResolveBattle(this, card, slotIndex);
@@ -168,8 +167,25 @@ public class GameManagerNet : NetworkBehaviour
         {
             aiBrain?.StartTurn(1);
         }
+        // Gọi hàm này để giảm thời gian hiệu lực của các lá bài đang Vô Địch (Invincible) trên bàn
+        UpdateBoardEffectsTick();
     }
-
+    private void UpdateBoardEffectsTick()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            if (BoardState[i].IsValid)
+            {
+                NetworkObject no = Runner.FindObject(BoardState[i]);
+                if (no != null)
+                {
+                    CardNet card = no.GetComponent<CardNet>();
+                    // Gọi hàm TickInvincibility trên CardNet để giảm thời gian hiệu lực
+                    if (card != null) card.TickInvincibility();
+                }
+            }
+        }
+    }
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_Restart()
     {

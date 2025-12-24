@@ -4773,6 +4773,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CardDatabase
   allCards:
+  - {fileID: 11400000, guid: b078202996df2554489854787faa773f, type: 2}
   - {fileID: 11400000, guid: 3e53ed2231230b74aae305e43fd53afa, type: 2}
   - {fileID: 11400000, guid: 031390e632a5d9e43a0c9e9ef80ee0fc, type: 2}
   - {fileID: 11400000, guid: 033b7cf06b2a3ee45ba03fea4de652dc, type: 2}
