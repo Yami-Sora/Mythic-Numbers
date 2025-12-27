@@ -4775,11 +4775,9 @@ MonoBehaviour:
   allCards:
   - {fileID: 11400000, guid: b078202996df2554489854787faa773f, type: 2}
   - {fileID: 11400000, guid: 90e3a4d2f2c90db42a60caf70305c974, type: 2}
+  - {fileID: 11400000, guid: efc4594001288f64f84f69e5952a0e34, type: 2}
   - {fileID: 11400000, guid: 3e53ed2231230b74aae305e43fd53afa, type: 2}
   - {fileID: 11400000, guid: 031390e632a5d9e43a0c9e9ef80ee0fc, type: 2}
-  - {fileID: 11400000, guid: 033b7cf06b2a3ee45ba03fea4de652dc, type: 2}
-  - {fileID: 11400000, guid: 6c75a81f5cc8a21449b4c0da50e1e294, type: 2}
-  - {fileID: 11400000, guid: 4ab5893c027fd8c4cad00084a94d62b8, type: 2}
   - {fileID: 11400000, guid: 505bc73a031a7a74882efbf168126bcc, type: 2}
 --- !u!4 &1799529570
 Transform:

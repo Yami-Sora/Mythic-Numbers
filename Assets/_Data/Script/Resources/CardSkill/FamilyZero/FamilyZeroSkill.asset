@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e75ec6845bc3b43448d21f3167a2a5f9, type: 3}
+  m_Name: FamilyZeroSkill
+  m_EditorClassIdentifier: Assembly-CSharp::FamilyZeroSkillSO
+  description: "Lo\u1EA1i b\u1ECF t\u1EA5t c\u1EA3 ch\u1EC9 s\u1ED1 c\u1EE7a l\xE1
+    n\xE0y. Sau \u0111\xF3, l\u1EA5y ng\u1EABu nhi\xEAn c\xE1c c\u1EA1nh m\u1EDBi
+    n\u1EB1m trong kho\u1EA3ng s\u1ED1 nh\u1ECF nh\u1EA5t v\xE0 l\u1EDBn nh\u1EA5t
+    c\u1EE7a ch\u1EC9 s\u1ED1 c\u0169."
