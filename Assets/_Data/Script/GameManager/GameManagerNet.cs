@@ -120,6 +120,11 @@ public class GameManagerNet : NetworkBehaviour
         card.Right = data.right;
         card.Bottom = data.bottom;
         card.Left = data.left;
+
+        if (card.CurrentSkill != null)
+        {
+            card.CurrentSkill.OnCardSpawned(card);
+        }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -147,17 +152,25 @@ public class GameManagerNet : NetworkBehaviour
         BoardState.Set(slotIndex, cardId);
         card.HandIndex = -1;
 
+
+        //Kích hoạt Pre - Battle Skill(Execute)
         if (card.CurrentSkill != null)
         {
-            Debug.LogWarning($"[GameManager] Kích hoạt Skill: {card.CurrentSkill.name} của bài {card.CardID}");
-
-            // Gọi hàm Execute trong ScriptableObject của Skill
             card.CurrentSkill.Execute(this, card, slotIndex);
         }
+        var preBattleOwners = CaptureBoardOwners(cardId);
         // Xử lý luật
         if (currentStrategy == null) currentStrategy = new NormalRule();
         currentStrategy.ResolveBattle(this, card, slotIndex);
 
+        // Tính số lượng bài bị lật (Flip Count)
+        int flippedCount = CountFlippedCards(preBattleOwners, card.OwnerID);
+
+        // Kích hoạt Post-Battle Skill (OnAfterBattle)
+        if (card.CurrentSkill != null)
+        {
+            card.CurrentSkill.OnAfterBattle(this, card, flippedCount);
+        }
         // Check Endgame & Đổi lượt
         if (GameRefereeNet.Instance != null) GameRefereeNet.Instance.CheckEndGame();
         CurrentTurn = 1 - CurrentTurn;
@@ -284,5 +297,43 @@ public class GameManagerNet : NetworkBehaviour
             // Gửi tất cả thông tin sang UI Manager
             CanvasManager.Instance.UpdateRulePanelText(baseRuleName, subRuleName, baseRuleDesc, subRuleDesc);
         }
+    }
+
+    // Lưu lại trạng thái chủ sở hữu của các bài xung quanh trước khi Battle
+    private Dictionary<NetworkId, int> CaptureBoardOwners(NetworkId excludeCardId)
+    {
+        Dictionary<NetworkId, int> owners = new Dictionary<NetworkId, int>();
+        for (int i = 0; i < 9; i++)
+        {
+            if (BoardState[i].IsValid && BoardState[i] != excludeCardId)
+            {
+                var obj = Runner.FindObject(BoardState[i]);
+                if (obj != null)
+                {
+                    owners[BoardState[i]] = obj.GetComponent<CardNet>().OwnerID;
+                }
+            }
+        }
+        return owners;
+    }
+    
+    // So sánh trạng thái hiện tại với trạng thái cũ để đếm số bài bị đổi chủ
+    private int CountFlippedCards(Dictionary<NetworkId, int> preBattleOwners, int attackerOwnerID)
+    {
+        int count = 0;
+        foreach (var kvp in preBattleOwners)
+        {
+            var obj = Runner.FindObject(kvp.Key);
+            if (obj != null)
+            {
+                int currentOwner = obj.GetComponent<CardNet>().OwnerID;
+                // Nếu chủ sở hữu thay đổi (khác value cũ) VÀ giờ thuộc về người tấn công -> Đã bị lật
+                if (currentOwner != kvp.Value && currentOwner == attackerOwnerID)
+                {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }
