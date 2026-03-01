@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2c43f77ef75186044bf6441d4fe701fd
+guid: 9b56db3aab7315e4ca27b52abf23287e
 labels:
 - FusionCodeDoc
 TextScriptImporter:
@@ -11,6 +11,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 267958
   packageName: Photon Fusion
-  packageVersion: 2.0.8
+  packageVersion: 2.0.9
   assetPath: Assets/Photon/Fusion/Assemblies/Fusion.Realtime.xml
-  uploadId: 807342
+  uploadId: 832254

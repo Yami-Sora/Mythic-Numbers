@@ -1,3 +1,22 @@
+# 2.0.9
+
+## Stable
+
+### Build 1566 (Dec 08, 2025)
+
+**What's New**
+
+- Added `Networkrunner.CommittedPlayers`, which lists only players both fully in the room and the Fusion session
+- Equality Operators and `GetHashCode()` to `ReliableKey`
+
+**Bug Fixes**
+
+- Fixed: Compatibility with Unity 6.3
+- Fixed: `NetworkTransform` area of interest override was being overwritten internally
+- Fixed: Invalid warning message suggesting to use `[Networked]` for float/vector properties on structs
+- Fixed: RPCs targeting state authority were not being received when outside the area of interest
+- Fixed: Lag compensation internal AABB constructor fix assignment order
+
 # 2.0.8
 
 ## Stable
