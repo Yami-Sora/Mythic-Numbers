@@ -60,6 +60,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (resultPanel) resultPanel.SetActive(false);
     }
+
     public async void StartGame(NetworkRunner runner, GameMode mode)
     {
         this.runner = runner;
@@ -79,6 +80,9 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
             ObjectProvider = _objectProvider
         });
     }
+
+
+
     private void SpawnGameManagers()
     {
         // Kiểm tra xem đã spawn chưa để tránh trùng lặp
@@ -113,6 +117,9 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         GameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
         GameUIManager.Instance.ResetBoardUI();
+        // Đảm bảo bài hiển thị đúng vị trí khi UI mới được cấu hình (client reconnect)
+        if (GameManagerNet.Instance != null)
+            GameManagerNet.Instance.RefreshAllCards();
     }
 
     // Hàm gán UI cho Referee
@@ -127,6 +134,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
         referee.SetUIRefs(resultPanel, resultText);
         Debug.Log("AppManager: Đã gán UI cho GameRefereeNet.");
     }
+
     public void OnSceneLoadDone(NetworkRunner runner)
     {
         //// Dự phòng: Nếu Start chưa chạy kịp hoặc logic load scene bất đồng bộ

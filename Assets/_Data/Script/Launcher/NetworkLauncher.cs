@@ -7,6 +7,11 @@ public class NetworkLauncher : MonoBehaviour
 {
     [Header("Security")]
     [SerializeField] private PhotonConfig photonConfig;
+
+    [Header("Reconnect / TTL (seconds)")]
+    [Tooltip("Time (in seconds) to keep a disconnected player 'alive' so they can reconnect. Recommended: 60-120")]
+    [SerializeField] private int playerTtl = 90;
+
     private void Awake()
     {
         // Đảm bảo App chạy ngầm để test 2 cửa sổ trên 1 máy
@@ -62,6 +67,11 @@ public class NetworkLauncher : MonoBehaviour
             pool = runner.gameObject.AddComponent<FusionObjectPool>();
         }
 
+        // Attach or update session settings so server code can read TTL after start
+        var settings = runner.gameObject.GetComponent<LauncherSessionSettings>();
+        if (settings == null) settings = runner.gameObject.AddComponent<LauncherSessionSettings>();
+        settings.PlayerTtl = Mathf.Clamp(playerTtl, 60, 120);
+
         // Đảm bảo Runner không đang chạy phiên cũ
         if (runner.IsRunning)
         {
@@ -82,6 +92,7 @@ public class NetworkLauncher : MonoBehaviour
             FixedRegion = "asia",
         };
         // 4. Bắt đầu Game và Load Scene 1
+
         await runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
@@ -92,7 +103,8 @@ public class NetworkLauncher : MonoBehaviour
             CustomPhotonAppSettings = customAppSettings,
 
             // Fusion sẽ dùng component pool này để sinh ra CardNet thay vì Instantiate/Destroy
-            ObjectProvider = pool
+            ObjectProvider = pool,
+
         });
     }
 }

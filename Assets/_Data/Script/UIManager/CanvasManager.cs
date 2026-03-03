@@ -23,6 +23,10 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private TMP_Text SubRuleName;
     [SerializeField] private TMP_Text SubRuleDes;
 
+    [Header("Reconnect UI")]
+    [SerializeField] private GameObject reconnectPanel;
+    [SerializeField] private TMP_Text reconnectText;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -48,6 +52,8 @@ public class CanvasManager : MonoBehaviour
                 SetLeftImageActive(false); // Bật ảnh Player 2 (Online)
             }
         }
+
+        if (reconnectPanel != null) reconnectPanel.SetActive(false);
     }
     public void SetLeftImageActive(bool isActive)
     {
@@ -83,6 +89,18 @@ public class CanvasManager : MonoBehaviour
         if (cardFocusPanel != null)
         {
             cardFocusPanel.Show(card);
+        }
+    }
+
+    // Show or hide a reconnect overlay with message
+    public void ShowReconnectMessage(bool show, string message)
+    {
+        if (reconnectPanel == null) return;
+
+        reconnectPanel.SetActive(show);
+        if (reconnectText != null)
+        {
+            reconnectText.text = message;
         }
     }
 }

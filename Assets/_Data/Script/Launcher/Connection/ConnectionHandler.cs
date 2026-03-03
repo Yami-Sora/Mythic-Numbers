@@ -27,7 +27,7 @@ public class ConnectionHandler : MonoBehaviour, INetworkRunnerCallbacks
     public void RegisterRunner(NetworkRunner runner)
     {
         // Nếu đã có runner cũ thì hủy đăng ký trước
-        if (runner != null) runner.RemoveCallbacks(this);
+        if (this.runner != null) this.runner.RemoveCallbacks(this);
 
         this.runner = runner;
         if (runner != null)
@@ -36,6 +36,7 @@ public class ConnectionHandler : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log("[ConnectionHandler] Đã đăng ký lắng nghe sự kiện từ Runner thành công!");
         }
     }
+
     // --- KHI RUNNER BỊ TẮT (DO HOST THOÁT HOẶC MẤT MẠNG) ---
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
@@ -65,20 +66,38 @@ public class ConnectionHandler : MonoBehaviour, INetworkRunnerCallbacks
 
 #pragma warning restore UNT0006
 
+    // --- PLAYER JOIN/LEAVE: forward to referee so server can manage TTL/reconnect ---
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
+    {
+        Debug.Log($"Player joined: {player}");
+        if (GameRefereeNet.Instance != null)
+        {
+            GameRefereeNet.Instance.HandlePlayerJoined(player);
+        }
+    }
+
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    {
+        Debug.Log($"Player left: {player}");
+        if (GameRefereeNet.Instance != null)
+        {
+            GameRefereeNet.Instance.HandlePlayerLeft(player);
+        }
+    }
+
     // --- CÁC HÀM KHÁC BẮT BUỘC CỦA INTERFACE (ĐỂ TRỐNG CŨNG ĐƯỢC) ---
-    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
-    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
     public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
-    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, System.ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
     public void OnSceneLoadDone(NetworkRunner runner) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+
+    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken){}
 }

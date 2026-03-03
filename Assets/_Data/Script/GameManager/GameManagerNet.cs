@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
@@ -13,8 +14,9 @@ public class GameManagerNet : NetworkBehaviour
 
     // --- CÁC MODULE CON ---
     private GameAI aiBrain;
-    private LocalInputHandler _inputHandler; // Module xử lý input
+    private LocalInputHandler _inputHandler;
     private ChangeDetector _changes;
+    private CardDealer _cardDealer;
 
     // --- NETWORKED DATA ---
     [Networked] public int CurrentTurn { get; set; }
@@ -43,11 +45,13 @@ public class GameManagerNet : NetworkBehaviour
             if (aiBrain != null) aiBrain.Init(this);
         }
 
+        _cardDealer = new CardDealer(Runner, cardPrefab);
+
         if (Object.HasStateAuthority)
         {
             RandomizeRule();
             CurrentTurn = 0;
-            DealCards();
+            _cardDealer.DealCards();
         }
         UpdateRuleStrategy();
     }
@@ -84,48 +88,6 @@ public class GameManagerNet : NetworkBehaviour
     public void OnCardInputDown(CardNet card) => _inputHandler?.OnPointerDown(card);
     public void OnCardInputUp(CardNet card) => _inputHandler?.OnPointerUp(card);
     public void OnCardInputExit(CardNet card) => _inputHandler?.OnPointerExit(card);
-
-    // --- GAME LOGIC ---
-    void DealCards()
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            SpawnCard(0, i); // Chia cho Player 1 (ownerID 0)
-            SpawnCard(1, i);// Chia cho Player 2 (ownerID 1)
-        }
-    }
-
-    void SpawnCard(int ownerID, int index)
-    {
-        if (CardDatabase.Instance == null)
-        {
-            Debug.LogError("CardDatabase not found! Make sure it exists in the scene.");
-            return;
-        }
-
-        CardDataSO data = CardDatabase.Instance.GetRandomCard();
-
-        if (data == null) return;
-
-        // Spawn Network Object
-        var no = Runner.Spawn(cardPrefab, Vector3.zero, Quaternion.identity);
-        CardNet card = no.GetComponent<CardNet>();
-
-        // Gán dữ liệu Networked
-        card.OwnerID = ownerID;
-        card.HandIndex = index;
-        card.CardID = data.id;
-
-        card.Top = data.top;
-        card.Right = data.right;
-        card.Bottom = data.bottom;
-        card.Left = data.left;
-
-        if (card.CurrentSkill != null)
-        {
-            card.CurrentSkill.OnCardSpawned(card);
-        }
-    }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_PlayCard(NetworkId cardId, int slotIndex, RpcInfo info = default)
@@ -214,7 +176,7 @@ public class GameManagerNet : NetworkBehaviour
         RPC_ResetUIOnClients();
 
         CurrentTurn = 0;
-        DealCards();
+        _cardDealer.DealCards();
     }
 
     // Helper để gọi UI reset trên tất cả máy
@@ -228,26 +190,31 @@ public class GameManagerNet : NetworkBehaviour
     // --- UTILS ---
     private void UpdateRuleStrategy()
     {
-        IRuleSet baseRule = null;
-        if (CurrentRuleIndex == 0 || CurrentRuleIndex == 2)
-            baseRule = new NormalRule();
-        else
-            baseRule = new ReverseRule();
-
-        if (CurrentRuleIndex == 2 || CurrentRuleIndex == 3)
-            currentStrategy = new OrderRuleDecorator(baseRule);
-        else
-            currentStrategy = baseRule;
-
+        currentStrategy = RuleStrategyFactory.Create(CurrentRuleIndex);
         Debug.Log($"[GameManager] Applied Strategy: {currentStrategy.RuleName}");
     }
 
-    private void RefreshAllCards()
+    public void RefreshAllCards()
     {
-        // Tìm tất cả bài và refresh
+        // Tìm tất cả bài và refresh vị trí theo BoardState
         CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
         foreach (var card in allCards) 
             if (card && card.Object && card.Object.IsValid) card.RefreshState();
+    }
+
+    /// <summary> RPC để đồng bộ vị trí bài khi player join/reconnect – client cần state chính xác </summary>
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_ForceRefreshCards()
+    {
+        RefreshAllCards();
+        // Refresh lại sau 0.5s – đảm bảo client đã nhận hết NetworkObjects (bài) trước khi đồng bộ
+        StartCoroutine(DelayedRefreshForReconnect());
+    }
+
+    private IEnumerator DelayedRefreshForReconnect()
+    {
+        yield return new WaitForSeconds(0.5f);
+        RefreshAllCards();
     }
 
     public int GetLocalPlayerID()
