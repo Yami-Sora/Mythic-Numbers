@@ -87,7 +87,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             _lastReconnectingState = IsOpponentReconnecting;
             if (CanvasManager.Instance != null)
             {
-                CanvasManager.Instance.ShowReconnectMessage(IsOpponentReconnecting, IsOpponentReconnecting ? "Đối thủ đang reconnect…" : "");
+                CanvasManager.Instance.ShowReconnectMessage(IsOpponentReconnecting, IsOpponentReconnecting ? "Đợi đối thủ \nkết nối lại…" : "");
             }
         }
     }
@@ -149,24 +149,6 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
     {
         // Thay vì hiện ngay, ta chạy Coroutine để chờ UI CardFocus tắt
         StartCoroutine(ShowResultSequence(winnerID, s1, s2, customMessage));
-    }
-
-    // RPC to show/hide reconnect UI on clients (best-effort)
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ShowReconnectStatus(bool isReconnecting)
-    {
-        // Keep RPC for immediate effect; networked var is authoritative fallback
-        if (CanvasManager.Instance != null)
-        {
-            if (isReconnecting)
-            {
-                CanvasManager.Instance.ShowReconnectMessage(true, "Đối thủ đang reconnect…");
-            }
-            else
-            {
-                CanvasManager.Instance.ShowReconnectMessage(false, "");
-            }
-        }
     }
 
     // ✅ [LOGIC QUAN TRỌNG]: Chờ isCardFocusUIOpen == false
@@ -256,11 +238,8 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 
         Debug.Log("Opponent disconnected – starting TTL wait for possible reconnect.");
 
-        // Set networked flag so all clients (and future-joining clients) know the state
+        // Set networked flag – Render() sẽ cập nhật UI trên tất cả clients
         IsOpponentReconnecting = true;
-
-        // Also notify immediately (best-effort via RPC)
-        RPC_ShowReconnectStatus(true);
 
         if (_reconnectCoroutine != null)
         {
@@ -277,21 +256,14 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 
         Debug.Log($"Player joined/reconnected: {player}");
 
-        // Clear the networked flag
+        // Clear the networked flag – Render() sẽ ẩn UI reconnect
         IsOpponentReconnecting = false;
 
         // Đồng bộ vị trí bài cho tất cả (client reconnect cần nhận state chính xác)
         if (GameManagerNet.Instance != null)
             GameManagerNet.Instance.RPC_ForceRefreshCards();
 
-        // Direct call for Host – hide reconnect UI immediately
-        if (CanvasManager.Instance != null)
-            CanvasManager.Instance.ShowReconnectMessage(false, "");
-
-        // Hide reconnect UI on clients
-        RPC_ShowReconnectStatus(false);
-
-        // Cancel TTL wait and hide UI
+        // Cancel TTL wait
         if (_reconnectCoroutine != null)
         {
             StopCoroutine(_reconnectCoroutine);
@@ -310,11 +282,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 
         Debug.Log("Reconnect TTL expired. Treating opponent as permanently disconnected.");
 
-        // Ẩn reconnect UI trước khi hiện kết quả
-        IsOpponentReconnecting = false;
-        if (CanvasManager.Instance != null)
-            CanvasManager.Instance.ShowReconnectMessage(false, "");
-        RPC_ShowReconnectStatus(false);
+        IsOpponentReconnecting = false; // Render() sẽ ẩn UI reconnect
 
         if (GameManagerNet.Instance != null)
         {
