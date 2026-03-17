@@ -29,5 +29,9 @@ Assets/_Data/Config/PhotonConfig.asset.meta
 .DS_Store
 Thumbs.db
 
-# Bản build game lỡ tay (Xóa cái này đi nếu bạn đặt tên khác)
 New folder/
+.cursor/rules/nh-t-qu-n.mdc
+
+# Ignore PlayFab SDK 
+Assets/PlayFabSDK/
+Assets/Plugins/PlayFab*

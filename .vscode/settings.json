@@ -1,7 +1,8 @@
 {
-  "files.exclude": {
-    "**/*.meta": true,
-    "**/*.prefab": true,
-    "**/*.asset": true
-  }
+    "files.exclude": {
+        "**/*.meta": true,
+        "**/*.prefab": true,
+        "**/*.asset": true
+    },
+    "dotnet.defaultSolution": "Mythic Numbers.sln"
 }

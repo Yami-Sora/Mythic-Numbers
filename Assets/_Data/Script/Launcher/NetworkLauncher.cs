@@ -12,17 +12,17 @@ public class NetworkLauncher : MonoBehaviour
     [Tooltip("Time (in seconds) to keep a disconnected player 'alive' so they can reconnect. Recommended: 60-120")]
     [SerializeField] private int playerTtl = 90;
 
+    private readonly MatchmakingService _matchmaking = new MatchmakingService();
+
     private void Awake()
     {
-        // Đảm bảo App chạy ngầm để test 2 cửa sổ trên 1 máy
         Application.runInBackground = true;
     }
 
     public async void OnPlayOnlineClicked()
     {
-        Debug.Log("Đang kết nối Online...");
-        // Dùng AutoHostOrClient để tự động chọn Host hoặc Join
-        await StartGame(GameMode.AutoHostOrClient);
+        Debug.Log("Đang kết nối Online (Matchmaking theo ELO)...");
+        await StartGameOnline();
     }
 
     public async void OnPlayOfflineClicked()
@@ -88,23 +88,39 @@ public class NetworkLauncher : MonoBehaviour
         var customAppSettings = new FusionAppSettings
         {
             AppIdFusion = photonConfig.appId,
-
             FixedRegion = "asia",
         };
-        // 4. Bắt đầu Game và Load Scene 1
 
-        await runner.StartGame(new StartGameArgs()
+        if (mode == GameMode.AutoHostOrClient && GameServices.Instance != null)
         {
-            GameMode = mode,
-            SessionName = "TestRoom",
-            Scene = SceneRef.FromIndex(1),
+            // Matchmaking theo ELO
+            var ok = await _matchmaking.FindMatchAsync(
+                runner,
+                customAppSettings,
+                runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
+                pool,
+                SceneRef.FromIndex(1),
+                playerTtl);
+            if (!ok)
+                Debug.LogError("[NetworkLauncher] Matchmaking thất bại.");
+        }
+        else
+        {
+            // Offline hoặc không có GameServices
+            await runner.StartGame(new StartGameArgs()
+            {
+                GameMode = mode,
+                SessionName = mode == GameMode.Single ? "Offline" : "TestRoom",
+                Scene = SceneRef.FromIndex(1),
+                SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
+                CustomPhotonAppSettings = customAppSettings,
+                ObjectProvider = pool,
+            });
+        }
+    }
 
-            SceneManager = runner.gameObject.AddComponent<NetworkSceneManagerDefault>(),
-            CustomPhotonAppSettings = customAppSettings,
-
-            // Fusion sẽ dùng component pool này để sinh ra CardNet thay vì Instantiate/Destroy
-            ObjectProvider = pool,
-
-        });
+    private async Task StartGameOnline()
+    {
+        await StartGame(GameMode.AutoHostOrClient);
     }
 }

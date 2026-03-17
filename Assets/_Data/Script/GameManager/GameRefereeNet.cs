@@ -1,15 +1,25 @@
 using Fusion;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 {
     public static GameRefereeNet Instance { get; private set; }
 
+    public struct PlayerMatchInfo
+    {
+        public string PlayFabId;
+        public int Elo, Wins, Losses, TotalGames;
+    }
+
     [Header("UI Win/Lose")]
     private GameObject resultPanel;
     private TMP_Text resultText;
+
+    // Host only: map PlayerRef (0=P1, 1=P2) to PlayFabId + ELO stats
+    private readonly Dictionary<int, PlayerMatchInfo> _playerInfoMap = new Dictionary<int, PlayerMatchInfo>();
     public GameObject ResultPanel => resultPanel;
     public TMP_Text ResultText => resultText;
 
@@ -74,6 +84,63 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         {
             resultPanel.SetActive(false);
         }
+
+        // Đăng ký thông tin người chơi: Host tự đăng ký, Client gửi RPC tới Host
+        RegisterLocalPlayerIfNeeded();
+        TrySendRegisterRpc();
+    }
+
+    private void TrySendRegisterRpc()
+    {
+        if (Object.HasStateAuthority) return; // Host đã tự đăng ký
+        var settings = FindFirstObjectByType<LauncherSessionSettings>();
+        if (settings?.LocalPlayerData == null) return;
+
+        RPC_RegisterPlayer(
+            settings.LocalPlayerData.PlayFabId ?? "",
+            settings.LocalPlayerData.Elo,
+            settings.LocalPlayerData.Wins,
+            settings.LocalPlayerData.Losses,
+            settings.LocalPlayerData.TotalGames);
+    }
+
+    private void RegisterLocalPlayerIfNeeded()
+    {
+        if (!Object.HasStateAuthority) return; // Chỉ Host lưu
+        var settings = FindFirstObjectByType<LauncherSessionSettings>();
+        if (settings?.LocalPlayerData == null) return;
+
+        int myId = Runner.IsServer ? 0 : 1;
+        if (_playerInfoMap.ContainsKey(myId)) return;
+
+        _playerInfoMap[myId] = new PlayerMatchInfo
+        {
+            PlayFabId = settings.LocalPlayerData.PlayFabId ?? "",
+            Elo = settings.LocalPlayerData.Elo,
+            Wins = settings.LocalPlayerData.Wins,
+            Losses = settings.LocalPlayerData.Losses,
+            TotalGames = settings.LocalPlayerData.TotalGames
+        };
+        Debug.Log($"[Referee] Host registered as P{myId} ELO={settings.LocalPlayerData.Elo}");
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_RegisterPlayer(string playFabId, int elo, int wins, int losses, int totalGames, RpcInfo info = default)
+    {
+        if (!Object.HasStateAuthority) return;
+        // Client gửi RPC = player 1 (Host = 0)
+        int playerId = info.Source == Runner.LocalPlayer ? 0 : 1;
+        if (_playerInfoMap.ContainsKey(playerId)) return;
+
+        _playerInfoMap[playerId] = new PlayerMatchInfo
+        {
+            PlayFabId = playFabId ?? "",
+            Elo = elo,
+            Wins = wins,
+            Losses = losses,
+            TotalGames = totalGames
+        };
+        Debug.Log($"[Referee] P{playerId} registered ELO={elo}");
     }
 
     // Render runs regularly on all instances — use it to react to networked flag changes.
@@ -140,19 +207,31 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         if (p1Score > p2Score) winnerID = 0;
         else if (p2Score > p1Score) winnerID = 1;
 
-        // Bắn pháo hiệu cho tất cả người chơi
-        RPC_ShowResult(winnerID, p1Score, p2Score, "");
+        // Lấy ELO để gửi kèm (nếu có) - mỗi client tự cập nhật ELO
+        int p1Elo = 0, p2Elo = 0, p1Wins = 0, p2Wins = 0, p1Losses = 0, p2Losses = 0, p1Total = 0, p2Total = 0;
+        if (_playerInfoMap.TryGetValue(0, out var p1))
+        {
+            p1Elo = p1.Elo; p1Wins = p1.Wins; p1Losses = p1.Losses; p1Total = p1.TotalGames;
+        }
+        if (_playerInfoMap.TryGetValue(1, out var p2))
+        {
+            p2Elo = p2.Elo; p2Wins = p2.Wins; p2Losses = p2.Losses; p2Total = p2.TotalGames;
+        }
+
+        RPC_ShowResult(winnerID, p1Score, p2Score, "", p1Elo, p2Elo, p1Wins, p2Wins, p1Losses, p2Losses, p1Total, p2Total);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ShowResult(int winnerID, int s1, int s2, string customMessage)
+    public void RPC_ShowResult(int winnerID, int s1, int s2, string customMessage,
+        int p1Elo, int p2Elo, int p1Wins, int p2Wins, int p1Losses, int p2Losses, int p1Total, int p2Total)
     {
-        // Thay vì hiện ngay, ta chạy Coroutine để chờ UI CardFocus tắt
-        StartCoroutine(ShowResultSequence(winnerID, s1, s2, customMessage));
+        StartCoroutine(ShowResultSequence(winnerID, s1, s2, customMessage,
+            p1Elo, p2Elo, p1Wins, p2Wins, p1Losses, p2Losses, p1Total, p2Total));
     }
 
-    // ✅ [LOGIC QUAN TRỌNG]: Chờ isCardFocusUIOpen == false
-    private IEnumerator ShowResultSequence(int winnerID, int s1, int s2, string customMessage)
+    // ✅ [LOGIC QUAN TRỌNG]: Chờ isCardFocusUIOpen == false, rồi hiện kết quả và cập nhật ELO
+    private IEnumerator ShowResultSequence(int winnerID, int s1, int s2, string customMessage,
+        int p1Elo, int p2Elo, int p1Wins, int p2Wins, int p1Losses, int p2Losses, int p1Total, int p2Total)
     {
         Debug.Log("Game Over! Đang kiểm tra trạng thái CardFocus UI...");
 
@@ -218,6 +297,28 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             }
 
             resultText.text = message;
+
+            // Cập nhật ELO lên backend (chỉ online, có PlayFab)
+            if (Runner.GameMode != GameMode.Single && GameServices.Instance?.PlayerData != null && string.IsNullOrEmpty(customMessage))
+            {
+                int myId = GameManagerNet.Instance.GetLocalPlayerID();
+                int myElo = myId == 0 ? p1Elo : p2Elo;
+                int oppElo = myId == 0 ? p2Elo : p1Elo;
+                int myWins = myId == 0 ? p1Wins : p2Wins;
+                int myLosses = myId == 0 ? p1Losses : p2Losses;
+                int myTotal = myId == 0 ? p1Total : p2Total;
+
+                float result = winnerID == 2 ? 0.5f : (winnerID == myId ? 1f : 0f);
+                int newElo = EloCalculator.CalculateNewElo(myElo, oppElo, result, myTotal);
+                int newWins = myWins + (winnerID == myId ? 1 : 0);
+                int newLosses = myLosses + (winnerID != 2 && winnerID != myId ? 1 : 0);
+                int newTotal = myTotal + 1;
+
+                GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
+                    newElo, newWins, newLosses, newTotal,
+                    () => Debug.Log($"[Referee] ELO updated: {myElo} -> {newElo}"),
+                    err => Debug.LogWarning($"[Referee] ELO update failed: {err}"));
+            }
         }
     }
 
@@ -288,7 +389,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         {
             int winnerID = GameManagerNet.Instance.GetLocalPlayerID();
             string msg = "Opponent Disconnected\nYou Win!";
-            RPC_ShowResult(winnerID, 0, 0, msg);
+            RPC_ShowResult(winnerID, 0, 0, msg, 0, 0, 0, 0, 0, 0, 0, 0);
         }
     }
 
