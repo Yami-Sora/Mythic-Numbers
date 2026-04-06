@@ -1,0 +1,10 @@
+{
+  "inputs": [],
+  "servers": {
+    "MCPForUnity": {
+      "type": "sse",
+      "url": "https://mc-82a58513564647608b491c00acc383c8.ecs.us-east-2.on.aws",
+      "headers": {}
+    }
+  }
+}

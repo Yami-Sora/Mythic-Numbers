@@ -35,3 +35,37 @@ New folder/
 # Ignore PlayFab SDK 
 Assets/PlayFabSDK/
 Assets/Plugins/PlayFab*
+
+ # Editor / IDE
+ .vscode/
+ .idea/
+
+ # Unity package and build outputs
+ /Packages/
+
+ # MCP (ignore newly added MCP-related files and build artifacts)
+ /MCP/
+ /MCP/*
+ *.mcp
+ *.mcp.meta
+ *.mcpack
+ *.mcplugin
+
+ # Ignore MCPForUnity project build outputs
+ /MCPForUnity.Runtime/bin/
+ /MCPForUnity.Runtime/obj/
+ /MCPForUnity.Editor/bin/
+ /MCPForUnity.Editor/obj/
+
+ # Temporary files
+ *~
+ *.bak
+ *.tmp
+ *.swp
+
+ # Logs
+ *.log
+/Assets/MCPForUnity
+/Assets/MCPForUnity.meta
+/Assets/Skyden_Games
+/Assets/_Data/_Assets/Free_Casual_GUI
