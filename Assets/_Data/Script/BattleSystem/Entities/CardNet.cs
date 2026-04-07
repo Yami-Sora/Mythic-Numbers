@@ -112,7 +112,15 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     private void UpdateInvincibleVisuals()
     {
+        // Cập nhật lại màu chữ
         UpdateStatTexts();
+
+        // Ám vàng cho ảnh lá bài
+        if (cardImage != null)
+        {
+            // Khi Vô Địch thì nhuộm vàng, bình thường thì để màu gốc của ảnh
+            cardImage.color = IsInvincible ? new Color(1f, 0.84f, 0.5f) : Color.white;
+        }
     }
     private void LoadVisualsFromID()
     {
@@ -175,12 +183,35 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     private void UpdateStatTexts()
     {
-        Color displayColor = IsInvincible ? colorInvincible : Color.white;
+        // Màu chủ đạo: Nếu Vô Địch thì dùng Vàng Kim, không thì dùng màu Cảnh Giới
+        Color GetColor(int stat)
+        {
+            if (IsInvincible) return new Color(1f, 0.84f, 0f); // Gold
+            return RealmCalculator.GetRealmStat(stat).displayColor;
+        }
 
-        if (txtTop) { txtTop.text = Top.ToString(); txtTop.color = displayColor; }
-        if (txtRight) { txtRight.text = Right.ToString(); txtRight.color = displayColor; }
-        if (txtBottom) { txtBottom.text = Bottom.ToString(); txtBottom.color = displayColor; }
-        if (txtLeft) { txtLeft.text = Left.ToString(); txtLeft.color = displayColor; }
+        int GetVal(int stat) => RealmCalculator.GetRealmStat(stat).displayValue;
+
+        if (txtTop)
+        {
+            txtTop.text = GetVal(Top).ToString();
+            txtTop.color = GetColor(Top);
+        }
+        if (txtRight)
+        {
+            txtRight.text = GetVal(Right).ToString();
+            txtRight.color = GetColor(Right);
+        }
+        if (txtBottom)
+        {
+            txtBottom.text = GetVal(Bottom).ToString();
+            txtBottom.color = GetColor(Bottom);
+        }
+        if (txtLeft)
+        {
+            txtLeft.text = GetVal(Left).ToString();
+            txtLeft.color = GetColor(Left);
+        }
     }
 
     private void UpdateBackgroundColor()

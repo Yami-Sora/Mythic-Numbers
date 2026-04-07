@@ -8,10 +8,10 @@ public class CardDataSO : ScriptableObject
     public Sprite artwork; 
 
     [Header("Stats")]
-    [Range(1, 10)] public int top;
-    [Range(1, 10)] public int right;
-    [Range(1, 10)] public int bottom;
-    [Range(1, 10)] public int left;
+    [Range(1, 1000)] public int top;
+    [Range(1, 1000)] public int right;
+    [Range(1, 1000)] public int bottom;
+    [Range(1, 1000)] public int left;
 
     public BaseSkillSO skill;
 }

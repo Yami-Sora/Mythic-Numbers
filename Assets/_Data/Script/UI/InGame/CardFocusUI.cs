@@ -242,22 +242,31 @@ public class CardFocusUI : YamiMonoBehaviour
     {
         if (mainText == null) return;
 
-        mainText.text = currentVal.ToString();
+        // 1. Dùng RealmCalculator để lấy số hiển thị (1-99) và Màu cảnh giới
+        var realm = RealmCalculator.GetRealmStat(currentVal);
+
+        // 2. Hiển thị số đã quy đổi
+        mainText.text = realm.displayValue.ToString();
+
+        // 3. Tính toán chênh lệch (diff) dựa trên số thực tế (Raw Stat)
         int diff = currentVal - baseVal;
 
         if (diff > 0)
         {
+            // Nếu chỉ số đang được BUFF -> Ưu tiên màu Xanh lá của Buff (hoặc giữ màu Cảnh giới tùy bro)
+            // Ở đây tui giữ nguyên logic cũ của bro là đổi màu mainText thành Green để dễ nhận biết
             mainText.color = Color.green;
+
             if (modText != null)
             {
                 modText.gameObject.SetActive(true);
-                modText.text = "+" + diff;
+                modText.text = "+" + diff; // Hiện số thực tế tăng thêm (VD: +5)
                 modText.color = Color.green;
             }
         }
         else if (diff < 0)
         {
-            mainText.color = Color.red;
+            mainText.color = Color.red; // Đang bị Debuff
             if (modText != null)
             {
                 modText.gameObject.SetActive(true);
@@ -267,7 +276,8 @@ public class CardFocusUI : YamiMonoBehaviour
         }
         else
         {
-            mainText.color = Color.white;
+            // Nếu không có thay đổi (Stat gốc) -> Hiện màu chuẩn của Cảnh Giới
+            mainText.color = realm.displayColor;
             if (modText != null) modText.gameObject.SetActive(false);
         }
     }

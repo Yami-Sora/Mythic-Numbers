@@ -15,8 +15,8 @@ MonoBehaviour:
   id: 9
   cardName: Hee
   artwork: {fileID: -5195146431633962765, guid: 73a47458942ee1d4ea9e6479b2894f7e, type: 3}
-  top: 5
-  right: 7
-  bottom: 2
-  left: 7
+  top: 100
+  right: 198
+  bottom: 199
+  left: 298
   skill: {fileID: 11400000, guid: 65f344f0d6ba98f42ab96ac0fa33419e, type: 2}

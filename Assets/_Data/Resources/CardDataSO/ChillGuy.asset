@@ -16,7 +16,7 @@ MonoBehaviour:
   cardName: ChillGuy
   artwork: {fileID: -5514358925732052403, guid: a343c303524326144b9499e4da9ceb9c, type: 3}
   top: 3
-  right: 8
-  bottom: 4
-  left: 5
+  right: 801
+  bottom: 111
+  left: 677
   skill: {fileID: 11400000, guid: 10649677e6fe3fa4385721b061345d72, type: 2}
