@@ -60,7 +60,7 @@ public class LocalInputHandler
                 // HIỆN POPUP INFO
                 if (_currentPressCard != null)
                 {
-                    CanvasManager.Instance?.ShowCardFocus(_currentPressCard);
+                    InGameUIManager.Instance?.ShowCardFocus(_currentPressCard);
                 }
             }
         }
@@ -79,7 +79,7 @@ public class LocalInputHandler
         // Logic kiểm tra chủ sở hữu
         if (card.OwnerID != _gameManager.GetLocalPlayerID())
         {
-            GameUIManager.Instance?.ShowFloatingText("Không phải bài của bạn!", card.transform.position);
+            InGameUIManager.Instance?.ShowFloatingText("Không phải bài của bạn!", card.transform.position);
             return;
         }
         // Bài trên bàn không thể chọn lại để đánh (chỉ xem info)
@@ -93,7 +93,7 @@ public class LocalInputHandler
         {
             if (!currentRule.CanPlayCard(_gameManager, card))
             {
-                GameUIManager.Instance?.ShowFloatingText("Đánh bài theo đúng thứ tự!", card.transform.position);
+                InGameUIManager.Instance?.ShowFloatingText("Đánh bài theo đúng thứ tự!", card.transform.position);
                 return;
             }
         }
@@ -121,7 +121,7 @@ public class LocalInputHandler
         if (_gameManager.GetLocalPlayerID() != _gameManager.CurrentTurn) 
         {
             Vector2 mousePos = Mouse.current.position.ReadValue();
-            GameUIManager.Instance?.ShowFloatingText("Chưa đến lượt bạn!", mousePos);
+            InGameUIManager.Instance?.ShowFloatingText("Chưa đến lượt bạn!", mousePos);
             return; 
         };
 
@@ -131,7 +131,7 @@ public class LocalInputHandler
         _gameManager.RPC_PlayCard(_selectedLocalCard.Object.Id, slotIndex);
 
         // Gọi UI Manager để hiển thị panel phóng to lá bài vừa đánh
-        CanvasManager.Instance?.ShowCardFocus(_selectedLocalCard);
+        InGameUIManager.Instance?.ShowCardFocus(_selectedLocalCard);
 
         _selectedLocalCard = null;
     }

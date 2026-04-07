@@ -2469,7 +2469,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1320687077}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
         m_MethodName: OnRuleButtonClicked
         m_Mode: 1
@@ -3399,7 +3399,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1320687077}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: GameUIManager, Assembly-CSharp
         m_MethodName: OnCloseRulePanelClicked
         m_Mode: 1
@@ -4295,8 +4295,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1320687078}
-  - component: {fileID: 1320687079}
-  - component: {fileID: 1320687077}
+  - component: {fileID: 1320687080}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -4304,30 +4303,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1320687077
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1320687076}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3253a24836cb2e469e37d85f750895b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameUIManager
-  LeftAiImage: {fileID: 2065633732}
-  LeftPlayer2: {fileID: 13665361}
-  btnRule: {fileID: 794654838}
-  RulePanel: {fileID: 235151537}
-  cardFocusPanel: {fileID: 621511190}
-  isCardFocusUIOpen: 0
-  BaseRuleName: {fileID: 1953899484}
-  BaseRuleDes: {fileID: 981316932}
-  SubRuleName: {fileID: 1212168032}
-  SubRuleDes: {fileID: 2082501998}
-  reconnectPanel: {fileID: 736192376}
-  reconnectText: {fileID: 849488927}
 --- !u!4 &1320687078
 Transform:
   m_ObjectHideFlags: 0
@@ -4343,7 +4318,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1320687079
+--- !u!114 &1320687080
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4352,13 +4327,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1320687076}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34722a4069e529b419734aa6a8cd2f88, type: 3}
+  m_Script: {fileID: 11500000, guid: e8ffe8e5ef6c30b40852895346d2d263, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameUIManager
+  m_EditorClassIdentifier: Assembly-CSharp::InGameUIManager
   slots: []
   leftHandPos: {fileID: 1177400707}
   rightHandPos: {fileID: 83980595}
   turnText: {fileID: 1155190365}
+  leftAiImage: {fileID: 2065633732}
+  leftPlayer2: {fileID: 13665361}
+  btnRule: {fileID: 794654838}
+  rulePanel: {fileID: 235151536}
+  baseRuleName: {fileID: 1953899484}
+  baseRuleDes: {fileID: 981316932}
+  subRuleName: {fileID: 1212168032}
+  subRuleDes: {fileID: 2082501998}
+  cardFocusPanel: {fileID: 621511190}
+  reconnectPanel: {fileID: 736192376}
+  reconnectText: {fileID: 849488927}
+  isCardFocusUIOpen: 0
   floatingTextPrefab: {fileID: 7310387484375277547, guid: 59a5c307adb07de48930ff6c1c955fba, type: 3}
   effectsCanvas: {fileID: 1924306036}
 --- !u!1 &1388308173

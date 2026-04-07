@@ -98,7 +98,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     private void FixedUpdate()
     {
         // Chúng ta kiểm tra _uiConfigured để chỉ thực hiện việc này 1 lần
-        if (!_uiConfigured && GameUIManager.Instance != null)
+        if (!_uiConfigured && InGameUIManager.Instance != null)
         {
             Debug.Log("[AppManager] Tìm thấy GameUIManager -> Đang chuyển giao tham chiếu UI...");
             SetupUIManager();
@@ -115,8 +115,8 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private void SetupUIManager()
     {
-        GameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
-        GameUIManager.Instance.ResetBoardUI();
+        InGameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
+        InGameUIManager.Instance.ResetBoardUI();
         // Đảm bảo bài hiển thị đúng vị trí khi UI mới được cấu hình (client reconnect)
         if (GameManagerNet.Instance != null)
             GameManagerNet.Instance.RefreshAllCards();

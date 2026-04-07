@@ -34,8 +34,8 @@ public class CardFocusUI : YamiMonoBehaviour
     public void Show(CardNet sourceCard)
     {
         gameObject.SetActive(true);
-        if (CanvasManager.Instance != null)
-            CanvasManager.Instance.isCardFocusUIOpen = true;
+        if (InGameUIManager.Instance != null)
+            InGameUIManager.Instance.isCardFocusUIOpen = true;
 
         _currentSourceCard = sourceCard;
 
@@ -179,8 +179,8 @@ public class CardFocusUI : YamiMonoBehaviour
 
         // --- PHẦN POLLING & UPDATE STATS ---
         gameObject.SetActive(false);
-        if (CanvasManager.Instance != null)
-            CanvasManager.Instance.isCardFocusUIOpen = false;
+        if (InGameUIManager.Instance != null)
+            InGameUIManager.Instance.isCardFocusUIOpen = false;
         _currentAnimRoutine = null;
     }
 

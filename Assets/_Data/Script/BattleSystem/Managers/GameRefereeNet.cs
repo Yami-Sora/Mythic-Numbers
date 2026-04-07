@@ -152,9 +152,9 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         if (_lastReconnectingState != IsOpponentReconnecting)
         {
             _lastReconnectingState = IsOpponentReconnecting;
-            if (CanvasManager.Instance != null)
+            if (InGameUIManager.Instance != null)
             {
-                CanvasManager.Instance.ShowReconnectMessage(IsOpponentReconnecting, IsOpponentReconnecting ? "Đợi đối thủ \nkết nối lại…" : "");
+                InGameUIManager.Instance.ShowReconnectMessage(IsOpponentReconnecting, IsOpponentReconnecting ? "Đợi đối thủ \nkết nối lại…" : "");
             }
         }
     }
@@ -165,7 +165,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
     {
         // Chỉ Server (StateAuthority) mới có quyền kiểm tra và quyết định thắng thua
         if (!Object.HasStateAuthority) return;
-        if (CanvasManager.Instance != null && CanvasManager.Instance.isCardFocusUIOpen) return;
+        if (InGameUIManager.Instance != null && InGameUIManager.Instance.isCardFocusUIOpen) return;
         // Kiểm tra xem bàn cờ đã đầy chưa thông qua GameManager
         bool isFull = true;
         var board = GameManagerNet.Instance.BoardState; // Truy cập dữ liệu từ Manager
@@ -237,14 +237,14 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 
         yield return new WaitForSeconds(1f);
         // Kiểm tra xem CanvasManager có tồn tại không
-        if (CanvasManager.Instance != null)
+        if (InGameUIManager.Instance != null)
         {
             // Timeout an toàn: Nếu sau 3 giây mà UI vẫn chưa tắt (do lỗi gì đó), thì cứ hiện bảng kết quả luôn
             // để tránh game bị treo vĩnh viễn.
             float timeOut = 15f;
 
             // Vòng lặp chờ: Chừng nào isCardFocusUIOpen còn TRUE thì còn đợi
-            while (CanvasManager.Instance.isCardFocusUIOpen && timeOut > 0)
+            while (InGameUIManager.Instance.isCardFocusUIOpen && timeOut > 0)
             {
                 timeOut -= Time.deltaTime;
                 yield return null; // Đợi 1 frame rồi check tiếp

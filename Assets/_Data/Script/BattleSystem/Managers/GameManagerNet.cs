@@ -59,9 +59,9 @@ public class GameManagerNet : NetworkBehaviour
     // Hàm này giữ lại để tương thích với NetworkAppManager cũ, nhưng sẽ đẩy data sang GameUIManager
     public void SetSceneReferences(Transform[] slots, Transform left, Transform right, TMPro.TMP_Text turnText, Transform mainCanvas)
     {
-        if (GameUIManager.Instance != null)
+        if (InGameUIManager.Instance != null)
         {
-            GameUIManager.Instance.SetupReferences(slots, left, right, turnText, mainCanvas);
+            InGameUIManager.Instance.SetupReferences(slots, left, right, turnText, mainCanvas);
             RefreshAllCards();
         }
     }
@@ -75,9 +75,9 @@ public class GameManagerNet : NetworkBehaviour
         }
 
         // Cập nhật UI thông qua Manager
-        if (GameUIManager.Instance != null)
+        if (InGameUIManager.Instance != null)
         {
-            GameUIManager.Instance.UpdateTurnText(GetLocalPlayerID(), CurrentTurn, currentStrategy?.RuleName);
+            InGameUIManager.Instance.UpdateTurnText(GetLocalPlayerID(), CurrentTurn, currentStrategy?.RuleName);
         }
         _inputHandler?.Update();
     }
@@ -183,7 +183,7 @@ public class GameManagerNet : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_ResetUIOnClients()
     {
-        GameUIManager.Instance?.ResetBoardUI();
+        InGameUIManager.Instance?.ResetBoardUI();
         _inputHandler?.Deselect();
     }
 
@@ -237,7 +237,7 @@ public class GameManagerNet : NetworkBehaviour
     public IRuleSet GetCurrentRule() => currentStrategy;
     public void SetCurrenRule()
     {
-        if (GameUIManager.Instance != null && currentStrategy != null)
+        if (InGameUIManager.Instance != null && currentStrategy != null)
         {
             string baseRuleName = "";
             string baseRuleDesc = "";
@@ -262,7 +262,7 @@ public class GameManagerNet : NetworkBehaviour
             }
             
             // Gửi tất cả thông tin sang UI Manager
-            CanvasManager.Instance.UpdateRulePanelText(baseRuleName, subRuleName, baseRuleDesc, subRuleDesc);
+            InGameUIManager.Instance.UpdateRulePanelText(baseRuleName, subRuleName, baseRuleDesc, subRuleDesc);
         }
     }
 

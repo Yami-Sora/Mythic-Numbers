@@ -78,7 +78,7 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     public void RefreshState()
     {
-        if (GameManagerNet.Instance == null || GameUIManager.Instance == null) 
+        if (GameManagerNet.Instance == null || InGameUIManager.Instance == null) 
         { 
             Debug.LogWarning("GameManagerNet or GameUIManager is not ready yet.");
             _isInitialized = false;
@@ -135,8 +135,8 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         if (HandIndex != -1)
         {
             Transform targetParent = (OwnerID == 0) ?
-                GameUIManager.Instance.RightHandPos : // Player 1 (Host) thường bên phải
-                GameUIManager.Instance.LeftHandPos;
+                InGameUIManager.Instance.RightHandPos : // Player 1 (Host) thường bên phải
+                InGameUIManager.Instance.LeftHandPos;
 
             SetParentIfChanged(targetParent);
         }
@@ -151,9 +151,9 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
                 if (boardState[i] == Object.Id)
                 {
                     // Truy cập mảng Slots từ GameUIManager (nơi chứa Transform)
-                    if (GameUIManager.Instance.Slots != null && GameUIManager.Instance.Slots.Length > i)
+                    if (InGameUIManager.Instance.Slots != null && InGameUIManager.Instance.Slots.Length > i)
                     {
-                        SetParentIfChanged(GameUIManager.Instance.Slots[i]);
+                        SetParentIfChanged(InGameUIManager.Instance.Slots[i]);
                     }
                     break;
                 }

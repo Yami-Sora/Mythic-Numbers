@@ -12,6 +12,6 @@ public class AbsoluteCinemaSkillSO : BaseSkillSO
         Debug.Log($"[Absolute Cinema] Card {card.CardID} is now INVINCIBLE!");
 
         // Hiệu ứng Visual (nếu có)
-        GameUIManager.Instance?.ShowFloatingText("ABSOLUTE CINEMA!", card.transform.position);
+        InGameUIManager.Instance?.ShowFloatingText("ABSOLUTE CINEMA!", card.transform.position);
     }
 }

@@ -23,7 +23,7 @@ public class Skill_IssueSO : BaseSkillSO
             card.SetInvincible(duration);
             Debug.Log($"[Skill] {card.Object.Id} lật được {flippedCount} lá -> Kích hoạt Vô Địch!");
 
-            GameUIManager.Instance?.ShowFloatingText("INVINCIBLE!", card.transform.position);
+            InGameUIManager.Instance?.ShowFloatingText("INVINCIBLE!", card.transform.position);
         }
         else
         {
