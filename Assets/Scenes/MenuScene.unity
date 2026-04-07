@@ -639,7 +639,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 614622e6c1622ce46871370873445f44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkLauncher
-  photonConfig: {fileID: 11400000, guid: 6b38111b77f06cc4c9966aad4773bba6, type: 2}
+  photonConfig: {fileID: 11400000, guid: 82c8d85b07be87c4080eb8d315aff688, type: 2}
   playerTtl: 90
 --- !u!4 &670189604
 Transform:
@@ -3008,7 +3008,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2066634279
 RectTransform:
   m_ObjectHideFlags: 0
