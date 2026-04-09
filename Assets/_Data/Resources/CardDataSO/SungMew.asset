@@ -20,3 +20,4 @@ MonoBehaviour:
   bottom: 3
   left: 3
   skill: {fileID: 11400000, guid: e0147edebb0b2a141a732fad7be2087b, type: 2}
+  availableSockets: 01000000

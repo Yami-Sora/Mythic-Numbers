@@ -1,6 +1,8 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NewItem", menuName = "Mythic/Item")]
+public enum GemDirection { None, Top, Bottom, Left, Right }
+
+[CreateAssetMenu(fileName = "NewItem", menuName = "MythicNumbers/Item")]
 public class ItemDataSO : ScriptableObject
 {
     public string itemID;
@@ -8,13 +10,18 @@ public class ItemDataSO : ScriptableObject
     [TextArea] public string description;
 
     [Header("Visuals")]
-    public Sprite icon;    // Hình vật phẩm
-    public Sprite frame;   // Hình cái viền 
-    public Color itemColor = Color.white; // Màu đặc trưng cho độ hiếm
+    public Sprite icon;
+    public Sprite frame;
+    public Color itemColor = Color.white;
 
     [Header("Settings")]
     public ItemType type;
     public int maxStack = 99;
+
+    [Header("--- THÔNG SỐ TINH THẠCH (Chỉ dùng cho Gem) ---")]
+    public GemDirection directionTag = GemDirection.None; // Lỗ nào?
+    public int bonusStat1; // Ví dụ: +Tấn Công
+    public int bonusStat2; // Ví dụ: +Máu
 
     public enum ItemType { Gem, Prop, Special }
 }
