@@ -42,7 +42,16 @@ public class InventoryManager : MonoBehaviour
             HandleCheatItems();
         }
     }
+    public List<InventoryItem> GetInventoryList()
+    {
+        return _inventoryList;
+    }
 
+    // 2. Hàm lọc đồ theo loại (Gem, Prop...) - Tiện cho việc khảm ngọc
+    public List<InventoryItem> GetItemsByType(ItemDataSO.ItemType type)
+    {
+        return _inventoryList.Where(i => i.data.type == type).ToList();
+    }
     private void HandleCheatItems()
     {
         if (testItemsArray == null || testItemsArray.Length == 0) return;

@@ -61,8 +61,8 @@ public class UI_CardSlot : MonoBehaviour
     private void OnCardClicked()
     {
         Debug.Log("<color=yellow>Sếp vừa chạm vào thần bài: " + _currentCard.data.cardName + "</color>");
-
-        // TODO (Phase 2): Chỗ này mốt mình sẽ gọi cái CardDetailManager để mở cái bảng sếp vẽ tay lên!
-        // Ví dụ: CardDetailManager.Instance.OpenDetail(_currentCard);
+        CardDetailManager.Instance.gameObject.SetActive(true);
+        CardListManager.Instance.gameObject.SetActive(false);
+        CardDetailManager.Instance.OpenDetail(_currentCard);
     }
 }
