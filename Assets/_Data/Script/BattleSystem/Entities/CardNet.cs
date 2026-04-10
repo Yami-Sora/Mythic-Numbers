@@ -129,7 +129,7 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         CardDataSO data = CardDatabase.Instance.GetCardData(CardID);
         if (data != null)
         {
-            if (cardImage != null) cardImage.sprite = data.artwork;
+            if (cardImage != null) cardImage.sprite = data.cardImage;
 
             gameObject.name = $"Card_{data.cardName}_{Object.Id}";
             CurrentSkill = data.skill;

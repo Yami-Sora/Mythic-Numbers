@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class MainMenuManager : MonoBehaviour
+public class Canvas_NavigationManager : MonoBehaviour
 {
-    public static MainMenuManager Instance { get; private set; }
+    public static Canvas_NavigationManager Instance { get; private set; }
 
     [Header("Canvas Tabs")]
     [SerializeField] private GameObject shopCanvas;

@@ -4,7 +4,7 @@ using DG.Tweening;
 
 public class TabButton : MonoBehaviour
 {
-    [SerializeField] private MainMenuManager.TabType tabType;
+    [SerializeField] private Canvas_NavigationManager.TabType tabType;
     private RectTransform _rectTransform;
     private Vector2 _originalPos;
     private bool _isSelected = false;
@@ -33,6 +33,6 @@ public class TabButton : MonoBehaviour
 
     public void OnClick()
     {
-        MainMenuManager.Instance.OnTabButtonClicked((int)tabType);
+        Canvas_NavigationManager.Instance.OnTabButtonClicked((int)tabType);
     }
 }

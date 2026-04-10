@@ -40,7 +40,7 @@ public class CardDealer
 
         card.OwnerID = ownerID;
         card.HandIndex = index;
-        card.CardID = data.id;
+        card.CardID = data.cardID;
         card.Top = data.top;
         card.Right = data.right;
         card.Bottom = data.bottom;

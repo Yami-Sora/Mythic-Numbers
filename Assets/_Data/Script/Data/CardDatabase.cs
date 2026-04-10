@@ -44,7 +44,7 @@ public class CardDatabase : YamiMonoBehaviour
         {
             if (allCards[i] != null)
             {
-                allCards[i].id = i;
+                allCards[i].cardID = i;
             }
         }
 
@@ -67,9 +67,9 @@ public class CardDatabase : YamiMonoBehaviour
             if (card != null)
             {
                 // Đảm bảo ID khớp với index mảng
-                if (!_cardLookup.ContainsKey(card.id))
+                if (!_cardLookup.ContainsKey(card.cardID))
                 {
-                    _cardLookup.Add(card.id, card);
+                    _cardLookup.Add(card.cardID, card);
                 }
             }
         }

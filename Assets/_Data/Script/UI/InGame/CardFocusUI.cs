@@ -77,7 +77,7 @@ public class CardFocusUI : YamiMonoBehaviour
 
         if (data != null)
         {
-            cardImage.sprite = data.artwork;
+            cardImage.sprite = data.cardImage;
             _baseTop = data.top;
             _baseRight = data.right;
             _baseBottom = data.bottom;

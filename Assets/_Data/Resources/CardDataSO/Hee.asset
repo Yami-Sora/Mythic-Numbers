@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
   m_Name: Hee
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
-  id: 9
+  cardID: 0
   cardName: Hee
-  artwork: {fileID: -5195146431633962765, guid: 73a47458942ee1d4ea9e6479b2894f7e, type: 3}
+  cardImage: {fileID: -5195146431633962765, guid: 73a47458942ee1d4ea9e6479b2894f7e, type: 3}
+  cardFrame: {fileID: 0}
+  rate: 0
   top: 100
   right: 198
   bottom: 199

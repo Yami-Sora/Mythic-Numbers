@@ -635,7 +635,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -63.297, y: 34.84}
-  m_SizeDelta: {x: 126.6, y: 0}
+  m_SizeDelta: {x: 126.6, y: 28}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &128953515
 MonoBehaviour:
@@ -2173,9 +2173,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 921669343}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: ShowGems
+      - m_Target: {fileID: 921669349}
+        m_TargetAssemblyTypeName: CardListManager, Assembly-CSharp
+        m_MethodName: ShowSSR
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2767,9 +2767,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 921669343}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: ShowProps
+      - m_Target: {fileID: 921669349}
+        m_TargetAssemblyTypeName: CardListManager, Assembly-CSharp
+        m_MethodName: ShowSR
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3563,61 +3563,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &814603014
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 814603016}
-  - component: {fileID: 814603015}
-  m_Layer: 0
-  m_Name: MainMenuManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &814603015
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 814603014}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b46041ffd0bd214dab9e4bdef41dcb2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MainMenuManager
-  shopCanvas: {fileID: 60816599}
-  cardsCanvas: {fileID: 0}
-  combatCanvas: {fileID: 852150486}
-  dungeonCanvas: {fileID: 416198774}
-  inventoryCanvas: {fileID: 1058417748}
-  allTabButtons:
-  - {fileID: 179163695}
-  - {fileID: 372841522}
-  - {fileID: 994406439}
-  - {fileID: 1369282369}
-  - {fileID: 94553835}
---- !u!4 &814603016
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 814603014}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 158.93909, y: 119.98225, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &851591177
 GameObject:
   m_ObjectHideFlags: 0
@@ -3897,9 +3842,9 @@ RectTransform:
   - {fileID: 483577032}
   m_Father: {fileID: 2098543260}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 46.788277, y: -53.375}
   m_SizeDelta: {x: 0, y: 106.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &863970317
@@ -4023,9 +3968,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 921669343}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: ShowProps
+      - m_Target: {fileID: 921669349}
+        m_TargetAssemblyTypeName: CardListManager, Assembly-CSharp
+        m_MethodName: ShowR
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4085,6 +4030,7 @@ GameObject:
   - component: {fileID: 914978357}
   - component: {fileID: 914978356}
   - component: {fileID: 914978355}
+  - component: {fileID: 914978358}
   m_Layer: 5
   m_Name: Canvas_Navigation
   m_TagString: Untagged
@@ -4179,6 +4125,29 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 100
   m_TargetDisplay: 0
+--- !u!114 &914978358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 914978353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c9b8294b67201478f02e7916f8fd9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Canvas_NavigationManager
+  shopCanvas: {fileID: 60816599}
+  cardsCanvas: {fileID: 921669341}
+  combatCanvas: {fileID: 852150486}
+  dungeonCanvas: {fileID: 416198774}
+  inventoryCanvas: {fileID: 1058417748}
+  allTabButtons:
+  - {fileID: 179163695}
+  - {fileID: 372841522}
+  - {fileID: 994406439}
+  - {fileID: 1369282369}
+  - {fileID: 94553835}
 --- !u!1 &920035079
 GameObject:
   m_ObjectHideFlags: 0
@@ -4268,7 +4237,7 @@ GameObject:
   - component: {fileID: 921669346}
   - component: {fileID: 921669345}
   - component: {fileID: 921669344}
-  - component: {fileID: 921669343}
+  - component: {fileID: 921669349}
   m_Layer: 5
   m_Name: Canvas_Cards
   m_TagString: Untagged
@@ -4295,33 +4264,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.23199463, y: 1.1069988}
-  m_SizeDelta: {x: 10.817993, y: 2.2149963}
+  m_AnchoredPosition: {x: 0, y: 1}
+  m_SizeDelta: {x: 10, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &921669343
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 921669341}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2034cb889038db4ca15debd3687f6fa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryManager
-  slotContainer: {fileID: 1684780639}
-  slotPrefab: {fileID: 3795021764965444291, guid: 8d515bcfd0f9fc74891233140ec06742, type: 3}
-  imgTabAll: {fileID: 1192798422}
-  imgTabGems: {fileID: 472007095}
-  imgTabProps: {fileID: 605518927}
-  testItemsArray:
-  - {fileID: 11400000, guid: 71abe5aad17444c4ea4194bd4c3c4770, type: 2}
-  - {fileID: 11400000, guid: 6e7853bda99dbd343b0613de0727bc66, type: 2}
-  - {fileID: 11400000, guid: d08846845e9070442bd4f852c1eb7b2a, type: 2}
-  - {fileID: 11400000, guid: 7be5a10b48a60b841917f3c1e76bd836, type: 2}
-  - {fileID: 11400000, guid: c3bc54a1fe0bcbe499aecb1deb28deed, type: 2}
-  - {fileID: 11400000, guid: 813bd65cf2b0edb4d8d1c6cd763ae4f7, type: 2}
 --- !u!114 &921669344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4423,6 +4368,34 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 80
   m_TargetDisplay: 0
+--- !u!114 &921669349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 921669341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b951bd11bee8e248b254a1d7e7c86a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CardListManager
+  cardContainer: {fileID: 1684780639}
+  cardPrefab: {fileID: 734829498934828550, guid: 5a615a371eab2b44590b6cb11c018f8f, type: 3}
+  imgTabAll: {fileID: 1192798422}
+  imgTabSSR: {fileID: 472007095}
+  imgTabSR: {fileID: 605518927}
+  imgTabR: {fileID: 906334680}
+  imgTabN: {fileID: 2083212677}
+  allCardDatabase:
+  - {fileID: 11400000, guid: b078202996df2554489854787faa773f, type: 2}
+  - {fileID: 11400000, guid: 90e3a4d2f2c90db42a60caf70305c974, type: 2}
+  - {fileID: 11400000, guid: efc4594001288f64f84f69e5952a0e34, type: 2}
+  - {fileID: 11400000, guid: f753aad951cdffb4197b548f7db31445, type: 2}
+  - {fileID: 11400000, guid: d45c55759acd59f4cb4393b8ba624838, type: 2}
+  - {fileID: 11400000, guid: 3e53ed2231230b74aae305e43fd53afa, type: 2}
+  - {fileID: 11400000, guid: 031390e632a5d9e43a0c9e9ef80ee0fc, type: 2}
+  - {fileID: 11400000, guid: 505bc73a031a7a74882efbf168126bcc, type: 2}
 --- !u!1 &930044566
 GameObject:
   m_ObjectHideFlags: 0
@@ -4777,9 +4750,9 @@ RectTransform:
   m_Father: {fileID: 1589728490}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -5.6190004, y: 20}
+  m_SizeDelta: {x: 0, y: 20}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &979863476
 MonoBehaviour:
@@ -5533,7 +5506,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1126596513
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5954,8 +5927,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 921669343}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
+      - m_Target: {fileID: 921669349}
+        m_TargetAssemblyTypeName: CardListManager, Assembly-CSharp
         m_MethodName: ShowAll
         m_Mode: 1
         m_Arguments:
@@ -7279,9 +7252,9 @@ RectTransform:
   - {fileID: 2049148338}
   m_Father: {fileID: 2098543260}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 140.36484, y: -53.375}
   m_SizeDelta: {x: 0, y: 106.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1437490575
@@ -7561,9 +7534,9 @@ RectTransform:
   m_Father: {fileID: 1589728490}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -5.6190004, y: -17}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1524468159
 MonoBehaviour:
@@ -8451,7 +8424,7 @@ RectTransform:
   m_Father: {fileID: 2123583365}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0.4642, y: 8.0456}
   m_SizeDelta: {x: 20.9283, y: 3.9089}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -8641,7 +8614,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1647006943
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9145,7 +9118,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.00040374842, y: -0.00045013428}
-  m_SizeDelta: {x: -0.0004, y: -47.698654}
+  m_SizeDelta: {x: -0.0004, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1684780640
 MonoBehaviour:
@@ -9174,17 +9147,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GridLayoutGroup
   m_Padding:
-    m_Left: 18
+    m_Left: 5
     m_Right: 0
-    m_Top: 7
-    m_Bottom: 25
-  m_ChildAlignment: 0
+    m_Top: 8
+    m_Bottom: 0
+  m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 13, y: 13}
-  m_Spacing: {x: 4, y: 4}
+  m_CellSize: {x: 16, y: 20}
+  m_Spacing: {x: 8, y: 14}
   m_Constraint: 1
-  m_ConstraintCount: 10
+  m_ConstraintCount: 7
 --- !u!1 &1687124806
 GameObject:
   m_ObjectHideFlags: 0
@@ -10568,9 +10541,9 @@ RectTransform:
   m_Father: {fileID: 1589728490}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -5.332, y: 0}
-  m_SizeDelta: {x: 8.619, y: -17}
+  m_SizeDelta: {x: 8.619, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1890749971
 MonoBehaviour:
@@ -10842,7 +10815,7 @@ RectTransform:
   m_Father: {fileID: 1592532101}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -11822,9 +11795,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 921669343}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: ShowProps
+      - m_Target: {fileID: 921669349}
+        m_TargetAssemblyTypeName: CardListManager, Assembly-CSharp
+        m_MethodName: ShowN
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -12162,5 +12135,4 @@ SceneRoots:
   - {fileID: 1808535672}
   - {fileID: 670189604}
   - {fileID: 930044568}
-  - {fileID: 814603016}
   - {fileID: 321745374}

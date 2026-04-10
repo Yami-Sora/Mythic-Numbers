@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
   m_Name: JackPojt
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
-  id: 0
+  cardID: 0
   cardName: JackPojt
-  artwork: {fileID: -2366965408156117902, guid: e8bf40d257a404244a59dbd906d8cb8d, type: 3}
-  top: 5
-  right: 5
-  bottom: 5
+  cardImage: {fileID: -2366965408156117902, guid: e8bf40d257a404244a59dbd906d8cb8d, type: 3}
+  cardFrame: {fileID: 0}
+  rate: 0
+  top: 521
+  right: 235
+  bottom: 215
   left: 5
   skill: {fileID: 11400000, guid: 99ba8f6031bc5044c80e7ade955027dd, type: 2}
   availableSockets: 03000000

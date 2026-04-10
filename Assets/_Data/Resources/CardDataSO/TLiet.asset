@@ -12,12 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
   m_Name: TLiet
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
-  id: 6
+  cardID: 0
   cardName: TLiet
-  artwork: {fileID: 2894593323134696561, guid: c3ea846ec98f1254c93a61be3bd4e852, type: 3}
-  top: 3
-  right: 6
-  bottom: 3
-  left: 6
+  cardImage: {fileID: 2894593323134696561, guid: c3ea846ec98f1254c93a61be3bd4e852, type: 3}
+  cardFrame: {fileID: 0}
+  rate: 2
+  top: 174
+  right: 419
+  bottom: 235
+  left: 297
   skill: {fileID: 11400000, guid: d243c371d19c60046aff3fdbbc837fb7, type: 2}
   availableSockets: 02000000
