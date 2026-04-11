@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class InventoryManager : MonoBehaviour
+public class InventoryManager : YamiMonoBehaviour
 {
     public static InventoryManager Instance { get; private set; }
 
@@ -27,10 +27,15 @@ public class InventoryManager : MonoBehaviour
     [Header("--- HÀNG NÓNG ĐỂ TEST ---")]
     public ItemDataSO[] testItemsArray;
 
-    private void Awake() => Instance = this;
+    protected override void Awake()
+    { 
+        base.Awake();
+        Instance = this; 
+    }
 
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
         ShowAll(); // Vào game là hiện luôn tab Tất Cả
     }
 

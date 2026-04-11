@@ -54,6 +54,8 @@ public class Canvas_NavigationManager : MonoBehaviour
             // 1. Tắt tab cũ, bật tab mới (Logic cũ của mình)
             if (_currentActiveTab != null) _currentActiveTab.SetActive(false);
 
+            Canvas_CardManager.Instance.OnTransition(); // Reset trạng thái
+
             if (_tabDictionary.TryGetValue(targetTab, out GameObject targetGO))
             {
                 targetGO.SetActive(true);

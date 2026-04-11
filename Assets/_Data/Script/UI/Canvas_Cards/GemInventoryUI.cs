@@ -7,7 +7,7 @@ public class GemInventoryUI : MonoBehaviour
     [Header("UI Settings")]
     [SerializeField] private Transform gemContent;
     [SerializeField] private GameObject gemSlotPrefab;
-    [SerializeField] private int minGemSlots = 40;
+    [SerializeField] private int minGemSlots = 24;
 
     // Hàm này để CardDetailManager gọi mỗi khi mở bảng lên
     public void RefreshGemList()
@@ -16,6 +16,11 @@ public class GemInventoryUI : MonoBehaviour
         foreach (Transform child in gemContent) Destroy(child.gameObject);
 
         // 2. Lấy danh sách ngọc từ "Nguồn cội" InventoryManager
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogError("InventoryManager instance not found!");
+            return;
+        }
         var gemList = InventoryManager.Instance.GetItemsByType(ItemDataSO.ItemType.Gem);
 
         // 3. Render Ngọc đang có

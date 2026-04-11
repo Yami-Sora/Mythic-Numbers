@@ -5,7 +5,6 @@ public class UI_Socket : MonoBehaviour
 {
     [SerializeField] private Image imgHighlight; // Cái viền sáng khi được chọn
     [SerializeField] private Image imgGemIcon;   // Hình viên ngọc sau khi khảm
-    [SerializeField] private Image imgDirectionIcon; // Icon mũi tên chỉ hướng (Top/Down...)
 
     public GemDirection Direction { get; private set; }
 
