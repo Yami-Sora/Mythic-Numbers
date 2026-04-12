@@ -8,31 +8,45 @@ public class GemInventoryUI : MonoBehaviour
     [SerializeField] private Transform gemContent;
     [SerializeField] private GameObject gemSlotPrefab;
     [SerializeField] private int minGemSlots = 24;
+    [SerializeField] private int columns = 6;
 
     // Hàm này để CardDetailManager gọi mỗi khi mở bảng lên
     public void RefreshGemList()
     {
-        // 1. Dọn dẹp sạch sẽ
-        foreach (Transform child in gemContent) Destroy(child.gameObject);
-
-        // 2. Lấy danh sách ngọc từ "Nguồn cội" InventoryManager
-        if (InventoryManager.Instance == null)
+        // 1. Dọn rác (Duyệt ngược)
+        for (int i = gemContent.childCount - 1; i >= 0; i--)
         {
-            Debug.LogError("InventoryManager instance not found!");
-            return;
+            Transform child = gemContent.GetChild(i);
+            child.SetParent(null);
+            Destroy(child.gameObject);
         }
+
+        if (InventoryManager.Instance == null) return;
         var gemList = InventoryManager.Instance.GetItemsByType(ItemDataSO.ItemType.Gem);
 
-        // 3. Render Ngọc đang có
+        // 2. Render Ngọc
         foreach (var gemItem in gemList)
         {
             CreateSlot(gemItem, false);
         }
 
-        // 4. Lấp đầy ô xám cho đủ hàng lối (Min 40 và chia hết cho 10)
+        // 3. Logic Đệm ô xám thông minh
         int currentCount = gemList.Count;
-        int targetCount = Mathf.Max(minGemSlots, currentCount + (10 - (currentCount % 10)) % 10);
-        int emptyNeeded = targetCount - currentCount;
+        int emptyNeeded = 0;
+
+        if (currentCount < minGemSlots)
+        {
+            emptyNeeded = minGemSlots - currentCount;
+        }
+        else
+        {
+            // Sử dụng biến columns thay vì số cứng
+            int remainder = currentCount % columns;
+            if (remainder > 0)
+            {
+                emptyNeeded = columns - remainder;
+            }
+        }
 
         for (int i = 0; i < emptyNeeded; i++)
         {

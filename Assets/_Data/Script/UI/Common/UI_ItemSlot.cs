@@ -20,8 +20,20 @@ public class UI_ItemSlot : MonoBehaviour
         imgIcon.sprite = item.data.icon;
 
         // 2. Hiện số lượng
-        txtAmount.gameObject.SetActive(true);
-        txtAmount.text = item.amount.ToString();
+        if (txtAmount != null)
+        {
+            if (item.data.type == ItemDataSO.ItemType.Gem)
+            {
+                // Nếu là Ngọc -> Tắt luôn chữ đi cho nó sang
+                txtAmount.gameObject.SetActive(false);
+            }
+            else
+            {
+                // Nếu là Đạo cụ -> Bật chữ và hiện số lượng (Ví dụ x99)
+                txtAmount.gameObject.SetActive(true);
+                txtAmount.text = item.amount.ToString();
+            }
+        }
 
         // 3. Đổi Frame và Màu sắc từ DataSO
         if (imgFrame != null)

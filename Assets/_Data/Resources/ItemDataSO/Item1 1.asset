@@ -21,5 +21,4 @@ MonoBehaviour:
   type: 0
   maxStack: 99
   directionTag: 1
-  bonusStat1: 1
-  bonusStat2: 0
+  bonusStat: 1

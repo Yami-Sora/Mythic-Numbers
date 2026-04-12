@@ -69,15 +69,23 @@ public class GemInfoPopupManager : YamiMonoBehaviour
     {
         if (_isEquippedGem)
         {
-            Debug.Log($"<color=red>Thực hiện tháo viên ngọc {_currentGem.data.itemName} ra khỏi thẻ!</color>");
-            // Logic tháo ngọc sếp nhét vào đây
+            Debug.Log($"<color=yellow>Đang gỡ {_currentGem.data.itemName} trả về túi...</color>");
+            // GỌI HÀM GỠ NGỌC TỪ CARD DETAIL
+            if (CardDetailManager.Instance != null)
+            {
+                CardDetailManager.Instance.UnequipCurrentSocket();
+            }
         }
         else
         {
-            Debug.Log($"<color=green>Thực hiện khảm viên ngọc {_currentGem.data.itemName} vào lỗ!</color>");
-            // Logic check lỗ và khảm sếp nhét vào đây
+            Debug.Log($"<color=green>Chuẩn bị khảm {_currentGem.data.itemName}...</color>");
+            // GỌI HÀM KHẢM NGỌC NHƯ CŨ
+            if (CardDetailManager.Instance != null)
+            {
+                CardDetailManager.Instance.PrepareToEquipGem(_currentGem);
+            }
         }
-        ClosePopup(); // Bấm xong thì đóng popup cho gọn
+        ClosePopup();
     }
 
     private void OnUpgradeClicked()

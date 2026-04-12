@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// Kế thừa từ UI_CardBase
 public class UI_CardSlot : UI_CardBase
 {
     [Header("Interaction")]

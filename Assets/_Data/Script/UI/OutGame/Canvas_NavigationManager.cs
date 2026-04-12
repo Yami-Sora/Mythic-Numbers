@@ -69,6 +69,7 @@ public class Canvas_NavigationManager : MonoBehaviour
 
     public void SwitchTab(TabType targetTab)
     {
+        if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
         // Gọi hiệu ứng chuyển cảnh
         TransitionManager.Instance.PlayTransition(() => {
 

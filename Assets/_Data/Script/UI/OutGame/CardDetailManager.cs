@@ -10,7 +10,6 @@ public class CardDetailManager : YamiMonoBehaviour
     [SerializeField] private GemInventoryUI gemInventoryUI;
 
     [Header("Bên Trái - Thẻ Bài (Preview)")]
-
     [SerializeField] private UI_CardBase cardPreviewVisual;
 
     [Header("Bên Trái - Thông Tin Râu Ria")]
@@ -28,6 +27,7 @@ public class CardDetailManager : YamiMonoBehaviour
 
     private CardListManager.OwnedCard _selectedCard;
     private UI_Socket _currentSelectedSocket;
+    private InventoryManager.InventoryItem _pendingGemToEquip;
 
     protected override void Awake()
     {
@@ -48,39 +48,38 @@ public class CardDetailManager : YamiMonoBehaviour
 
     private void RefreshCardInfo()
     {
-        // 1. Vẽ thẻ bài và chữ (Giữ nguyên)
         if (cardPreviewVisual != null) cardPreviewVisual.Setup(_selectedCard.data);
         if (txtCardName != null) txtCardName.text = _selectedCard.data.cardName;
         if (txtCardName2 != null) txtCardName2.text = _selectedCard.data.cardName;
-        if(txtCardDesc != null) txtCardDesc.text = _selectedCard.data.skill.description;
+        if (txtCardDesc != null && _selectedCard.data.skill != null) txtCardDesc.text = _selectedCard.data.skill.description;
 
-        // --- ĐOẠN PHÁP THUẬT RENDER LỖ NGỌC MỚI ---
-
-        // 2. Gom hết 12 cái lỗ sếp đã xếp sẵn bằng tay vào 1 mảng
         UI_Socket[] allSockets = socketContainer.GetComponentsInChildren<UI_Socket>(true);
 
-        // 3. Tắt sạch đi trước (Giấu đi)
+        // 1. Mặc định: KHÓA TẤT CẢ 12 LỖ (Vẫn hiện Khung, nhưng có hình Ổ Khóa)
         foreach (var socket in allSockets)
         {
-            socket.gameObject.SetActive(false);
+            socket.gameObject.SetActive(true); // ĐẢM BẢO LUÔN HIỆN
+            socket.SetupState(isLocked: true);
         }
 
-        // 4. Thẻ bài có bao nhiêu lỗ thì bật sáng bấy nhiêu cái
-        var cardSockets = _selectedCard.data.availableSockets;
-        for (int i = 0; i < cardSockets.Count; i++)
+        // 2. Đi tìm các lỗ được phép mở theo thẻ
+        int topIdx = 0, botIdx = 3, rightIdx = 6, leftIdx = 9;
+
+        foreach (GemDirection dir in _selectedCard.data.availableSockets)
         {
-            if (i < allSockets.Length)
+            int targetIndex = -1;
+
+            if (dir == GemDirection.Top && topIdx <= 2) { targetIndex = topIdx; topIdx++; }
+            else if (dir == GemDirection.Bottom && botIdx <= 5) { targetIndex = botIdx; botIdx++; }
+            else if (dir == GemDirection.Right && rightIdx <= 8) { targetIndex = rightIdx; rightIdx++; }
+            else if (dir == GemDirection.Left && leftIdx <= 11) { targetIndex = leftIdx; leftIdx++; }
+
+            if (targetIndex != -1 && targetIndex < allSockets.Length)
             {
-                allSockets[i].gameObject.SetActive(true); // Hồi sinh nó
-                allSockets[i].Setup(cardSockets[i]);      // Truyền công lực (hướng) vào
-            }
-            else
-            {
-                Debug.LogWarning("Thẻ này đục nhiều lỗ hơn số chỗ sếp xếp trên UI rồi kìa!");
+                // MỞ KHÓA LỖ NÀY
+                allSockets[targetIndex].SetupState(isLocked: false);
             }
         }
-
-        // -----------------------------------------
 
         RefreshStatsDisplay();
     }
@@ -107,16 +106,136 @@ public class CardDetailManager : YamiMonoBehaviour
         tmp.text = $"{label}: {baseVal}{bonusText}";
     }
 
-    public void OnSocketClicked(UI_Socket socket)
+    // ==========================================
+    // LOGIC CHUẨN BỊ KHẢM (DÙNG ENUM)
+    // ==========================================
+    public void PrepareToEquipGem(InventoryManager.InventoryItem gem)
     {
-        if (_currentSelectedSocket != null) _currentSelectedSocket.SetHighlight(false);
-        _currentSelectedSocket = socket;
-        _currentSelectedSocket.SetHighlight(true);
+        _pendingGemToEquip = gem;
+        GemDirection targetDir = gem.data.directionTag; // Lấy thẳng Enum từ Ngọc
+
+        UI_Socket[] allSockets = socketContainer.GetComponentsInChildren<UI_Socket>(true);
+
+        for (int i = 0; i < allSockets.Length; i++)
+        {
+            GemDirection socketDir = GetDirectionByIndex(i);
+
+            // NẾU: Đúng hướng Enum + Lỗ đang mở + Lỗ chưa có ngọc
+            if (socketDir == targetDir && allSockets[i].EquippedGem == null && allSockets[i].IsUnlocked)
+            {
+                allSockets[i].SetReadyToEquip(true); // Nhuộm vàng
+            }
+            else
+            {
+                allSockets[i].SetReadyToEquip(false);
+            }
+        }
     }
 
-    public void CloseDetail() 
+    // Hàm chuyển Index sang Enum
+    private GemDirection GetDirectionByIndex(int index)
     {
-        CardListManager.Instance.gameObject.SetActive(true);
-        this.gameObject.SetActive(false); 
+        if (index >= 0 && index <= 2) return GemDirection.Top;
+        if (index >= 3 && index <= 5) return GemDirection.Bottom;
+        if (index >= 6 && index <= 8) return GemDirection.Right;
+        if (index >= 9 && index <= 11) return GemDirection.Left;
+        return GemDirection.None;
+    }
+
+    // ==========================================
+    // LOGIC CLICK VÀO LỖ (CHỐNG DÍNH CLICK)
+    // ==========================================
+    public void OnSocketClicked(UI_Socket socket)
+    {
+        // --------------------------------------------------------
+        // TRƯỜNG HỢP 1: SẾP ĐANG CẦM NGỌC TRÊN TAY -> CHỈ THỰC HIỆN KHẢM
+        // --------------------------------------------------------
+        if (_pendingGemToEquip != null)
+        {
+            int index = socket.transform.GetSiblingIndex();
+            GemDirection socketDir = GetDirectionByIndex(index);
+
+            // Check chuẩn Enum và lỗ trống
+            // Check chuẩn Enum và lỗ trống
+            if (socketDir == _pendingGemToEquip.data.directionTag && socket.EquippedGem == null)
+            {
+                socket.EquipGem(_pendingGemToEquip);
+                Debug.Log($"<color=cyan>Đã khảm thành công {_pendingGemToEquip.data.itemName} vào vị trí {socketDir}!</color>");
+
+                // --- LOGIC MỚI: TRỪ NGỌC TRONG TÚI ĐỒ ---
+                if (InventoryManager.Instance != null)
+                {
+                    InventoryManager.Instance.RemoveItem(_pendingGemToEquip); // Xóa khỏi List tổng
+                }
+                if (gemInventoryUI != null) gemInventoryUI.RefreshGemList(); // F5 lại UI túi ngọc nhỏ bên phải
+                // ----------------------------------------
+            }
+
+            // Xử lý xong thì "rửa tay", hủy trạng thái chờ khảm
+            _pendingGemToEquip = null;
+            ResetAllSocketHighlights();
+
+            // Xong việc thì cút luôn, không chạy xuống dưới nữa!
+            return;
+        }
+
+        // --------------------------------------------------------
+        // TRƯỜNG HỢP 2: TAY KHÔNG BẤM VÀO LỖ -> CHỈ ĐỂ SOI THÔNG TIN
+        // --------------------------------------------------------
+        else
+        {
+            // Tắt highlight cũ (nếu có)
+            if (_currentSelectedSocket != null) _currentSelectedSocket.SetReadyToEquip(false);
+
+            _currentSelectedSocket = socket;
+            _currentSelectedSocket.SetReadyToEquip(true); // Bật highlight cho lỗ đang chọn
+
+            // Mở popup nếu cái lỗ sếp nhấp vào đang chứa ngọc
+            if (socket.EquippedGem != null && GemInfoPopupManager.Instance != null)
+            {
+                GemInfoPopupManager.Instance.OpenPopup(socket.EquippedGem, true);
+            }
+        }
+    }
+
+    private void ResetAllSocketHighlights()
+    {
+        UI_Socket[] allSockets = socketContainer.GetComponentsInChildren<UI_Socket>(true);
+        foreach (var s in allSockets) s.SetReadyToEquip(false);
+    }
+
+    public void CloseDetail()
+    {
+        _pendingGemToEquip = null;
+        ResetAllSocketHighlights();
+
+        if (CardListManager.Instance != null)
+        {
+            CardListManager.Instance.gameObject.SetActive(true);
+        }
+        this.gameObject.SetActive(false);
+    }
+    // --- LOGIC GỠ NGỌC ---
+    public void UnequipCurrentSocket()
+    {
+        if (_currentSelectedSocket != null && _currentSelectedSocket.EquippedGem != null)
+        {
+            // 1. Lưu lại thông tin viên ngọc đang nằm trong lỗ
+            var gemToReturn = _currentSelectedSocket.EquippedGem;
+
+            // 2. Trả ngọc về túi đồ
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.AddItem(gemToReturn.data, 1);
+            }
+            if (gemInventoryUI != null) gemInventoryUI.RefreshGemList(); // F5 lại UI túi ngọc nhỏ
+
+            // 3. Reset lỗ về trạng thái Mở Khóa nhưng Trống không
+            _currentSelectedSocket.SetupState(isLocked: false);
+            _currentSelectedSocket.SetReadyToEquip(false); // Tắt viền vàng
+            _currentSelectedSocket = null; // Quên lỗ này đi
+
+            // 4. (Tương lai) Sếp gọi thêm hàm RefreshStatsDisplay() ở đây để trừ chỉ số
+        }
     }
 }

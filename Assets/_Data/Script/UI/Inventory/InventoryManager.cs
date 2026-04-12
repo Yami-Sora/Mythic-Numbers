@@ -17,10 +17,13 @@ public class InventoryManager : YamiMonoBehaviour
     [SerializeField] private Image imgTabGems;
     [SerializeField] private Image imgTabProps;
 
+    [Header("Layout Settings")]
+    [SerializeField] private int minSlots = 40;
+    [SerializeField] private int columns = 10;
+
     private Color _normalColor = Color.white;
     private Color _selectedColor = new Color(1f, 0.84f, 0f); // Vàng kim (Gold)
 
-    // CHUYỂN SANG LIST: Để một loại ItemID có thể nằm trên nhiều ô khác nhau
     private List<InventoryItem> _inventoryList = new List<InventoryItem>();
     private ItemDataSO.ItemType? _currentTab = null;
 
@@ -28,41 +31,40 @@ public class InventoryManager : YamiMonoBehaviour
     public ItemDataSO[] testItemsArray;
 
     protected override void Awake()
-    { 
+    {
         base.Awake();
-        Instance = this; 
+        Instance = this;
     }
 
     protected override void Start()
     {
         base.Start();
-        ShowAll(); // Vào game là hiện luôn tab Tất Cả
+        ShowAll();
     }
 
     private void Update()
     {
-        // Bắt phím Space hệ Input System mới
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             HandleCheatItems();
         }
     }
+
     public List<InventoryItem> GetInventoryList()
     {
         return _inventoryList;
     }
 
-    // 2. Hàm lọc đồ theo loại (Gem, Prop...) - Tiện cho việc khảm ngọc
     public List<InventoryItem> GetItemsByType(ItemDataSO.ItemType type)
     {
         return _inventoryList.Where(i => i.data.type == type).ToList();
     }
+
     private void HandleCheatItems()
     {
         if (testItemsArray == null || testItemsArray.Length == 0) return;
 
-        // Hack mỗi lần 30 món, mỗi món nhảy random 1-50 cái để sếp thấy nó tràn ô cho sướng
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 3; i++)
         {
             int randomIndex = Random.Range(0, testItemsArray.Length);
             AddItem(testItemsArray[randomIndex], Random.Range(1, 51));
@@ -84,18 +86,21 @@ public class InventoryManager : YamiMonoBehaviour
     }
 
     // ==========================================
-    // 1. PHẦN XỬ LÝ LOGIC DATA (TRÀN STACK)
+    // 1. PHẦN XỬ LÝ LOGIC DATA (ÉP STACK 1 CHO NGỌC)
     // ==========================================
     public void AddItem(ItemDataSO itemData, int count)
     {
         int remaining = count;
 
-        // BƯỚC A: Tìm trong túi xem có ô nào cùng loại mà CHƯA ĐẦY không?
+        // ĐIỂM CHẠM VIBE: Nếu là Gem thì maxStack ép cứng bằng 1, còn lại lấy theo SO
+        int currentMaxStack = (itemData.type == ItemDataSO.ItemType.Gem) ? 1 : itemData.maxStack;
+
+        // BƯỚC A: Tìm ô chưa đầy (Chỉ áp dụng cho Đạo cụ - Prop, vì Gem max = 1 nên luôn bỏ qua bước này nếu đã có 1 viên)
         foreach (var item in _inventoryList)
         {
-            if (item.data.itemID == itemData.itemID && item.amount < itemData.maxStack)
+            if (item.data.itemID == itemData.itemID && item.amount < currentMaxStack)
             {
-                int canAdd = itemData.maxStack - item.amount; // Chỗ trống còn lại trong ô này
+                int canAdd = currentMaxStack - item.amount;
                 int toAdd = Mathf.Min(remaining, canAdd);
 
                 item.amount += toAdd;
@@ -105,10 +110,10 @@ public class InventoryManager : YamiMonoBehaviour
             }
         }
 
-        // BƯỚC B: Nếu vẫn còn dư đồ (do ô cũ đầy hoặc chưa có ô nào), tạo ô mới
+        // BƯỚC B: Nếu đồ dư (hoặc là Gem bị ép stack 1), cứ thế mà đẻ ô mới liên tục
         while (remaining > 0)
         {
-            int toAdd = Mathf.Min(remaining, itemData.maxStack);
+            int toAdd = Mathf.Min(remaining, currentMaxStack);
             _inventoryList.Add(new InventoryItem(itemData, toAdd));
             remaining -= toAdd;
         }
@@ -123,25 +128,41 @@ public class InventoryManager : YamiMonoBehaviour
     {
         _currentTab = filterType;
 
-        // Dọn dẹp grid cũ
-        foreach (Transform child in slotContainer) Destroy(child.gameObject);
+        // 1. Dọn rác (Duyệt ngược)
+        for (int i = slotContainer.childCount - 1; i >= 0; i--)
+        {
+            Transform child = slotContainer.GetChild(i);
+            child.SetParent(null);
+            Destroy(child.gameObject);
+        }
 
-        // Lọc danh sách theo Tab
         var itemsToShow = filterType == null
             ? _inventoryList
             : _inventoryList.Where(i => i.data.type == filterType).ToList();
 
-        // 3. Render các ô CÓ ĐỒ
+        // 2. Render Item
         foreach (var item in itemsToShow)
         {
             CreateSlotUI(item, false);
         }
 
-        // 4. Render các ô TRỐNG (Tối thiểu 100 ô, lấp đầy hàng 10)
+        // 3. Logic Đệm ô xám thông minh
         int totalDisplay = itemsToShow.Count;
-        int minSlots = 40;
-        int targetSlots = Mathf.Max(minSlots, totalDisplay + (10 - (totalDisplay % 10)) % 10);
-        int emptySlotsNeeded = targetSlots - totalDisplay;
+        int emptySlotsNeeded = 0;
+
+        if (totalDisplay < minSlots)
+        {
+            emptySlotsNeeded = minSlots - totalDisplay;
+        }
+        else
+        {
+            // Tính toán dựa trên số cột sếp đã cấu hình trong Inspector
+            int remainder = totalDisplay % columns;
+            if (remainder > 0)
+            {
+                emptySlotsNeeded = columns - remainder;
+            }
+        }
 
         for (int i = 0; i < emptySlotsNeeded; i++)
         {
@@ -153,7 +174,6 @@ public class InventoryManager : YamiMonoBehaviour
     {
         GameObject go = Instantiate(slotPrefab, slotContainer, false);
 
-        // Trấn áp Scale và Size
         RectTransform rect = go.GetComponent<RectTransform>();
         rect.localScale = Vector3.one;
         rect.sizeDelta = new Vector2(150f, 150f);
@@ -182,5 +202,14 @@ public class InventoryManager : YamiMonoBehaviour
         if (imgTabProps) imgTabProps.color = _normalColor;
 
         if (activeTabImg) activeTabImg.color = _selectedColor;
+    }
+
+    public void RemoveItem(InventoryItem itemToRemove)
+    {
+        if (_inventoryList.Contains(itemToRemove))
+        {
+            _inventoryList.Remove(itemToRemove);
+            RefreshUI(); // Cập nhật lại UI của túi đồ lớn
+        }
     }
 }
