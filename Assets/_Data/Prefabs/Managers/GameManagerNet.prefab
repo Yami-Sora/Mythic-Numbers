@@ -67,9 +67,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerNet
   playWithAI: 0
   cardPrefab: {fileID: 4286878122934005440, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
-  floatingTextPrefab: {fileID: 7310387484375277547, guid: 59a5c307adb07de48930ff6c1c955fba, type: 3}
   _CurrentTurn: 0
   _BoardState: []
+  _CurrentRuleIndex: 0
 --- !u!114 &7819502552760626106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82,4 +82,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b2f7e5aaf0c8514a84c89246f5b01e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameAI
-  thinkingTime: 1.5
+  thinkingTime: 3

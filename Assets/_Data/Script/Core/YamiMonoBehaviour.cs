@@ -10,7 +10,6 @@ public class YamiMonoBehaviour : MonoBehaviour
     protected virtual void Awake()
     {
         this.LoadComponents();
-        this.gameObject.SetActive(false);
     }
     protected virtual void Start()
     {

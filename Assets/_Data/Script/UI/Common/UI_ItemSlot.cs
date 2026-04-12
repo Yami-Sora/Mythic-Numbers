@@ -35,6 +35,19 @@ public class UI_ItemSlot : MonoBehaviour
         }
 
         btnSlot.interactable = true;
+
+        if (btnSlot != null)
+        {
+            btnSlot.onClick.RemoveAllListeners();
+            btnSlot.onClick.AddListener(() =>
+            {
+                // Gọi ông thần Popup dậy. Truyền false vì ngọc trong túi thì chưa được trang bị.
+                if (GemInfoPopupManager.Instance != null)
+                {
+                    GemInfoPopupManager.Instance.OpenPopup(item, isEquipped: false);
+                }
+            });
+        }
     }
 
     public void SetupEmpty()

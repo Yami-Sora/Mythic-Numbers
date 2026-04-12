@@ -12,6 +12,9 @@ public class Canvas_NavigationManager : MonoBehaviour
     [SerializeField] private GameObject dungeonCanvas;
     [SerializeField] private GameObject inventoryCanvas;
 
+    [Header("Global Popups")]
+    [SerializeField] private GameObject gemInfoPopup;
+
     private GameObject _currentActiveTab;
     private Dictionary<TabType, GameObject> _tabDictionary;
 
@@ -20,12 +23,32 @@ public class Canvas_NavigationManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+
+        if (shopCanvas) shopCanvas.SetActive(true);
+        if (cardsCanvas) cardsCanvas.SetActive(true);
+        if (combatCanvas) combatCanvas.SetActive(true);
+        if (dungeonCanvas) dungeonCanvas.SetActive(true);
+        if (inventoryCanvas) inventoryCanvas.SetActive(true);
+
+        if (gemInfoPopup != null) gemInfoPopup.SetActive(true);
+
         InitDictionary();
     }
 
     private void Start()
     {
-        // Khi mới vào game, mặc định hiện màn hình Chiến Đấu (Màn hình chính)
+        if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
+        // 2. Lúc này (chuyển sang Start), mọi hàm Awake của tụi đàn em đã chạy xong hết rồi.
+        // Giờ mình dọn dẹp: "Trảm" (tắt) hết tụi nó đi trước khi game kịp render khung hình đầu tiên.
+        foreach (var tab in _tabDictionary.Values)
+        {
+            if (tab != null)
+            {
+                tab.SetActive(false);
+            }
+        }
+
+        // 3. Cuối cùng, bật duy nhất tab sếp muốn lên (Combat)
         SwitchTab(TabType.Combat);
     }
 

@@ -20,8 +20,7 @@ public class ItemDataSO : ScriptableObject
 
     [Header("--- THÔNG SỐ TINH THẠCH (Chỉ dùng cho Gem) ---")]
     public GemDirection directionTag = GemDirection.None; // Lỗ nào?
-    public int bonusStat1; // Ví dụ: +Tấn Công
-    public int bonusStat2; // Ví dụ: +Máu
+    public int bonusStat;
 
     public enum ItemType { Gem, Prop, Special }
 }

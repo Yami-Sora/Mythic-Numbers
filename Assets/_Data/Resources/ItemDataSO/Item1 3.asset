@@ -20,3 +20,5 @@ MonoBehaviour:
   itemColor: {r: 0, g: 0.20456195, b: 1, a: 1}
   type: 1
   maxStack: 99
+  directionTag: 3
+  bonusStat: 0
