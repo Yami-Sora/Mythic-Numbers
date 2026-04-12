@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
   m_Name: SungMew
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
-  cardID: 0
+  cardID: 6
   cardName: SungMew
   cardImage: {fileID: -3045914649768131082, guid: 7501ef4094a2c9c43a7e08524df185c5, type: 3}
   cardFrame: {fileID: 0}

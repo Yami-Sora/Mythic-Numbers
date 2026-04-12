@@ -22,15 +22,19 @@ public static class RealmCalculator
 
     public static (int displayValue, Color displayColor) GetRealmStat(int rawStat)
     {
+        // Vẫn giữ logic cũ: Nếu chỉ số tụt xuống âm hoặc bằng 0 thì cho màu xám
         if (rawStat <= 0) return (0, Color.gray);
 
-        // Dùng công thức (n-1) để mốc 99, 198, 297... luôn là số cuối cùng của 1 bậc màu
-        int tier = (rawStat - 1) / 99;
+        // ----------------------------------------------------
+        // CÔNG THỨC MỚI (Hệ cơ số 100 cực dễ tính)
+        int tier = rawStat / 100;
 
-        // Phép toán Modulo 99 để số luôn xoay vòng từ 1 đến 99
-        int displayVal = ((rawStat - 1) % 99) + 1;
+        // Phép chia lấy dư % 100 sẽ luôn trả về kết quả từ 0 đến 99
+        // VD: 100 % 100 = 0
+        // VD: 105 % 100 = 5
+        int displayVal = rawStat % 100;
 
-        // Lấy màu dựa trên Tier
+        // Lấy màu dựa trên Tier (Giới hạn lại để không bị out of bounds nếu chỉ số quá to)
         int colorIndex = Mathf.Clamp(tier, 0, RealmColors.Length - 1);
         Color color = RealmColors[colorIndex];
 

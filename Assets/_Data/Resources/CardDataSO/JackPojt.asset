@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51138dcb66b4d5f44ae9a0996479e3ea, type: 3}
   m_Name: JackPojt
   m_EditorClassIdentifier: Assembly-CSharp::CardDataSO
-  cardID: 0
+  cardID: 4
   cardName: JackPojt
   cardImage: {fileID: -2366965408156117902, guid: e8bf40d257a404244a59dbd906d8cb8d, type: 3}
   cardFrame: {fileID: 0}

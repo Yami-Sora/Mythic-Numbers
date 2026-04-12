@@ -310,10 +310,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ScrollRect
   m_Content: {fileID: 928120382}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
-  m_Elasticity: 0.02
+  m_Elasticity: 0.01
   m_Inertia: 1
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
@@ -4391,7 +4391,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1227966796}
   m_Direction: 0
   m_Value: 0
-  m_Size: 0.9998676
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -5085,7 +5085,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00002670288, y: 0}
+  m_AnchoredPosition: {x: 0.000015258789, y: 0}
   m_SizeDelta: {x: -3.4285, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &928120383
@@ -8097,10 +8097,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ScrollRect
   m_Content: {fileID: 379435863}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
-  m_Elasticity: 0.02
+  m_Elasticity: 0.01
   m_Inertia: 1
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
@@ -9246,10 +9246,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ScrollRect
   m_Content: {fileID: 1684780639}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
-  m_Elasticity: 0.02
+  m_Elasticity: 0.01
   m_Inertia: 1
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
@@ -14102,9 +14102,9 @@ MonoBehaviour:
   imgFrame: {fileID: 5466471419710366976}
   txtCardName: {fileID: 0}
   txtTop: {fileID: 9077675153363077314}
-  txtRight: {fileID: 9000995019394178695}
-  txtBottom: {fileID: 3236243136194751814}
-  txtLeft: {fileID: 2033230546419049392}
+  txtRight: {fileID: 2033230546419049392}
+  txtBottom: {fileID: 9000995019394178695}
+  txtLeft: {fileID: 3236243136194751814}
   btnCard: {fileID: 2476444712589069902}
 --- !u!1 &5769042380667059583
 GameObject:
