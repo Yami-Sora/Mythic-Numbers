@@ -12,7 +12,7 @@ public class UI_ItemSlot : MonoBehaviour
     // Màu xám cho ô trống
     private Color _emptyColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
 
-    public void Setup(InventoryManager.InventoryItem item)
+    public void Setup(InventoryItem item)
     {
         this.gameObject.SetActive(true);
         // 1. Hiện hình vật phẩm

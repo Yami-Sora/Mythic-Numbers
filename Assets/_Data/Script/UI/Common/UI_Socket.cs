@@ -12,7 +12,7 @@ public class UI_Socket : MonoBehaviour
     [Header("Interaction")]
     [SerializeField] private Button btnSocket;
 
-    public InventoryManager.InventoryItem EquippedGem { get; private set; }
+    public InventoryItem EquippedGem { get; private set; }
     public bool IsUnlocked { get; private set; } // Thẻ căn cước check mở khóa
 
     private void Awake()
@@ -55,7 +55,7 @@ public class UI_Socket : MonoBehaviour
         }
     }
 
-    public void EquipGem(InventoryManager.InventoryItem gem)
+    public void EquipGem(InventoryItem gem)
     {
         EquippedGem = gem;
         if (imgIcon != null && gem != null)

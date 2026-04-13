@@ -7,10 +7,10 @@ public class UI_CardSlot : UI_CardBase
     [Header("Interaction")]
     [SerializeField] private Button btnCard;
 
-    private CardListManager.OwnedCard _currentCard;
+    private OwnedCard _currentCard;
 
     // Overload hàm Setup để nhận OwnedCard từ List
-    public void Setup(CardListManager.OwnedCard cardInfo)
+    public void Setup(OwnedCard cardInfo)
     {
         _currentCard = cardInfo;
 

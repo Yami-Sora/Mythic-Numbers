@@ -25,9 +25,9 @@ public class CardDetailManager : YamiMonoBehaviour
     [SerializeField] private TextMeshProUGUI txtStatBottom;
     [SerializeField] private TextMeshProUGUI txtStatLeft;
 
-    private CardListManager.OwnedCard _selectedCard;
+    private OwnedCard _selectedCard;
     private UI_Socket _currentSelectedSocket;
-    private InventoryManager.InventoryItem _pendingGemToEquip;
+    private InventoryItem _pendingGemToEquip;
 
     protected override void Awake()
     {
@@ -36,7 +36,7 @@ public class CardDetailManager : YamiMonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void OpenDetail(CardListManager.OwnedCard card)
+    public void OpenDetail(OwnedCard card)
     {
         _selectedCard = card;
         gameObject.SetActive(true);
@@ -117,7 +117,7 @@ public class CardDetailManager : YamiMonoBehaviour
     // ==========================================
     // LOGIC CHUẨN BỊ KHẢM (DÙNG ENUM)
     // ==========================================
-    public void PrepareToEquipGem(InventoryManager.InventoryItem gem)
+    public void PrepareToEquipGem(InventoryItem gem)
     {
         _pendingGemToEquip = gem;
         GemDirection targetDir = gem.data.directionTag; // Lấy thẳng Enum từ Ngọc

@@ -14,7 +14,7 @@ public class GemInfoPopupManager : YamiMonoBehaviour
     [SerializeField] private Button btnUpgrade;    // Nút Nâng cấp
 
     // Lưu lại thông tin viên ngọc đang chọn để mốt còn xử lý logic
-    private InventoryManager.InventoryItem _currentGem;
+    private InventoryItem _currentGem;
     private bool _isEquippedGem;
 
     protected override void Awake()
@@ -31,7 +31,7 @@ public class GemInfoPopupManager : YamiMonoBehaviour
     }
 
     // Hàm public để các Slot (ô ngọc) gọi vào khi bị click
-    public void OpenPopup(InventoryManager.InventoryItem gem, bool isEquipped)
+    public void OpenPopup(InventoryItem gem, bool isEquipped)
     {
         if (gem == null || gem.data == null) return;
 

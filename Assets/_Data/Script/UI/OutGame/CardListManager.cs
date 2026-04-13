@@ -9,8 +9,8 @@ public class CardListManager : MonoBehaviour
     public static CardListManager Instance { get; private set; }
 
     [Header("References")]
-    [SerializeField] private Transform cardContainer; // Kéo Viewport/Content vào đây
-    [SerializeField] private GameObject cardPrefab;   // Kéo Prefab UI_CardSlot vào đây
+    [SerializeField] private Transform cardContainer;
+    [SerializeField] private GameObject cardPrefab;
 
     [Header("Tab Visuals")]
     [SerializeField] private Image imgTabAll;
@@ -22,43 +22,26 @@ public class CardListManager : MonoBehaviour
     private Color _normalColor = Color.white;
     private Color _selectedColor = new Color(1f, 0.84f, 0f); // Vàng kim (Gold)
 
-    // Khác với túi đồ cộng dồn, thẻ bài mình lưu thành từng thực thể riêng biệt
     private List<OwnedCard> _ownedCards = new List<OwnedCard>();
     private CardRate? _currentFilter = null;
 
     [Header("--- BỘ BÀI TEST ---")]
-    public CardDataSO[] allCardDatabase; //kéo hết thẻ đang có vào đây để test hiển thị
+    public CardDataSO[] allCardDatabase;
 
     private void Awake() => Instance = this;
 
     private void Start()
     {
-        HackInitialCards(); // Nạp data test
-        ShowAll();          // Mở tab Tất cả lúc mới vào
+        HackInitialCards();
+        ShowAll();
     }
 
-    [System.Serializable]
-    public class OwnedCard
-    {
-        public CardDataSO data;
-        public int level = 1;
-        // Mở rộng sau: public List<ItemDataSO> slottedGems; (Lưu các ngọc đang khảm)
-
-        public OwnedCard(CardDataSO data)
-        {
-            this.data = data;
-        }
-        public InventoryManager.InventoryItem[] equippedGems = new InventoryManager.InventoryItem[12];
-    }
-
-    // Nạp toàn bộ thẻ vào túi để test UI
     private void HackInitialCards()
     {
         if (allCardDatabase == null) return;
         foreach (var cardData in allCardDatabase)
         {
             _ownedCards.Add(new OwnedCard(cardData));
-            // Có thể copy dòng trên ra nhiều lần để fake việc có nhiều thẻ trùng nhau
         }
     }
 
@@ -69,14 +52,19 @@ public class CardListManager : MonoBehaviour
     {
         _currentFilter = filterRate;
 
-        // 1. Dọn dẹp Content
-        foreach (Transform child in cardContainer) Destroy(child.gameObject);
+        // 1. Dọn dẹp Content (Áp dụng bí kíp Duyệt Ngược chống lỗi kẹt UI)
+        for (int i = cardContainer.childCount - 1; i >= 0; i--)
+        {
+            Transform child = cardContainer.GetChild(i);
+            child.SetParent(null);
+            Destroy(child.gameObject);
+        }
 
         // 2. Phép thuật LINQ: Lọc và Sắp xếp
         var cardsToShow = _ownedCards
-            .Where(c => filterRate == null || c.data.rate == filterRate) // Lọc theo Tab
-            .OrderByDescending(c => c.data.rate)                         // Sort 1: Thẻ xịn (SSR) lên trước
-            .ThenBy(c => c.data.cardID)                                  // Sort 2: Cùng rate thì xếp theo tên/ID
+            .Where(c => filterRate == null || c.data.rate == filterRate)
+            .OrderByDescending(c => c.data.rate)
+            .ThenBy(c => c.data.cardID)
             .ToList();
 
         // 3. Render ra UI
@@ -85,12 +73,10 @@ public class CardListManager : MonoBehaviour
             GameObject go = Instantiate(cardPrefab, cardContainer, false);
 
             RectTransform rect = go.GetComponent<RectTransform>();
-            rect.localScale = Vector3.one;
-
+            // Giữ nguyên setting Scale của sếp (sếp đang set Vector3.one xong lại set lại thành 0.1f)
             rect.localScale = new Vector3(0.1f, 0.1f, 0.1f);
             rect.anchoredPosition3D = Vector3.zero;
 
-            // ĐOẠN QUAN TRỌNG ĐÂY: Gọi Setup để đổ dữ liệu vào ô thẻ
             UI_CardSlot slotScript = go.GetComponent<UI_CardSlot>();
 
             if (slotScript != null)

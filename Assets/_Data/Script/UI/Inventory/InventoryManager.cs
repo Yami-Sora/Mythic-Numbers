@@ -72,19 +72,6 @@ public class InventoryManager : YamiMonoBehaviour
         Debug.Log("<color=cyan>[Hack] Mưa sao băng đã rơi vào túi!</color>");
     }
 
-    [System.Serializable]
-    public class InventoryItem
-    {
-        public ItemDataSO data;
-        public int amount;
-
-        public InventoryItem(ItemDataSO data, int amount)
-        {
-            this.data = data;
-            this.amount = amount;
-        }
-    }
-
     // ==========================================
     // 1. PHẦN XỬ LÝ LOGIC DATA (ÉP STACK 1 CHO NGỌC)
     // ==========================================
@@ -92,10 +79,8 @@ public class InventoryManager : YamiMonoBehaviour
     {
         int remaining = count;
 
-        // ĐIỂM CHẠM VIBE: Nếu là Gem thì maxStack ép cứng bằng 1, còn lại lấy theo SO
         int currentMaxStack = (itemData.type == ItemDataSO.ItemType.Gem) ? 1 : itemData.maxStack;
 
-        // BƯỚC A: Tìm ô chưa đầy (Chỉ áp dụng cho Đạo cụ - Prop, vì Gem max = 1 nên luôn bỏ qua bước này nếu đã có 1 viên)
         foreach (var item in _inventoryList)
         {
             if (item.data.itemID == itemData.itemID && item.amount < currentMaxStack)
@@ -110,7 +95,6 @@ public class InventoryManager : YamiMonoBehaviour
             }
         }
 
-        // BƯỚC B: Nếu đồ dư (hoặc là Gem bị ép stack 1), cứ thế mà đẻ ô mới liên tục
         while (remaining > 0)
         {
             int toAdd = Mathf.Min(remaining, currentMaxStack);
@@ -128,7 +112,6 @@ public class InventoryManager : YamiMonoBehaviour
     {
         _currentTab = filterType;
 
-        // 1. Dọn rác (Duyệt ngược)
         for (int i = slotContainer.childCount - 1; i >= 0; i--)
         {
             Transform child = slotContainer.GetChild(i);
@@ -140,13 +123,11 @@ public class InventoryManager : YamiMonoBehaviour
             ? _inventoryList
             : _inventoryList.Where(i => i.data.type == filterType).ToList();
 
-        // 2. Render Item
         foreach (var item in itemsToShow)
         {
             CreateSlotUI(item, false);
         }
 
-        // 3. Logic Đệm ô xám thông minh
         int totalDisplay = itemsToShow.Count;
         int emptySlotsNeeded = 0;
 
@@ -156,7 +137,6 @@ public class InventoryManager : YamiMonoBehaviour
         }
         else
         {
-            // Tính toán dựa trên số cột sếp đã cấu hình trong Inspector
             int remainder = totalDisplay % columns;
             if (remainder > 0)
             {
@@ -209,7 +189,7 @@ public class InventoryManager : YamiMonoBehaviour
         if (_inventoryList.Contains(itemToRemove))
         {
             _inventoryList.Remove(itemToRemove);
-            RefreshUI(); // Cập nhật lại UI của túi đồ lớn
+            RefreshUI();
         }
     }
 }

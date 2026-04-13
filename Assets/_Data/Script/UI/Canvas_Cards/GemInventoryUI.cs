@@ -54,7 +54,7 @@ public class GemInventoryUI : MonoBehaviour
         }
     }
 
-    private void CreateSlot(InventoryManager.InventoryItem item, bool isEmpty)
+    private void CreateSlot(InventoryItem item, bool isEmpty)
     {
         GameObject go = Instantiate(gemSlotPrefab, gemContent);
 
