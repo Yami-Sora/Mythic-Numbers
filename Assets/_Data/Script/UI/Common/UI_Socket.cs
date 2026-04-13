@@ -62,6 +62,7 @@ public class UI_Socket : MonoBehaviour
         {
             imgIcon.sprite = gem.data.icon;
             imgIcon.gameObject.SetActive(true);
+            imgFrame.color = gem.data.GetFrameColor(); //Khảm ngọc nào đổi màu khung ngọc đó
         }
         SetReadyToEquip(false);
     }

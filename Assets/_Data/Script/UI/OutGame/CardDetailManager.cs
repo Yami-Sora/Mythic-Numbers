@@ -6,20 +6,20 @@ public class CardDetailManager : YamiMonoBehaviour
 {
     public static CardDetailManager Instance { get; private set; }
 
-    [Header("Bên Phải - Kho Ngọc (Tách riêng)")]
+    [Header("Bên Phải - Kho Ngọc")]
     [SerializeField] private GemInventoryUI gemInventoryUI;
 
-    [Header("Bên Trái - Thẻ Bài (Preview)")]
+    [Header("Bên Trái - Thẻ Bài")]
     [SerializeField] private UI_CardBase cardPreviewVisual;
 
-    [Header("Bên Trái - Thông Tin Râu Ria")]
+    [Header("Bên Trái")]
     [SerializeField] private TextMeshProUGUI txtCardName;
     [SerializeField] private TextMeshProUGUI txtCardName2;
     [SerializeField] private TextMeshProUGUI txtCardDesc;
     [SerializeField] private Transform socketContainer;
     [SerializeField] private GameObject socketPrefab;
 
-    [Header("Stats References (Kèm Bonus)")]
+    [Header("Stats References")]
     [SerializeField] private TextMeshProUGUI txtStatTop;
     [SerializeField] private TextMeshProUGUI txtStatRight;
     [SerializeField] private TextMeshProUGUI txtStatBottom;
@@ -247,6 +247,13 @@ public class CardDetailManager : YamiMonoBehaviour
             _currentSelectedSocket = null; // Quên lỗ này đi
 
             // 4. (Tương lai) Sếp gọi thêm hàm RefreshStatsDisplay() ở đây để trừ chỉ số
+        }
+    }
+    public void RefreshRightGemInventory()
+    {
+        if (gemInventoryUI != null)
+        {
+            gemInventoryUI.RefreshGemList();
         }
     }
 }

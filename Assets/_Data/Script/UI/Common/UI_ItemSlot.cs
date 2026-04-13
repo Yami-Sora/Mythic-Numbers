@@ -5,7 +5,7 @@ using TMPro;
 public class UI_ItemSlot : MonoBehaviour
 {
     [SerializeField] private Image imgIcon;
-    [SerializeField] private Image imgFrame; // Cái viền của ô
+    [SerializeField] private Image imgFrame; // Cái nền của ô
     [SerializeField] private TextMeshProUGUI txtAmount;
     [SerializeField] private Button btnSlot;
 
@@ -39,11 +39,8 @@ public class UI_ItemSlot : MonoBehaviour
         if (imgFrame != null)
         {
             imgFrame.gameObject.SetActive(true);
-            // Nếu sếp có nhiều loại hình dáng viền khác nhau (tròn, vuông, cánh sen...)
-            if (item.data.frame != null) imgFrame.sprite = item.data.frame;
 
-            // Nhuộm màu viền theo độ hiếm sếp đã chỉnh trong SO
-            imgFrame.color = item.data.itemColor;
+            if (imgFrame != null) imgFrame.color = item.data.GetFrameColor();
         }
 
         btnSlot.interactable = true;

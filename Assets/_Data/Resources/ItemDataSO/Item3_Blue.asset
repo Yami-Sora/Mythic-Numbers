@@ -10,15 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c77b48d7e26a74148914325439790ead, type: 3}
-  m_Name: Item1 5
+  m_Name: Item3_Blue
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
-  itemID: 6
-  itemName: F
+  itemID: 03_Blue
+  itemName: 'C [Blue]'
   description: AAA
-  icon: {fileID: 21300072, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+  icon: {fileID: 21300064, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   frame: {fileID: 21300000, guid: 140317e4ee1bda84692acc5926818309, type: 3}
-  itemColor: {r: 1, g: 0, b: 0.06700325, a: 1}
+  itemColor: {r: 1, g: 1, b: 1, a: 1}
   type: 0
   maxStack: 99
-  directionTag: 3
-  bonusStat: 5
+  colorLevel: 3
+  nextLevelGem: {fileID: 11400000, guid: fe1c0d5912671f5419f3c851dd709a9f, type: 2}
+  directionTag: 4
+  bonusStat: 24

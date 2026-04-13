@@ -75,7 +75,7 @@ public class InventoryManager : YamiMonoBehaviour
     // ==========================================
     // 1. PHẦN XỬ LÝ LOGIC DATA (ÉP STACK 1 CHO NGỌC)
     // ==========================================
-    public void AddItem(ItemDataSO itemData, int count)
+    public void AddItem(ItemDataSO itemData, int count, bool isSilent = false)
     {
         int remaining = count;
 
@@ -102,7 +102,7 @@ public class InventoryManager : YamiMonoBehaviour
             remaining -= toAdd;
         }
 
-        RefreshUI();
+        if (!isSilent) RefreshUI();
     }
 
     // ==========================================
@@ -166,7 +166,7 @@ public class InventoryManager : YamiMonoBehaviour
             slotScript.Setup(item);
     }
 
-    private void RefreshUI() => DisplayInventory(_currentTab);
+    public void RefreshUI() => DisplayInventory(_currentTab);
 
     // ==========================================
     // 3. XỬ LÝ NÚT BẤM VÀ ĐỔI MÀU
@@ -184,12 +184,12 @@ public class InventoryManager : YamiMonoBehaviour
         if (activeTabImg) activeTabImg.color = _selectedColor;
     }
 
-    public void RemoveItem(InventoryItem itemToRemove)
+    public void RemoveItem(InventoryItem itemToRemove, bool isSilent = false)
     {
         if (_inventoryList.Contains(itemToRemove))
         {
             _inventoryList.Remove(itemToRemove);
-            RefreshUI();
+            if (!isSilent) RefreshUI();
         }
     }
 }

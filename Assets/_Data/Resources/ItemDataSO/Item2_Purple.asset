@@ -10,15 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c77b48d7e26a74148914325439790ead, type: 3}
-  m_Name: Item1 2
+  m_Name: Item2_Purple
   m_EditorClassIdentifier: Assembly-CSharp::ItemDataSO
-  itemID: 03
-  itemName: C
+  itemID: 02_Purple
+  itemName: 'B [Purple]'
   description: AAA
-  icon: {fileID: 21300092, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
+  icon: {fileID: 21300064, guid: bb76618f4bae74c83b9d6654d0b2a47e, type: 3}
   frame: {fileID: 21300000, guid: 140317e4ee1bda84692acc5926818309, type: 3}
-  itemColor: {r: 1, g: 0.5301002, b: 0, a: 1}
-  type: 1
+  itemColor: {r: 1, g: 1, b: 1, a: 1}
+  type: 0
   maxStack: 99
-  directionTag: 0
-  bonusStat: 0
+  colorLevel: 4
+  nextLevelGem: {fileID: 11400000, guid: 520c5442995f8294b9330459c46cfb2a, type: 2}
+  directionTag: 4
+  bonusStat: 48

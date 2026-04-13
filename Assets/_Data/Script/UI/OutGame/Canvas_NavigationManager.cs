@@ -14,6 +14,8 @@ public class Canvas_NavigationManager : MonoBehaviour
 
     [Header("Global Popups")]
     [SerializeField] private GameObject gemInfoPopup;
+    [SerializeField] private GameObject gemUpgrade;
+    [SerializeField] private GameObject RewardPopup;
 
     private GameObject _currentActiveTab;
     private Dictionary<TabType, GameObject> _tabDictionary;
@@ -31,6 +33,8 @@ public class Canvas_NavigationManager : MonoBehaviour
         if (inventoryCanvas) inventoryCanvas.SetActive(true);
 
         if (gemInfoPopup != null) gemInfoPopup.SetActive(true);
+        if (gemUpgrade != null) gemUpgrade.SetActive(true);
+        if (RewardPopup != null) RewardPopup.SetActive(true);
 
         InitDictionary();
     }
@@ -38,6 +42,9 @@ public class Canvas_NavigationManager : MonoBehaviour
     private void Start()
     {
         if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
+        if (gemUpgrade != null) gemUpgrade.SetActive(false);
+        if (RewardPopup != null) RewardPopup.SetActive(false);
+
         // 2. Lúc này (chuyển sang Start), mọi hàm Awake của tụi đàn em đã chạy xong hết rồi.
         // Giờ mình dọn dẹp: "Trảm" (tắt) hết tụi nó đi trước khi game kịp render khung hình đầu tiên.
         foreach (var tab in _tabDictionary.Values)
@@ -70,6 +77,9 @@ public class Canvas_NavigationManager : MonoBehaviour
     public void SwitchTab(TabType targetTab)
     {
         if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
+        if (gemUpgrade != null) gemUpgrade.SetActive(false);
+        if (RewardPopup != null) RewardPopup.SetActive(false);
+
         // Gọi hiệu ứng chuyển cảnh
         TransitionManager.Instance.PlayTransition(() => {
 
