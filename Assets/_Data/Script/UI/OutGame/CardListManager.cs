@@ -48,6 +48,7 @@ public class CardListManager : MonoBehaviour
         {
             this.data = data;
         }
+        public InventoryManager.InventoryItem[] equippedGems = new InventoryManager.InventoryItem[12];
     }
 
     // Nạp toàn bộ thẻ vào túi để test UI

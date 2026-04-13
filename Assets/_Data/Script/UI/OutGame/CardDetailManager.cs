@@ -80,7 +80,15 @@ public class CardDetailManager : YamiMonoBehaviour
                 allSockets[targetIndex].SetupState(isLocked: false);
             }
         }
-
+        for (int i = 0; i < allSockets.Length; i++)
+        {
+            // Nếu trong data báo lỗ thứ i này có ngọc
+            if (_selectedCard.equippedGems[i] != null && _selectedCard.equippedGems[i].data != null)
+            {
+                // Vẽ viên ngọc đó lên UI
+                allSockets[i].EquipGem(_selectedCard.equippedGems[i]);
+            }
+        }
         RefreshStatsDisplay();
     }
 
@@ -159,16 +167,16 @@ public class CardDetailManager : YamiMonoBehaviour
             // Check chuẩn Enum và lỗ trống
             if (socketDir == _pendingGemToEquip.data.directionTag && socket.EquippedGem == null)
             {
-                socket.EquipGem(_pendingGemToEquip);
-                Debug.Log($"<color=cyan>Đã khảm thành công {_pendingGemToEquip.data.itemName} vào vị trí {socketDir}!</color>");
+                int socketIndex = socket.transform.GetSiblingIndex(); // Lấy vị trí lỗ (0-11)
 
-                // --- LOGIC MỚI: TRỪ NGỌC TRONG TÚI ĐỒ ---
-                if (InventoryManager.Instance != null)
-                {
-                    InventoryManager.Instance.RemoveItem(_pendingGemToEquip); // Xóa khỏi List tổng
-                }
-                if (gemInventoryUI != null) gemInventoryUI.RefreshGemList(); // F5 lại UI túi ngọc nhỏ bên phải
-                // ----------------------------------------
+                // 1. Ghi vào UI (Cái vỏ)
+                socket.EquipGem(_pendingGemToEquip);
+
+                // 2. GHI VÀO DATA (Linh hồn)
+                _selectedCard.equippedGems[socketIndex] = _pendingGemToEquip;
+
+                if (InventoryManager.Instance != null) InventoryManager.Instance.RemoveItem(_pendingGemToEquip);
+                if (gemInventoryUI != null) gemInventoryUI.RefreshGemList();
             }
 
             // Xử lý xong thì "rửa tay", hủy trạng thái chờ khảm
@@ -221,6 +229,7 @@ public class CardDetailManager : YamiMonoBehaviour
         if (_currentSelectedSocket != null && _currentSelectedSocket.EquippedGem != null)
         {
             // 1. Lưu lại thông tin viên ngọc đang nằm trong lỗ
+            int socketIndex = _currentSelectedSocket.transform.GetSiblingIndex();
             var gemToReturn = _currentSelectedSocket.EquippedGem;
 
             // 2. Trả ngọc về túi đồ
@@ -228,6 +237,8 @@ public class CardDetailManager : YamiMonoBehaviour
             {
                 InventoryManager.Instance.AddItem(gemToReturn.data, 1);
             }
+            // XÓA KHỎI DATA
+            _selectedCard.equippedGems[socketIndex] = null;
             if (gemInventoryUI != null) gemInventoryUI.RefreshGemList(); // F5 lại UI túi ngọc nhỏ
 
             // 3. Reset lỗ về trạng thái Mở Khóa nhưng Trống không
