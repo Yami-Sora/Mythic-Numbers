@@ -20,14 +20,15 @@ public class TabButton : MonoBehaviour
         if (_isSelected) return;
         _isSelected = true;
 
-        // Nhón chân lên 3 đơn vị 
+        _rectTransform.DOKill(); // Dập tắt tween cũ nếu có
         _rectTransform.DOAnchorPosY(_originalPos.y + 3f, 0.2f);
     }
 
     public void Deselect()
     {
         _isSelected = false;
-        // Hạ chân xuống vị trí cũ
+
+        _rectTransform.DOKill(); // Dập tắt tween cũ nếu có
         _rectTransform.DOAnchorPosY(_originalPos.y, 0.2f);
     }
 
