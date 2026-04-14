@@ -23,6 +23,7 @@ public class CardListManager : MonoBehaviour
     private Color _selectedColor = new Color(1f, 0.84f, 0f); // Vàng kim (Gold)
 
     private List<OwnedCard> _ownedCards = new List<OwnedCard>();
+    public List<OwnedCard> GetOwnedCards() => _ownedCards;
     private CardRate? _currentFilter = null;
 
     [Header("--- BỘ BÀI TEST ---")]

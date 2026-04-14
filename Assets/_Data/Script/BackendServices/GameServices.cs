@@ -37,7 +37,16 @@ public class GameServices : MonoBehaviour
             () =>
             {
                 Debug.Log("<color=green>[PlayFab] Kết nối thành công!</color>");
-                // Lấy ELO hiện tại và in ra để debug
+
+                // === THÊM ĐÚNG 2 DÒNG NÀY VÀO ĐÂY ===
+                if (PlayFabDataManager.Instance != null)
+                {
+                    PlayFabDataManager.Instance.FetchVirtualCurrencies(); // Kéo tiền về UI
+                    PlayFabDataManager.Instance.LoadGameData();           // Kéo túi đồ và bài về UI
+                }
+                // ===================================
+
+                // Lấy ELO hiện tại và in ra để debug (Đoạn code cũ của sếp giữ nguyên)
                 PlayerData.GetEloAsync(
                     (elo, wins, losses, totalGames) =>
                     {

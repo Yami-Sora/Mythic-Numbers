@@ -28,7 +28,7 @@ public class TabButton : MonoBehaviour
     {
         _isSelected = false;
 
-        _rectTransform.DOKill(); // Dập tắt tween cũ nếu có
+        _rectTransform.DOKill();
         _rectTransform.DOAnchorPosY(_originalPos.y, 0.2f);
     }
 
