@@ -94,13 +94,34 @@ public class CardDetailManager : YamiMonoBehaviour
 
     private void RefreshStatsDisplay()
     {
-        if (_selectedCard == null) return;
+        if (_selectedCard == null || _selectedCard.data == null) return;
 
-        int bonusTop = 7;
-        int bonusRight = 26;
-        int bonusBottom = 12;
-        int bonusLeft = 8;
+        // Khởi tạo các biến chứa tổng Bonus
+        int bonusTop = 0;
+        int bonusRight = 0;
+        int bonusBottom = 0;
+        int bonusLeft = 0;
 
+        // Quét toàn bộ 12 lỗ trong Data để tính tổng chỉ số ngọc đang khảm
+        for (int i = 0; i < _selectedCard.equippedGems.Length; i++)
+        {
+            var gem = _selectedCard.equippedGems[i];
+
+            // Nếu lỗ này có ngọc
+            if (gem != null && gem.data != null)
+            {
+                // Phân loại cộng vào đúng hướng dựa trên directionTag của viên ngọc
+                switch (gem.data.directionTag)
+                {
+                    case GemDirection.Top: bonusTop += gem.data.bonusStat; break;
+                    case GemDirection.Right: bonusRight += gem.data.bonusStat; break;
+                    case GemDirection.Bottom: bonusBottom += gem.data.bonusStat; break;
+                    case GemDirection.Left: bonusLeft += gem.data.bonusStat; break;
+                }
+            }
+        }
+
+        // Bắn data ra UI hiển thị
         UpdateSingleStatText(txtStatTop, "Trên", _selectedCard.data.top, bonusTop);
         UpdateSingleStatText(txtStatRight, "Phải", _selectedCard.data.right, bonusRight);
         UpdateSingleStatText(txtStatBottom, "Dưới", _selectedCard.data.bottom, bonusBottom);
@@ -177,6 +198,7 @@ public class CardDetailManager : YamiMonoBehaviour
 
                 if (InventoryManager.Instance != null) InventoryManager.Instance.RemoveItem(_pendingGemToEquip);
                 if (gemInventoryUI != null) gemInventoryUI.RefreshGemList();
+                RefreshStatsDisplay();
             }
 
             // Xử lý xong thì "rửa tay", hủy trạng thái chờ khảm
@@ -244,9 +266,11 @@ public class CardDetailManager : YamiMonoBehaviour
             // 3. Reset lỗ về trạng thái Mở Khóa nhưng Trống không
             _currentSelectedSocket.SetupState(isLocked: false);
             _currentSelectedSocket.SetReadyToEquip(false); // Tắt viền vàng
+            _currentSelectedSocket.ClearSocket(); // Xóa ngọc khỏi lỗ
             _currentSelectedSocket = null; // Quên lỗ này đi
 
-            // 4. (Tương lai) Sếp gọi thêm hàm RefreshStatsDisplay() ở đây để trừ chỉ số
+            
+            RefreshStatsDisplay();
         }
     }
     public void RefreshRightGemInventory()

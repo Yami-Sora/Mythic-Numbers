@@ -22,5 +22,5 @@ MonoBehaviour:
   maxStack: 99
   colorLevel: 6
   nextLevelGem: {fileID: 11400000, guid: 55a7138a47974a649953f6cb33b88196, type: 2}
-  directionTag: 4
+  directionTag: 1
   bonusStat: 192

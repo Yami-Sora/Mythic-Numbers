@@ -33,7 +33,11 @@ public class UI_Socket : MonoBehaviour
         IsUnlocked = !isLocked;
         EquippedGem = null;
 
-        if (imgFrame) imgFrame.gameObject.SetActive(true);
+        if (imgFrame)
+        {
+            imgFrame.gameObject.SetActive(true);
+            imgFrame.color = Color.white; //Tẩy trắng khung viền mỗi khi reset lỗ!
+        }
         if (imgHighlight)
         {
             imgHighlight.gameObject.SetActive(true);
@@ -52,6 +56,18 @@ public class UI_Socket : MonoBehaviour
         if (imgHighlight != null)
         {
             imgHighlight.color = isReady ? Color.yellow : Color.white;
+        }
+    }
+    public void ClearSocket()
+    {
+        EquippedGem = null;
+        if (imgIcon != null)
+        {
+            imgIcon.gameObject.SetActive(false);
+        }
+        if (imgFrame != null)
+        {
+            imgFrame.color = Color.white; // Trả về màu khung mặc định khi gỡ ngọc
         }
     }
 
