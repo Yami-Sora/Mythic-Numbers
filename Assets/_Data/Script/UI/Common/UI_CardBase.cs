@@ -18,22 +18,23 @@ public class UI_CardBase : MonoBehaviour
     protected CardDataSO _cardData;
 
     // Hàm Setup nhận trực tiếp CardDataSO
-    public virtual void Setup(CardDataSO data)
+    // [UPDATE]: Chuyển sang nhận OwnedCard để lấy được chỉ số tổng đã cộng ngọc
+    public virtual void Setup(OwnedCard ownedCard)
     {
-        if (data == null) return;
-        _cardData = data;
+        if (ownedCard == null || ownedCard.data == null) return;
+        _cardData = ownedCard.data;
 
-        // Bật điện lên! Thẻ đã vào slot
         ToggleContent(true);
 
-        if (imgCard != null) imgCard.sprite = data.cardImage;
-        if (imgFrame != null && data.cardFrame != null) imgFrame.sprite = data.cardFrame;
-        if (txtCardName != null) txtCardName.text = data.cardName;
+        if (imgCard != null) imgCard.sprite = ownedCard.data.cardImage;
+        if (imgFrame != null && ownedCard.data.cardFrame != null) imgFrame.sprite = ownedCard.data.cardFrame;
+        if (txtCardName != null) txtCardName.text = ownedCard.data.cardName;
 
-        UpdateBaseStat(txtTop, data.top);
-        UpdateBaseStat(txtRight, data.right);
-        UpdateBaseStat(txtBottom, data.bottom);
-        UpdateBaseStat(txtLeft, data.left);
+        // ÉP CHỈ SỐ TỔNG (ĐÃ CỘNG NGỌC) RA MÀN HÌNH
+        UpdateBaseStat(txtTop, ownedCard.GetTotalTop());
+        UpdateBaseStat(txtRight, ownedCard.GetTotalRight());
+        UpdateBaseStat(txtBottom, ownedCard.GetTotalBottom());
+        UpdateBaseStat(txtLeft, ownedCard.GetTotalLeft());
     }
 
     // Hàm tiện ích: Bật/Tắt các thành phần phụ (Khung, Tên, 4 Chỉ số)

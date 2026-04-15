@@ -54,10 +54,11 @@ public class CardListManager : MonoBehaviour
     // ==========================================
     public void DisplayCards()
     {
-        // 1. LINQ Thông Minh: Lọc Tab VÀ Lọc luôn bài trong Deck ở ngay đây
+        // 1. LINQ Thông Minh: Mặc thêm 1 lớp giáp chống rác (c.data != null)
         var cardsToShow = _ownedCards
+            .Where(c => c != null && c.data != null) // [BỌC THÉP]: Lọc ngay mấy cái thẻ ma rỗng ruột
             .Where(c => _currentFilter == null || c.data.rate == _currentFilter)
-            .Where(c => DeckManager.Instance == null || !IsCardInDeck(c.data.cardID)) // Lọc bài đã trang bị
+            .Where(c => !IsCardInDeck(c.data.cardID)) // Chuyển check Instance vào trong IsCardInDeck luôn cho gọn
             .OrderByDescending(c => c.data.rate)
             .ThenBy(c => c.data.cardID)
             .ToList();
@@ -65,12 +66,9 @@ public class CardListManager : MonoBehaviour
         // 2. KHÔNG DÙNG DESTROY NỮA! Lấy thẻ từ Pool ra xài
         for (int i = 0; i < cardsToShow.Count; i++)
         {
-            // Thiếu thì mới Instantiate đẻ thêm
             if (i >= _cardPool.Count)
             {
                 GameObject go = Instantiate(cardPrefab, cardContainer, false);
-
-                // Set Scale đúng 1 lần lúc mới đẻ ra
                 RectTransform rect = go.GetComponent<RectTransform>();
                 rect.localScale = new Vector3(0.1f, 0.1f, 0.1f);
 
@@ -78,36 +76,37 @@ public class CardListManager : MonoBehaviour
                 _cardPool.Add(newSlot);
             }
 
-            // Có sẵn rồi thì lôi ra Setup lại Data
             UI_CardSlot slot = _cardPool[i];
-            slot.gameObject.SetActive(true); // Bật lên
+            slot.gameObject.SetActive(true);
             slot.Setup(cardsToShow[i]);
-
-            // Quan Trọng: Ép nó xếp xuống dưới cùng để UI hiển thị đúng thứ tự Sort (SSR -> N)
             slot.transform.SetAsLastSibling();
         }
 
-        // 3. Giấu đi những thẻ thừa (Không Destroy)
-        // Ví dụ lúc trước xem Tab ALL có 100 thẻ, giờ qua Tab SSR chỉ có 5 thẻ -> Cất 95 thẻ đi
+        // 3. Giấu đi những thẻ thừa
         for (int i = cardsToShow.Count; i < _cardPool.Count; i++)
         {
             _cardPool[i].gameObject.SetActive(false);
         }
     }
 
+    // [BỌC THÉP]: Phiên bản check thẻ 3 lớp siêu an toàn
     private bool IsCardInDeck(int cardID)
     {
+        // Nhỡ DeckManager chưa kịp tỉnh dậy thì bỏ qua
+        if (DeckManager.Instance == null || DeckManager.Instance.currentDeck == null) return false;
+
         for (int i = 0; i < DeckManager.Instance.maxDeckSize; i++)
         {
-            if (DeckManager.Instance.currentDeck[i] != null &&
-                DeckManager.Instance.currentDeck[i].data.cardID == cardID)
+            var cardInDeck = DeckManager.Instance.currentDeck[i];
+
+            // Check đủ 3 bước: Có thẻ ko? Thẻ có linh hồn (data) ko? ID có khớp ko?
+            if (cardInDeck != null && cardInDeck.data != null && cardInDeck.data.cardID == cardID)
             {
                 return true;
             }
         }
         return false;
     }
-
     // ==========================================
     // XỬ LÝ NÚT BẤM
     // ==========================================

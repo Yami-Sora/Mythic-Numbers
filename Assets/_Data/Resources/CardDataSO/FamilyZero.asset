@@ -18,7 +18,7 @@ MonoBehaviour:
   cardFrame: {fileID: 0}
   rate: 0
   top: 7
-  right: 562
+  right: 193
   bottom: 8
   left: 11
   skill: {fileID: 11400000, guid: 296f7eda921be9d469976ef39d8fcd82, type: 2}

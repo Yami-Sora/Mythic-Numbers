@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class Canvas_NavigationManager : MonoBehaviour
 {
@@ -12,15 +13,17 @@ public class Canvas_NavigationManager : MonoBehaviour
     [SerializeField] private GameObject dungeonCanvas;
     [SerializeField] private GameObject inventoryCanvas;
 
+    // [CLEAN CODE 1]: Gom tất cả Popup vào 1 cái túi (Mảng). Thêm bớt gì cứ kéo thả trên Inspector!
     [Header("Global Popups")]
-    [SerializeField] private GameObject gemInfoPopup;
-    [SerializeField] private GameObject gemUpgrade;
-    [SerializeField] private GameObject RewardPopup;
+    [SerializeField] private GameObject[] allGlobalPopups;
 
     private GameObject _currentActiveTab;
     private Dictionary<TabType, GameObject> _tabDictionary;
 
     public enum TabType { Shop, Cards, Combat, Dungeon, Inventory }
+
+    // [CLEAN CODE 2]: Tạo một cái Cổng Phát Thanh (Event). Ai thích hóng biến thì đăng ký vào đây.
+    public static event Action<TabType> OnTabChanged;
 
     private void Awake()
     {
@@ -32,30 +35,22 @@ public class Canvas_NavigationManager : MonoBehaviour
         if (dungeonCanvas) dungeonCanvas.SetActive(true);
         if (inventoryCanvas) inventoryCanvas.SetActive(true);
 
-        if (gemInfoPopup != null) gemInfoPopup.SetActive(true);
-        if (gemUpgrade != null) gemUpgrade.SetActive(true);
-        if (RewardPopup != null) RewardPopup.SetActive(true);
+        // Bật hết Popup lên để nó init (Awake)
+        SetAllPopupsState(true);
 
         InitDictionary();
     }
 
     private void Start()
     {
-        if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
-        if (gemUpgrade != null) gemUpgrade.SetActive(false);
-        if (RewardPopup != null) RewardPopup.SetActive(false);
+        // Init xong thì tắt sạch Popup đi
+        SetAllPopupsState(false);
 
-        // 2. Lúc này (chuyển sang Start), mọi hàm Awake của tụi đàn em đã chạy xong hết rồi.
-        // Giờ mình dọn dẹp: "Trảm" (tắt) hết tụi nó đi trước khi game kịp render khung hình đầu tiên.
         foreach (var tab in _tabDictionary.Values)
         {
-            if (tab != null)
-            {
-                tab.SetActive(false);
-            }
+            if (tab != null) tab.SetActive(false);
         }
 
-        // 3. Cuối cùng, bật duy nhất tab sếp muốn lên (Combat)
         SwitchTab(TabType.Combat);
     }
 
@@ -76,19 +71,13 @@ public class Canvas_NavigationManager : MonoBehaviour
 
     public void SwitchTab(TabType targetTab)
     {
-        if (gemInfoPopup != null) gemInfoPopup.SetActive(false);
-        if (gemUpgrade != null) gemUpgrade.SetActive(false);
-        if (RewardPopup != null) RewardPopup.SetActive(false);
+        // 1. Dập hết mọi popup đang mở trên màn hình
+        SetAllPopupsState(false);
 
-        // Gọi hiệu ứng chuyển cảnh
         TransitionManager.Instance.PlayTransition(() => {
 
-            // --- ĐOẠN NÀY CHẠY KHI MÀN HÌNH ĐANG ĐEN ---
-
-            // 1. Tắt tab cũ, bật tab mới (Logic cũ của mình)
+            // 2. Chuyển đổi Tab (Tắt cũ, Bật mới)
             if (_currentActiveTab != null) _currentActiveTab.SetActive(false);
-
-            Canvas_CardManager.Instance.OnTransition(); // Reset trạng thái
 
             if (_tabDictionary.TryGetValue(targetTab, out GameObject targetGO))
             {
@@ -96,18 +85,33 @@ public class Canvas_NavigationManager : MonoBehaviour
                 _currentActiveTab = targetGO;
             }
 
-            // 2. Cập nhật trạng thái "Nhón chân" của các nút
-            for (int i = 0; i < allTabButtons.Length; i++)
-            {
-                if (i == (int)targetTab)
-                    allTabButtons[i].Select();
-                else
-                    allTabButtons[i].Deselect();
-            }
+            UpdateTabButtons(targetTab);
+
+            // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab
+            // (Thằng CardManager hay InventoryManager nghe thấy sẽ tự động reset)
+            OnTabChanged?.Invoke(targetTab);
         });
     }
 
-    // Helper cho các nút bấm UI gọi vào
+    // Hàm tiện ích: Duyệt 1 nhát hết cả mảng Popup, code cực ngắn
+    private void SetAllPopupsState(bool isActive)
+    {
+        if (allGlobalPopups == null) return;
+        foreach (var popup in allGlobalPopups)
+        {
+            if (popup != null) popup.SetActive(isActive);
+        }
+    }
+
+    private void UpdateTabButtons(TabType targetTab)
+    {
+        for (int i = 0; i < allTabButtons.Length; i++)
+        {
+            if (i == (int)targetTab) allTabButtons[i].Select();
+            else allTabButtons[i].Deselect();
+        }
+    }
+
     public void OnTabButtonClicked(int tabIndex)
     {
         SwitchTab((TabType)tabIndex);

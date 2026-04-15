@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Canvas_CardManager : MonoBehaviour
+public class Canvas_CardManager : TabListenerBase
 {
     public static Canvas_CardManager Instance { get; private set; }
 
@@ -8,9 +8,10 @@ public class Canvas_CardManager : MonoBehaviour
     {
         Instance = this;
     }
-    public void OnTransition()
+    protected override void OnTabChanged(Canvas_NavigationManager.TabType targetTab)
     {
-        CardListManager.Instance.gameObject.SetActive(true);
-        CardDetailManager.Instance.gameObject.SetActive(false);
+        if (CardListManager.Instance != null) CardListManager.Instance.gameObject.SetActive(true);
+        if (CardDetailManager.Instance != null) CardDetailManager.Instance.gameObject.SetActive(false);
+        if (DeckManager.Instance != null) DeckManager.Instance.gameObject.SetActive(true);
     }
 }

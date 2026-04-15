@@ -5,7 +5,7 @@ using TMPro;
 public class UI_CardSlot : UI_CardBase
 {
     // Thêm Sprite rỗng để gán lại khi thẻ bị tháo ra (Sếp khai báo biến này ở trên đầu class nhé)
-    [Header("Empty Slot Setting")]
+    [Header("Empty Slot Setting - Chỉ dành cho Panel Left Deck")]
     public Sprite emptySlotSprite;
 
     [Header("Interaction")]
@@ -21,12 +21,12 @@ public class UI_CardSlot : UI_CardBase
     private OwnedCard _currentCard;
 
     // Overload hàm Setup để nhận OwnedCard từ List
-    public void Setup(OwnedCard cardInfo)
+    public override void Setup(OwnedCard cardInfo)
     {
         _currentCard = cardInfo;
 
         // Gọi thằng cha để vẽ hình và chữ
-        base.Setup(cardInfo.data);
+        base.Setup(cardInfo);
 
         // Nạp đạn cho nút bấm
         if (btnCard != null)

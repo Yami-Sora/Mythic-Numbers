@@ -17,9 +17,9 @@ MonoBehaviour:
   cardImage: {fileID: -2366965408156117902, guid: e8bf40d257a404244a59dbd906d8cb8d, type: 3}
   cardFrame: {fileID: 0}
   rate: 0
-  top: 521
-  right: 235
-  bottom: 215
+  top: 77
+  right: 23
+  bottom: 112
   left: 5
   skill: {fileID: 11400000, guid: 99ba8f6031bc5044c80e7ade955027dd, type: 2}
   availableSockets: 03000000
