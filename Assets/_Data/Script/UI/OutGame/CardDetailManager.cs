@@ -243,6 +243,10 @@ public class CardDetailManager : YamiMonoBehaviour
         {
             CardListManager.Instance.gameObject.SetActive(true);
         }
+        if (DeckManager.Instance != null)
+        {
+            DeckManager.Instance.gameObject.SetActive(true);
+        }
         this.gameObject.SetActive(false);
     }
     // --- LOGIC GỠ NGỌC ---

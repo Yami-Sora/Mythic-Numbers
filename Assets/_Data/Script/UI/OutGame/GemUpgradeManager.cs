@@ -11,13 +11,11 @@ public class GemUpgradeManager : MonoBehaviour
     [SerializeField] private Transform upgradeContainer;
     [SerializeField] private GameObject gemSlotPrefab;
     [SerializeField] private Button btnQuickUpgrade;
-    [SerializeField] private Button btnClose;
 
     private void Awake()
     {
         Instance = this;
         if (btnQuickUpgrade) btnQuickUpgrade.onClick.AddListener(OnQuickUpgradeClicked);
-        if (btnClose) btnClose.onClick.AddListener(ClosePanel);
         gameObject.SetActive(false);
     }
 

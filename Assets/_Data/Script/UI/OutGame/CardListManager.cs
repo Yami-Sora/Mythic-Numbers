@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using static CardDataSO;
 
 public class CardListManager : MonoBehaviour
 {
@@ -20,14 +19,18 @@ public class CardListManager : MonoBehaviour
     [SerializeField] private Image imgTabN;
 
     private Color _normalColor = Color.white;
-    private Color _selectedColor = new Color(1f, 0.84f, 0f); // Vàng kim (Gold)
+    private Color _selectedColor = new Color(1f, 0.84f, 0f);
 
     private List<OwnedCard> _ownedCards = new List<OwnedCard>();
     public List<OwnedCard> GetOwnedCards() => _ownedCards;
-    private CardRate? _currentFilter = null;
+
+    private CardDataSO.CardRate? _currentFilter = null;
 
     [Header("--- BỘ BÀI TEST ---")]
     public CardDataSO[] allCardDatabase;
+
+    // [BÍ KÍP TỐI ƯU]: Danh sách chứa các thẻ bài đã được nặn ra (Object Pool)
+    private List<UI_CardSlot> _cardPool = new List<UI_CardSlot>();
 
     private void Awake() => Instance = this;
 
@@ -47,58 +50,72 @@ public class CardListManager : MonoBehaviour
     }
 
     // ==========================================
-    // LOGIC LỌC (FILTER) & SẮP XẾP (SORT) MƯỢT MÀ
+    // LOGIC LỌC & TỐI ƯU HIỆU NĂNG (OBJECT POOLING)
     // ==========================================
-    public void DisplayCards(CardRate? filterRate = null)
+    public void DisplayCards()
     {
-        _currentFilter = filterRate;
-
-        // 1. Dọn dẹp Content (Áp dụng bí kíp Duyệt Ngược chống lỗi kẹt UI)
-        for (int i = cardContainer.childCount - 1; i >= 0; i--)
-        {
-            Transform child = cardContainer.GetChild(i);
-            child.SetParent(null);
-            Destroy(child.gameObject);
-        }
-
-        // 2. Phép thuật LINQ: Lọc và Sắp xếp
+        // 1. LINQ Thông Minh: Lọc Tab VÀ Lọc luôn bài trong Deck ở ngay đây
         var cardsToShow = _ownedCards
-            .Where(c => filterRate == null || c.data.rate == filterRate)
+            .Where(c => _currentFilter == null || c.data.rate == _currentFilter)
+            .Where(c => DeckManager.Instance == null || !IsCardInDeck(c.data.cardID)) // Lọc bài đã trang bị
             .OrderByDescending(c => c.data.rate)
             .ThenBy(c => c.data.cardID)
             .ToList();
 
-        // 3. Render ra UI
-        foreach (var card in cardsToShow)
+        // 2. KHÔNG DÙNG DESTROY NỮA! Lấy thẻ từ Pool ra xài
+        for (int i = 0; i < cardsToShow.Count; i++)
         {
-            GameObject go = Instantiate(cardPrefab, cardContainer, false);
-
-            RectTransform rect = go.GetComponent<RectTransform>();
-            // Giữ nguyên setting Scale của sếp (sếp đang set Vector3.one xong lại set lại thành 0.1f)
-            rect.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            rect.anchoredPosition3D = Vector3.zero;
-
-            UI_CardSlot slotScript = go.GetComponent<UI_CardSlot>();
-
-            if (slotScript != null)
+            // Thiếu thì mới Instantiate đẻ thêm
+            if (i >= _cardPool.Count)
             {
-                slotScript.Setup(card);
+                GameObject go = Instantiate(cardPrefab, cardContainer, false);
+
+                // Set Scale đúng 1 lần lúc mới đẻ ra
+                RectTransform rect = go.GetComponent<RectTransform>();
+                rect.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+
+                UI_CardSlot newSlot = go.GetComponent<UI_CardSlot>();
+                _cardPool.Add(newSlot);
             }
-            else
-            {
-                Debug.LogError("Prefab thẻ bài chưa gắn script UI_CardSlot kìa!");
-            }
+
+            // Có sẵn rồi thì lôi ra Setup lại Data
+            UI_CardSlot slot = _cardPool[i];
+            slot.gameObject.SetActive(true); // Bật lên
+            slot.Setup(cardsToShow[i]);
+
+            // Quan Trọng: Ép nó xếp xuống dưới cùng để UI hiển thị đúng thứ tự Sort (SSR -> N)
+            slot.transform.SetAsLastSibling();
+        }
+
+        // 3. Giấu đi những thẻ thừa (Không Destroy)
+        // Ví dụ lúc trước xem Tab ALL có 100 thẻ, giờ qua Tab SSR chỉ có 5 thẻ -> Cất 95 thẻ đi
+        for (int i = cardsToShow.Count; i < _cardPool.Count; i++)
+        {
+            _cardPool[i].gameObject.SetActive(false);
         }
     }
 
+    private bool IsCardInDeck(int cardID)
+    {
+        for (int i = 0; i < DeckManager.Instance.maxDeckSize; i++)
+        {
+            if (DeckManager.Instance.currentDeck[i] != null &&
+                DeckManager.Instance.currentDeck[i].data.cardID == cardID)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ==========================================
-    // XỬ LÝ NÚT BẤM (Gán vào OnClick của Button)
+    // XỬ LÝ NÚT BẤM
     // ==========================================
-    public void ShowAll() { DisplayCards(null); HighlightTab(imgTabAll); }
-    public void ShowSSR() { DisplayCards(CardRate.SSR); HighlightTab(imgTabSSR); }
-    public void ShowSR() { DisplayCards(CardRate.SR); HighlightTab(imgTabSR); }
-    public void ShowR() { DisplayCards(CardRate.R); HighlightTab(imgTabR); }
-    public void ShowN() { DisplayCards(CardRate.N); HighlightTab(imgTabN); }
+    public void ShowAll() { _currentFilter = null; DisplayCards(); HighlightTab(imgTabAll); }
+    public void ShowSSR() { _currentFilter = CardDataSO.CardRate.SSR; DisplayCards(); HighlightTab(imgTabSSR); }
+    public void ShowSR() { _currentFilter = CardDataSO.CardRate.SR; DisplayCards(); HighlightTab(imgTabSR); }
+    public void ShowR() { _currentFilter = CardDataSO.CardRate.R; DisplayCards(); HighlightTab(imgTabR); }
+    public void ShowN() { _currentFilter = CardDataSO.CardRate.N; DisplayCards(); HighlightTab(imgTabN); }
 
     private void HighlightTab(Image activeTabImg)
     {
