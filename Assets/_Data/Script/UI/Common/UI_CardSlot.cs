@@ -33,7 +33,6 @@ public class UI_CardSlot : UI_CardBase
             CardDetailManager.Instance.OpenDetail(_currentCard);
         }
 
-        // Chống lỗi NullReference nếu CardListManager đang bị tắt đột ngột
         if (CardListManager.Instance != null)
         {
             CardListManager.Instance.gameObject.SetActive(false);
