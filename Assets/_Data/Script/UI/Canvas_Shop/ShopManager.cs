@@ -70,6 +70,7 @@ public class ShopManager : MonoBehaviour
     private void ProcessGrantedItems(List<ItemInstance> grantedItems)
     {
         List<CardDataSO> newCards = new List<CardDataSO>();
+        bool isAnyCardUpdated = false;
 
         foreach (var item in grantedItems)
         {
@@ -78,25 +79,44 @@ public class ShopManager : MonoBehaviour
                 CardDataSO data = CardDatabase.Instance.GetCardData(cardId);
                 if (data != null)
                 {
-                    // KIỂM TRA NULL TRƯỚC KHI ADD BÀI VÀO LIST
                     if (CardListManager.Instance != null)
                     {
-                        CardListManager.Instance.GetOwnedCards().Add(new OwnedCard(data));
+                        var inventoryCards = CardListManager.Instance.GetOwnedCards();
+
+                        // [UPDATE LOGIC]: Dò tìm xem thẻ này đã có mặt trong Kho chưa?
+                        var existingCard = inventoryCards.Find(c => c.data.cardID == data.cardID);
+
+                        if (existingCard != null)
+                        {
+                            // NẾU TRÙNG: Chuyển hóa thành 50 mảnh
+                            existingCard.currentShards += 50;
+                            Debug.Log($"[Shop] Quay trúng thẻ trùng: {data.cardName}. Hóa thành 50 mảnh!");
+                        }
+                        else
+                        {
+                            // NẾU MỚI TINH: Đẻ thẻ mới nhét vào kho
+                            inventoryCards.Add(new OwnedCard(data));
+                            Debug.Log($"[Shop] Nhân phẩm bùng nổ! Nhận thẻ mới: {data.cardName}");
+                        }
+                        isAnyCardUpdated = true;
                     }
                     else
                     {
-                        Debug.LogWarning("[Shop] CardListManager đang ngủ, không add vào List hiển thị được (Nhưng vẫn sẽ lưu lên Cloud)!");
+                        Debug.LogWarning("[Shop] CardListManager đang ngủ!");
                     }
+
+                    // Vẫn đẩy thẻ vào list UI để popup hiện lên cho sướng mắt
                     newCards.Add(data);
                 }
             }
         }
 
-        // F5 lại giao diện bộ bài (để thẻ mới hiện ra)
-        if (CardListManager.Instance != null) CardListManager.Instance.DisplayCards();
-
-        // ☁️ LƯU LÊN MÂY NGAY LẬP TỨC!
-        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+        // F5 lại giao diện bộ bài (để thẻ mới hoặc số mảnh nhảy)
+        if (isAnyCardUpdated && CardListManager.Instance != null)
+        {
+            CardListManager.Instance.DisplayCards();
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+        }
 
         // HIỂN THỊ UI BẢNG THƯỞNG GACHA
         if (RewardPopupManager.Instance != null)

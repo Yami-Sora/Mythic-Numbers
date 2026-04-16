@@ -24,6 +24,8 @@ public class CardSaveData
 {
     public int id;
     public int lvl;
+    public int star;
+    public int shards;
     public string[] gems = new string[PlayFabDataManager.MAX_GEMS];
 }
 
@@ -69,6 +71,14 @@ public class PlayFabDataManager : MonoBehaviour
     public void SaveGameData()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        // [KHIÊN BẢO VỆ]: Nếu đang ở Combat mà gọi Save thì chặn ngay!
+        // Chỉ cho phép Save khi các Manager ở MenuScene đang tồn tại.
+        if (CardListManager.Instance == null || InventoryManager.Instance == null)
+        {
+            Debug.LogWarning("[PlayFab] Đang ở chế độ Offline/Combat, từ chối Save để bảo toàn tài sản cho sếp!");
+            return;
+        }
 
         PlayFabSaveData saveData = new PlayFabSaveData();
 
@@ -182,7 +192,13 @@ public class PlayFabDataManager : MonoBehaviour
 
         foreach (var card in CardListManager.Instance.GetOwnedCards())
         {
-            CardSaveData cardSave = new CardSaveData { id = card.data.cardID, lvl = card.level };
+            CardSaveData cardSave = new CardSaveData
+            {
+                id = card.data.cardID,
+                lvl = card.level,
+                star = card.starLevel,  
+                shards = card.currentShards 
+            };
             for (int i = 0; i < MAX_GEMS; i++)
             {
                 bool hasGem = card.equippedGems[i] != null && card.equippedGems[i].data != null;
@@ -218,7 +234,12 @@ public class PlayFabDataManager : MonoBehaviour
             var cardData = CardDatabase.Instance.GetCardData(cardSave.id);
             if (cardData == null) continue;
 
-            OwnedCard newCard = new OwnedCard(cardData) { level = cardSave.lvl };
+            OwnedCard newCard = new OwnedCard(cardData)
+            {
+                level = cardSave.lvl,
+                starLevel = cardSave.star, 
+                currentShards = cardSave.shards 
+            };
 
             for (int i = 0; i < MAX_GEMS; i++)
             {

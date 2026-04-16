@@ -36,17 +36,7 @@ public class CardListManager : MonoBehaviour
 
     private void Start()
     {
-        HackInitialCards();
         ShowAll();
-    }
-
-    private void HackInitialCards()
-    {
-        if (allCardDatabase == null) return;
-        foreach (var cardData in allCardDatabase)
-        {
-            _ownedCards.Add(new OwnedCard(cardData));
-        }
     }
 
     // ==========================================
