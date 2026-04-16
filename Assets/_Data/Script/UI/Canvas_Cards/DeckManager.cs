@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class DeckManager : MonoBehaviour
 {
@@ -59,9 +60,9 @@ public class DeckManager : MonoBehaviour
         if (btnEditDeck != null) btnEditDeck.gameObject.SetActive(true);
         if (btnSaveDeck != null) btnSaveDeck.gameObject.SetActive(false);
         if (btnCancelEdit != null) btnCancelEdit.gameObject.SetActive(false);
-        
+
         PlayFabDataManager.Instance.SaveCurrentDeck(currentDeck);
-        
+
         RefreshDeckUI();
     }
 
@@ -81,35 +82,81 @@ public class DeckManager : MonoBehaviour
         RefreshDeckUI();
     }
 
+    // ==========================================
+    // LOGIC LẮP BÀI (THÊM DOTWEEN)
+    // ==========================================
     public bool EquipCard(OwnedCard cardToEquip)
     {
-        for (int i = 0; i < maxDeckSize; i++)
+        // [BỌC THÉP TẦNG 1]: Thẻ định lắp vào mà rỗng ruột thì sút nó ra luôn!
+        if (cardToEquip == null || cardToEquip.data == null)
         {
-            // So sánh cardID thông qua .data
-            if (currentDeck[i] != null && currentDeck[i].data.cardID == cardToEquip.data.cardID)
-            {
-                return false;
-            }
+            Debug.LogWarning("[DeckManager] Lỗi: Thẻ định lắp bị rỗng Data!");
+            return false;
         }
 
         for (int i = 0; i < maxDeckSize; i++)
         {
-            if (currentDeck[i] == null)
+            // [BỌC THÉP TẦNG 2]: Quét xem mấy thẻ ĐANG NẰM SẴN trong Deck có cái nào bị ma nhập không
+            if (currentDeck[i] != null && currentDeck[i].data != null)
             {
-                currentDeck[i] = cardToEquip; // Lưu thẳng Reference (Tham chiếu)
+                // Nếu thẻ bình thường, check xem ID có bị trùng với thẻ đang định lắp không
+                if (currentDeck[i].data.cardID == cardToEquip.data.cardID)
+                {
+                    return false; // Bị trùng ID rồi sếp! Không cho lắp 2 lá giống nhau.
+                }
+            }
+        }
+
+        // Bắt đầu tìm ô trống để nhét thẻ vào
+        for (int i = 0; i < maxDeckSize; i++)
+        {
+            // [BỌC THÉP TẦNG 3]: Nếu ô trống, HOẶC ô đó chứa thẻ lỗi (data null), thì cứ thẳng tay đè thẻ mới lên!
+            if (currentDeck[i] == null || currentDeck[i].data == null)
+            {
+                currentDeck[i] = cardToEquip; // Lưu thẳng Reference
                 RefreshDeckUI();
+
+                // [DOTWEEN]: Hiệu ứng nảy "Pưng"
+                if (deckSlots[i] != null)
+                {
+                    Transform slotTrans = deckSlots[i].transform;
+                    slotTrans.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+                    slotTrans.DOScale(0.08f, 0.04f).SetEase(Ease.OutBack);
+                }
+
                 return true;
             }
         }
         return false;
     }
 
+    // ==========================================
+    // LOGIC GỠ BÀI (THÊM DOTWEEN)
+    // ==========================================
     public void UnequipCard(int slotIndex)
     {
         if (slotIndex >= 0 && slotIndex < maxDeckSize && currentDeck[slotIndex] != null)
         {
-            currentDeck[slotIndex] = null;
-            RefreshDeckUI();
+            if (deckSlots[slotIndex] != null)
+            {
+                Transform slotTrans = deckSlots[slotIndex].transform;
+
+                // [DOTWEEN]: Hút nhỏ thẻ bài về 0 rồi mới gỡ data để tạo cảm giác "cất đi"
+                slotTrans.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack).OnComplete(() =>
+                {
+                    currentDeck[slotIndex] = null;
+                    RefreshDeckUI();
+
+                    // Xóa xong phải trả lại Scale = 0.08 cho cái ô trống (khung xương) hiển thị
+                    slotTrans.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+                });
+            }
+            else
+            {
+                // Fallback nếu thiếu UI
+                currentDeck[slotIndex] = null;
+                RefreshDeckUI();
+            }
         }
     }
 
@@ -119,10 +166,13 @@ public class DeckManager : MonoBehaviour
         {
             if (deckSlots[i] != null)
             {
+                // [BỌC THÉP]: Đảm bảo mọi ô khi load lại đều phải có Scale = 1, tránh bị dính DOTween cũ làm tàng hình
+                deckSlots[i].transform.DOKill(); // Ngắt mọi hiệu ứng cũ (nếu có) đang chạy dở
+                deckSlots[i].transform.localScale = new Vector3(0.08f, 0.08f, 0.08f); // Scale mặc định cho ô trống
+
                 if (currentDeck[i] != null)
                 {
                     deckSlots[i].gameObject.SetActive(true);
-
                     deckSlots[i].Setup(currentDeck[i]);
                 }
                 else
