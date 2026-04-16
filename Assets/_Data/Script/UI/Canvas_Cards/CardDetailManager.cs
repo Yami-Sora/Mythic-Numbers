@@ -84,34 +84,25 @@ public class CardDetailManager : YamiMonoBehaviour
             socket.SetupState(isLocked: true);
         }
 
-        // 2. TÍNH QUOTA LỖ ĐƯỢC MỞ DỰA TRÊN CẤP SAO
-        // 0 sao = 4 lỗ | 1 sao = 5 lỗ | ... | 8 sao = 12 lỗ
+        // 2. TÍNH QUOTA LỖ DỰA TRÊN SAO
         int maxOpenSockets = 4 + _selectedCard.starLevel;
         if (maxOpenSockets > 12) maxOpenSockets = 12;
 
-        int unlockedCount = 0;
-        int topIdx = 0, botIdx = 3, rightIdx = 6, leftIdx = 9;
+        // [PHÁP THUẬT MỚI]: Mảng quy định thứ tự mở lỗ trải đều 4 góc
+        // 0-3 là 4 lỗ cơ bản. Tiếp theo sẽ ưu tiên mở Trên->Dưới->Phải->Trái
+        int[] unlockSequence = new int[] { 0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8, 11 };
 
-        // Quét theo cấu hình thẻ, nhưng bị chặn lại bởi Quota (maxOpenSockets)
-        foreach (GemDirection dir in _selectedCard.data.availableSockets)
+        // Mở khóa đúng số lượng Quota
+        for (int i = 0; i < maxOpenSockets; i++)
         {
-            if (unlockedCount >= maxOpenSockets) break; // Hết quota thì dừng, không mở lỗ nữa!
-
-            int targetIndex = -1;
-
-            if (dir == GemDirection.Top && topIdx <= 2) { targetIndex = topIdx; topIdx++; }
-            else if (dir == GemDirection.Bottom && botIdx <= 5) { targetIndex = botIdx; botIdx++; }
-            else if (dir == GemDirection.Right && rightIdx <= 8) { targetIndex = rightIdx; rightIdx++; }
-            else if (dir == GemDirection.Left && leftIdx <= 11) { targetIndex = leftIdx; leftIdx++; }
-
-            if (targetIndex != -1 && targetIndex < allSockets.Length)
+            int targetIndex = unlockSequence[i];
+            if (targetIndex < allSockets.Length)
             {
                 allSockets[targetIndex].SetupState(isLocked: false);
-                unlockedCount++;
             }
         }
 
-        // 3. Khảm ngọc vào những lỗ có data
+        // 3. Khảm ngọc vào
         for (int i = 0; i < allSockets.Length; i++)
         {
             if (_selectedCard.equippedGems[i] != null && _selectedCard.equippedGems[i].data != null)
