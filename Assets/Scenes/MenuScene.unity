@@ -3625,9 +3625,9 @@ MonoBehaviour:
   imgFrame: {fileID: 235501420}
   txtCardName: {fileID: 1840325257}
   txtTop: {fileID: 713888115}
-  txtRight: {fileID: 1322224079}
-  txtBottom: {fileID: 667940133}
-  txtLeft: {fileID: 813913050}
+  txtRight: {fileID: 813913050}
+  txtBottom: {fileID: 1322224079}
+  txtLeft: {fileID: 667940133}
   emptySlotSprite: {fileID: -2749261331969839478, guid: e3eedf77a00805849aa4ecaccd0c01b9, type: 3}
   btnCard: {fileID: 277105799}
   isDeckSlot: 1
@@ -8878,9 +8878,9 @@ MonoBehaviour:
   imgFrame: {fileID: 1411514983}
   txtCardName: {fileID: 1306163021}
   txtTop: {fileID: 2023941634}
-  txtRight: {fileID: 51215606}
-  txtBottom: {fileID: 1868172816}
-  txtLeft: {fileID: 549490441}
+  txtRight: {fileID: 549490441}
+  txtBottom: {fileID: 51215606}
+  txtLeft: {fileID: 1868172816}
   emptySlotSprite: {fileID: -2749261331969839478, guid: e3eedf77a00805849aa4ecaccd0c01b9, type: 3}
   btnCard: {fileID: 692333794}
   isDeckSlot: 1
@@ -9553,7 +9553,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -9.000488, y: -20.998657}
+  m_AnchoredPosition: {x: -9.000488, y: -20.998718}
   m_SizeDelta: {x: -1518, y: -782}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &738339164
@@ -12582,9 +12582,9 @@ MonoBehaviour:
   imgFrame: {fileID: 1137102368}
   txtCardName: {fileID: 1599289094}
   txtTop: {fileID: 1470742925}
-  txtRight: {fileID: 253430575}
-  txtBottom: {fileID: 649831262}
-  txtLeft: {fileID: 48768895}
+  txtRight: {fileID: 48768895}
+  txtBottom: {fileID: 253430575}
+  txtLeft: {fileID: 649831262}
   emptySlotSprite: {fileID: -2749261331969839478, guid: e3eedf77a00805849aa4ecaccd0c01b9, type: 3}
   btnCard: {fileID: 949610618}
   isDeckSlot: 1
@@ -13123,9 +13123,9 @@ MonoBehaviour:
   imgFrame: {fileID: 1864072492}
   txtCardName: {fileID: 722599168}
   txtTop: {fileID: 1669604546}
-  txtRight: {fileID: 290710656}
-  txtBottom: {fileID: 575243818}
-  txtLeft: {fileID: 140705832}
+  txtRight: {fileID: 140705832}
+  txtBottom: {fileID: 290710656}
+  txtLeft: {fileID: 575243818}
   emptySlotSprite: {fileID: -2749261331969839478, guid: e3eedf77a00805849aa4ecaccd0c01b9, type: 3}
   btnCard: {fileID: 978461836}
   isDeckSlot: 1
@@ -33079,9 +33079,9 @@ MonoBehaviour:
   imgFrame: {fileID: 2016166459737811062}
   txtCardName: {fileID: 7717212154925499375}
   txtTop: {fileID: 3304642711030285748}
-  txtRight: {fileID: 3229053695318496241}
-  txtBottom: {fileID: 8993516389968699440}
-  txtLeft: {fileID: 5481283259903258310}
+  txtRight: {fileID: 5481283259903258310}
+  txtBottom: {fileID: 3229053695318496241}
+  txtLeft: {fileID: 8993516389968699440}
   emptySlotSprite: {fileID: -2749261331969839478, guid: e3eedf77a00805849aa4ecaccd0c01b9, type: 3}
   btnCard: {fileID: 8248354974390010680}
   isDeckSlot: 1
