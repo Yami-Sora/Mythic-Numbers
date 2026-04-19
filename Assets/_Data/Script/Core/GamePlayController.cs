@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-public class AppController : MonoBehaviour
+public class GamePlayController : MonoBehaviour
 {
     public void QuitToMenu()
     {
@@ -22,10 +22,10 @@ public class AppController : MonoBehaviour
     {
         if (GameManagerNet.Instance == null)
         {
-            Debug.LogError("[AppController] Không tìm thấy GameManagerNet để restart!");
+            Debug.LogError("[GamePlayController] Không tìm thấy GameManagerNet để restart!");
             return;
         }
-        Debug.Log("[AppController] Gửi yêu cầu Restart...");
+        Debug.Log("[GamePlayController] Gửi yêu cầu Restart...");
         GameManagerNet.Instance.RPC_Restart();
 
         if (GameRefereeNet.Instance != null && GameRefereeNet.Instance.ResultPanel != null)

@@ -192,4 +192,30 @@ public class InventoryManager : YamiMonoBehaviour
             if (!isSilent) RefreshUI();
         }
     }
+    // ==========================================
+    // CÁC HÀM TIỆN ÍCH LẤY DATA (Helper Methods)
+    // ==========================================
+
+    // Lấy 1 cục InventoryItem đầu tiên khớp với ID (Dành cho việc kiểm tra số lượng nhanh)
+    public InventoryItem GetItem(string itemID)
+    {
+        return _inventoryList.FirstOrDefault(i => i.data != null && i.data.itemID == itemID);
+    }
+
+    // [BONUS]: Hàm này giúp trừ số lượng của những item có thể Stack (cộng dồn) như bình thể lực
+    public bool RemoveItemAmount(string itemID, int amountToRemove)
+    {
+        var item = GetItem(itemID);
+        if (item != null && item.amount >= amountToRemove)
+        {
+            item.amount -= amountToRemove;
+            if (item.amount <= 0)
+            {
+                _inventoryList.Remove(item); // Nếu dùng hết thì xóa luôn cái ô đó khỏi list
+            }
+            RefreshUI();
+            return true;
+        }
+        return false;
+    }
 }

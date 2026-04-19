@@ -52,6 +52,7 @@ public class PlayFabDataManager : MonoBehaviour
     private const string KEY_PLAYER_DECK = "PlayerDeck";
     private const string CURRENCY_GOLD = "GD";
     private const string CURRENCY_GEM = "GM";
+    private const string CURRENCY_STAMINA = "EN";
 
     private void Awake()
     {
@@ -149,8 +150,9 @@ public class PlayFabDataManager : MonoBehaviour
         }, error => Debug.LogError("Lỗi Load: " + error.GenerateErrorReport()));
     }
 
+
     // ==========================================
-    // TIỀN TỆ (CURRENCY)
+    // LẤY SỐ DƯ TIỀN TỆ & THỜI GIAN HỒI THỂ LỰC
     // ==========================================
     public void FetchVirtualCurrencies()
     {
@@ -161,10 +163,24 @@ public class PlayFabDataManager : MonoBehaviour
             int gold = result.VirtualCurrency.ContainsKey(CURRENCY_GOLD) ? result.VirtualCurrency[CURRENCY_GOLD] : 0;
             int gem = result.VirtualCurrency.ContainsKey(CURRENCY_GEM) ? result.VirtualCurrency[CURRENCY_GEM] : 0;
 
-            if (CurrencyUIManager.Instance != null)
-                CurrencyUIManager.Instance.UpdateBalances(gold, gem);
+            // 1. Lấy số dư Thể Lực
+            int stamina = result.VirtualCurrency.ContainsKey(CURRENCY_STAMINA) ? result.VirtualCurrency[CURRENCY_STAMINA] : 0;
 
-            Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {gem} Linh Ngọc</color>");
+            // 2. Lấy số giây còn lại để hồi 1 Thể lực (Từ Server trả về, chống hack)
+            int secondsToRecharge = 0;
+            if (result.VirtualCurrencyRechargeTimes != null && result.VirtualCurrencyRechargeTimes.ContainsKey(CURRENCY_STAMINA))
+            {
+                secondsToRecharge = result.VirtualCurrencyRechargeTimes[CURRENCY_STAMINA].SecondsToRecharge;
+            }
+
+            // 3. Bắn toàn bộ Data sang UI
+            if (CurrencyUIManager.Instance != null)
+            {
+                CurrencyUIManager.Instance.UpdateBalances(gold, gem);
+                CurrencyUIManager.Instance.UpdateStamina(stamina, secondsToRecharge); // Hàm mới lát mình viết
+            }
+
+            Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {gem} Ngọc | {stamina}/200 Thể lực</color>");
         },
         error => Debug.LogError("[PlayFab] Lỗi lấy tiền tệ: " + error.GenerateErrorReport()));
     }

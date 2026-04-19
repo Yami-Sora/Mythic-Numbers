@@ -125,7 +125,7 @@ public class ShopManager : MonoBehaviour
         }
     }
     // Hàm tự chế Text bay mượt mà bằng DOTween
-    private void SpawnFloatingText(string message, Transform spawnPos)
+    public void SpawnFloatingText(string message, Transform spawnPos)
     {
         if (floatingTextPrefab == null)
         {
