@@ -70,9 +70,9 @@ public class Canvas_CombatManager : TabListenerBase
                         Debug.LogWarning("Sếp ơi, hết pin (thể lực) rồi!");
 
                         // Gọi con hàng bên ShopManager sang bắn text bay cho xịn
-                        if (ShopManager.Instance != null && btnEnterStage != null)
+                        if (EffectManager.Instance != null && btnEnterStage != null)
                         {
-                            ShopManager.Instance.SpawnFloatingText("Không đủ Năng lượng!", btnEnterStage.transform);
+                            EffectManager.Instance.SpawnFloatingText("Không đủ Năng lượng!", btnEnterStage.transform);
                         }
                     }
                 }

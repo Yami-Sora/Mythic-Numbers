@@ -353,6 +353,51 @@ MonoBehaviour:
   btnUseMax: {fileID: 1929259958}
   btnUseSubmit: {fileID: 1242515108}
   staminaPerItem: 50
+--- !u!1 &17538666
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 17538667}
+  - component: {fileID: 17538668}
+  m_Layer: 0
+  m_Name: VFXManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &17538667
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17538666}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 67.56327, y: 40.28175, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &17538668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17538666}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fca12fb353beb44fbc1e31bb9b316df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EffectManager
+  floatingTextPrefab: {fileID: 7310387484375277547, guid: 59a5c307adb07de48930ff6c1c955fba, type: 3}
 --- !u!1 &18986572
 GameObject:
   m_ObjectHideFlags: 0
@@ -1877,7 +1922,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ShopManager
   normalPackBtn: {fileID: 1321769151}
   premiumPackBtn: {fileID: 492336152}
-  floatingTextPrefab: {fileID: 7310387484375277547, guid: 59a5c307adb07de48930ff6c1c955fba, type: 3}
 --- !u!114 &60816607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46569,3 +46613,4 @@ SceneRoots:
   - {fileID: 930044568}
   - {fileID: 321745374}
   - {fileID: 1720140659}
+  - {fileID: 17538667}
