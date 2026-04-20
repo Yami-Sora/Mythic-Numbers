@@ -28,6 +28,7 @@ public class NetworkLauncher : MonoBehaviour
     public async void OnPlayOfflineClicked()
     {
         Debug.Log("Đang vào chế độ Offline...");
+        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
         await StartGame(GameMode.Single);
     }
 

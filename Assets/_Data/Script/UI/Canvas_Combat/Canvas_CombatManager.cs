@@ -9,9 +9,9 @@ public class Canvas_CombatManager : TabListenerBase
     public static Canvas_CombatManager Instance { get; private set; }
 
     [Header("UI Controls")]
-    public Button btnEnterStage; // Kéo nút "VÀO ẢI (-10 ST)" vào đây
+    public Button btnEnterStage; 
 
-    private void Awake()
+    protected override void Awake()
     {
         Instance = this;
         if (btnEnterStage != null)
@@ -55,9 +55,6 @@ public class Canvas_CombatManager : TabListenerBase
 
                 // Trừ tiền xong nhớ hú thằng PlayFabDataManager lấy lại số dư mới để UI nó nhảy số
                 if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
-
-                // Load Scene chiến đấu (Tên Scene của sếp là playcard đúng khum?)
-                SceneManager.LoadScene("playcard");
             },
             error => {
                 // 2. Lỗi thì mở khóa lại nút để sếp còn bấm được

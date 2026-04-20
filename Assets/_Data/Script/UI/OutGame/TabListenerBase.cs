@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public abstract class TabListenerBase : MonoBehaviour
+public abstract class TabListenerBase : YamiMonoBehaviour
 {
-    protected virtual void OnEnable()
+    protected override void OnEnable()
     {
         Canvas_NavigationManager.OnTabChanged += OnTabChanged;
     }
 
-    protected virtual void OnDisable()
+    protected override void OnDisable()
     {
         Canvas_NavigationManager.OnTabChanged -= OnTabChanged;
     }

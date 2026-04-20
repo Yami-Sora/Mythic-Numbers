@@ -4,7 +4,7 @@ public class Canvas_CardManager : TabListenerBase
 {
     public static Canvas_CardManager Instance { get; private set; }
 
-    private void Awake()
+    protected override void Awake()
     {
         Instance = this;
     }
