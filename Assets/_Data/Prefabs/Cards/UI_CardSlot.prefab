@@ -283,10 +283,13 @@ MonoBehaviour:
   imgFrame: {fileID: 3269781426025805999}
   txtCardName: {fileID: 6738317177979654966}
   txtTop: {fileID: 1965319164180682093}
-  txtRight: {fileID: 1897602514234475304}
-  txtBottom: {fileID: 5356231128790757609}
-  txtLeft: {fileID: 8830197957281103391}
+  txtRight: {fileID: 8830197957281103391}
+  txtBottom: {fileID: 1897602514234475304}
+  txtLeft: {fileID: 5356231128790757609}
+  emptySlotSprite: {fileID: 0}
   btnCard: {fileID: 4963617087309042657}
+  isDeckSlot: 0
+  mySlotIndex: -1
 --- !u!114 &4963617087309042657
 MonoBehaviour:
   m_ObjectHideFlags: 0

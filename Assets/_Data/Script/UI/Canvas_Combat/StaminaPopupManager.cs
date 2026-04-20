@@ -138,23 +138,24 @@ public class StaminaPopupManager : TabListenerBase
                 string json = result.Data[STAMINA_DATA_KEY].Value;
                 var data = JsonUtility.FromJson<StaminaBuySaveData>(json);
 
-                // Lấy ngày chuẩn quốc tế hiện tại (Chống gian lận đổi giờ điện thoại)
                 string today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-                if (data.lastBuyDate == today)
-                {
-                    _currentDailyBuys = data.dailyBuys; // Vẫn trong ngày -> Giữ nguyên lượt đã mua
-                }
-                else
-                {
-                    _currentDailyBuys = 0; // Qua ngày mới -> Reset về 0
-                }
+                if (data.lastBuyDate == today) _currentDailyBuys = data.dailyBuys;
+                else _currentDailyBuys = 0;
             }
             else
             {
-                _currentDailyBuys = 0; // Tài khoản mới tinh chưa mua bao giờ
+                _currentDailyBuys = 0;
             }
-        }, error => Debug.LogWarning("[PlayFab] Không tìm thấy lịch sử mua thể lực: " + error.GenerateErrorReport()));
+
+            // [FIX BUG BẤT ĐỒNG BỘ]: Kéo xong data là phải ép màn hình vẽ lại ngay lập tức!
+            UpdateBuyUI();
+
+        }, error => {
+            Debug.LogWarning("[PlayFab] Không tìm thấy lịch sử mua thể lực: " + error.GenerateErrorReport());
+            _currentDailyBuys = 0;
+            UpdateBuyUI(); // Lỗi mạng cũng phải ép nó vẽ lại cho an toàn
+        });
     }
 
     private void SaveDailyBuyData()

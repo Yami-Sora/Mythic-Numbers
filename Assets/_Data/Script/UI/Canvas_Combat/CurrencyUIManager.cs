@@ -30,7 +30,11 @@ public class CurrencyUIManager : MonoBehaviour
         if (btnAddStamina != null)
         {
             btnAddStamina.onClick.AddListener(() => {
-                if (StaminaPopupManager.Instance != null) StaminaPopupManager.Instance.OpenPopup();
+                if (StaminaPopupManager.Instance != null)
+                {
+                    StaminaPopupManager.Instance.OpenPopup();
+                    PushDataToPopup();
+                }
             });
         }
     }
