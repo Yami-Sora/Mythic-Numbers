@@ -70,6 +70,10 @@ public class InventoryManager : YamiMonoBehaviour
             AddItem(testItemsArray[randomIndex], Random.Range(1, 51));
         }
         Debug.Log("<color=cyan>[Hack] Mưa sao băng đã rơi vào túi!</color>");
+        if (PlayFabDataManager.Instance != null)
+        {
+            PlayFabDataManager.Instance.SaveGameData();
+        }
     }
 
     // ==========================================
@@ -193,29 +197,66 @@ public class InventoryManager : YamiMonoBehaviour
         }
     }
     // ==========================================
-    // CÁC HÀM TIỆN ÍCH LẤY DATA (Helper Methods)
+    // CÁC HÀM TIỆN ÍCH LẤY DATA (ĐÃ NÂNG CẤP)
     // ==========================================
 
-    // Lấy 1 cục InventoryItem đầu tiên khớp với ID (Dành cho việc kiểm tra số lượng nhanh)
+    // Lấy 1 cục InventoryItem đầu tiên khớp với ID 
     public InventoryItem GetItem(string itemID)
     {
         return _inventoryList.FirstOrDefault(i => i.data != null && i.data.itemID == itemID);
     }
 
-    // [BONUS]: Hàm này giúp trừ số lượng của những item có thể Stack (cộng dồn) như bình thể lực
+    // [NEW] Hàm "Gom Bi": Cộng dồn số lượng của TẤT CẢ các slot chứa chung 1 loại item
+    public int GetTotalItemAmount(string itemID)
+    {
+        int total = 0;
+        foreach (var item in _inventoryList)
+        {
+            if (item != null && item.data != null && item.data.itemID == itemID)
+            {
+                total += item.amount;
+            }
+        }
+        return total;
+    }
+
+    // [NÂNG CẤP]: Hàm trừ item bây giờ có thể trừ xuyên qua nhiều Slot khác nhau!
     public bool RemoveItemAmount(string itemID, int amountToRemove)
     {
-        var item = GetItem(itemID);
-        if (item != null && item.amount >= amountToRemove)
+        // 1. Kiểm tra xem tổng tài sản có đủ để trừ không
+        int totalAmount = GetTotalItemAmount(itemID);
+        if (totalAmount < amountToRemove) return false;
+
+        int remainingToRemove = amountToRemove;
+
+        // 2. Đi lùng sục và vặt lông từng Slot một cho đến khi đủ số lượng
+        for (int i = _inventoryList.Count - 1; i >= 0; i--) // Quét ngược từ cuối lên cho an toàn khi Remove
         {
-            item.amount -= amountToRemove;
-            if (item.amount <= 0)
+            var item = _inventoryList[i];
+            if (item != null && item.data != null && item.data.itemID == itemID)
             {
-                _inventoryList.Remove(item); // Nếu dùng hết thì xóa luôn cái ô đó khỏi list
+                if (item.amount <= remainingToRemove)
+                {
+                    // Ô này không đủ hoặc vừa đủ -> Húp trọn ổ rồi Xóa Slot
+                    remainingToRemove -= item.amount;
+                    _inventoryList.RemoveAt(i);
+                }
+                else
+                {
+                    // Ô này có nhiều hơn mức cần -> Trừ đi lượng cần thiết và giữ lại Slot
+                    item.amount -= remainingToRemove;
+                    remainingToRemove = 0;
+                }
+
+                if (remainingToRemove <= 0) break; // Đủ chỉ tiêu thì dừng tay
             }
-            RefreshUI();
-            return true;
         }
-        return false;
+
+        RefreshUI();
+
+        // 3. Trừ đồ xong phải Save lên mây ngay cho nóng!
+        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+
+        return true;
     }
 }

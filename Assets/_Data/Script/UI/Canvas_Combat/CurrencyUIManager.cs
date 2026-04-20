@@ -173,7 +173,6 @@ public class CurrencyUIManager : MonoBehaviour
         if (staminaPopupPanel != null) staminaPopupPanel.SetActive(true);
         SwitchTab(true);
         RefreshStaminaUI();
-        UpdateTimerText();
     }
 
     // Tách riêng cái hàm Đóng này ra, lỡ sếp có thích gọi từ EventTrigger ngoài Inspector cũng tiện
@@ -251,8 +250,7 @@ public class CurrencyUIManager : MonoBehaviour
         _maxItemInInventory = 0;
         if (InventoryManager.Instance != null)
         {
-            var invItem = InventoryManager.Instance.GetItem(staminaPotionData.itemID);
-            if (invItem != null) _maxItemInInventory = invItem.amount;
+            _maxItemInInventory = InventoryManager.Instance.GetTotalItemAmount(staminaPotionData.itemID);
         }
 
         if (uiStaminaSlot != null)
