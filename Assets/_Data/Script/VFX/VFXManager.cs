@@ -35,18 +35,23 @@ public class EffectManager : MonoBehaviour
         {
             txt.text = message;
 
-            // Set màu: Nếu sếp không truyền màu vào, nó tự lấy màu đỏ.
+            // Set màu: Lấy màu đỏ.
             txt.color = color ?? new Color(1f, 0.2f, 0.2f, 1f);
 
-            // COMBO DOTWEEN 3 TRONG 1:
-            // 1. Phóng to từ 0 lên 0.1f (Bốp 1 phát ra luôn)
-            go.transform.DOScale(new Vector3(0.1f, 0.1f, 0.1f), 0.2f).SetEase(Ease.OutBack);
+            //Gom hết vào Sequence để quản lý vòng đời, chống lỗi "Destroy sớm"
+            Sequence seq = DOTween.Sequence();
 
-            // 2. Bay lên trên 150px
-            go.transform.DOMoveY(go.transform.position.y + 150f, 1f).SetEase(Ease.OutCubic);
+            // 1. Phóng to lên
+            seq.Join(go.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack));
 
-            // 3. Mờ dần Alpha về 0 rồi tự hủy (Xóa rác)
-            txt.DOFade(0f, 1f).SetEase(Ease.InQuad).OnComplete(() => Destroy(go));
+            // 2. Bay lên trên 150px trong 1 giây 
+            seq.Join(go.transform.DOMoveY(go.transform.position.y + 150f, 1f).SetEase(Ease.OutCubic));
+
+            // 3. Mờ dần Alpha về 0 trong 2 giây
+            seq.Join(txt.DOFade(0f, 2f).SetEase(Ease.InQuad));
+
+            // 4. CHỐT SỔ: Chờ cả 3 thằng trên chạy xong hết 100% thì mới tự hủy
+            seq.OnComplete(() => Destroy(go));
         }
     }
 }
