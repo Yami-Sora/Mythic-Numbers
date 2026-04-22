@@ -297,45 +297,70 @@ public class PlayFabDataManager : MonoBehaviour
     // ==========================================
     // HỆ THỐNG CHEAT CHO DEV
     // ==========================================
+
     private void HandleDevCheats()
     {
-        if (Keyboard.current == null) return;
+        // --- Phần cũ cho PC ---
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.digit1Key.wasPressedThisFrame) ExecuteCheat1();
+            if (Keyboard.current.digit2Key.wasPressedThisFrame) ExecuteCheat2();
+            if (Keyboard.current.digit3Key.wasPressedThisFrame) ExecuteCheat3();
+        }
 
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        // --- Phần mới cho Mobile (Input System Package) ---
+        var touch = Touchscreen.current?.primaryTouch;
+        if (touch != null && touch.press.wasPressedThisFrame && touch.tapCount.ReadValue() == 2)
         {
-            Debug.Log("<color=yellow>[Cheat] Sếp Yami đã nhấn phím 1: Đang nạp 1000 Vàng...</color>");
-            HackCurrency(CURRENCY_GOLD, 1000);
+            float touchX = touch.position.ReadValue().x;
+            float screenWidth = Screen.width;
+
+            if (touchX < screenWidth / 3f)
+                ExecuteCheat1(); // Chạm bên trái
+            else if (touchX < (screenWidth * 2f) / 3f)
+                ExecuteCheat2(); // Chạm ở giữa
+            else
+                ExecuteCheat3(); // Chạm bên phải
         }
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
-        {
-            Debug.Log("<color=red>[Cheat] Sếp Yami đã nhấn phím 2: Khởi động quy trình đầu thai!</color>");
-            Reincarnate();
-        }
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
-        {
-            Debug.Log("<color=yellow>[Cheat] Sếp Yami đã nhấn phím 3: Đang nạp 100 Linh Ngọc...</color>");
-            HackCurrency(CURRENCY_GEM, 100);
-        }
+    }
+
+
+    private void ExecuteCheat1()
+    {
+        Debug.Log("<color=yellow>[Cheat] Sếp Yami Double Tap Trái: +1000 Vàng!</color>");
+        HackCurrency(CURRENCY_GOLD, 1000);
+    }
+
+    private void ExecuteCheat2()
+    {
+        Debug.Log("<color=red>[Cheat] Sếp Yami Double Tap Giữa: Đầu thai thôi!</color>");
+        Reincarnate();
+    }
+
+    private void ExecuteCheat3()
+    {
+        Debug.Log("<color=cyan>[Cheat] Sếp Yami Double Tap Phải: +100 Linh Ngọc!</color>");
+        HackCurrency(CURRENCY_GEM, 100);
     }
 
     private void HackCurrency(string currencyCode, int amount)
-    {
-        if (!PlayFabClientAPI.IsClientLoggedIn())
         {
-            Debug.LogWarning("<color=orange>[Cheat] Bình tĩnh sếp ơi! PlayFab đang kết nối!</color>");
-            return;
-        }
-
-        var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = currencyCode, Amount = amount };
-        PlayFabClientAPI.AddUserVirtualCurrency(request,
-            result =>
+            if (!PlayFabClientAPI.IsClientLoggedIn())
             {
-                Debug.Log($"<color=yellow>[Cheat] Đã bơm {amount} {currencyCode}. Balance: {result.Balance}</color>");
-                FetchVirtualCurrencies();
-            },
-            error => Debug.LogError("Lỗi hack tiền: " + error.GenerateErrorReport())
-        );
-    }
+                Debug.LogWarning("<color=orange>[Cheat] Bình tĩnh sếp ơi! PlayFab đang kết nối!</color>");
+                return;
+            }
+
+            var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = currencyCode, Amount = amount };
+            PlayFabClientAPI.AddUserVirtualCurrency(request,
+                result =>
+                {
+                    Debug.Log($"<color=yellow>[Cheat] Đã bơm {amount} {currencyCode}. Balance: {result.Balance}</color>");
+                    FetchVirtualCurrencies();
+                },
+                error => Debug.LogError("Lỗi hack tiền: " + error.GenerateErrorReport())
+            );
+        }
 
     private void Reincarnate()
     {

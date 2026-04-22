@@ -44,11 +44,19 @@ public class InventoryManager : YamiMonoBehaviour
 
     private void Update()
     {
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        // Check phím Space cho PC (giữ nguyên cho Yami test trên máy)
+        if (Keyboard.current?.spaceKey.wasPressedThisFrame == true)
         {
             HandleCheatItems();
         }
-    }
+
+        // Check Double Tap cho Mobile (Ngắn - Gọn - Đúng hệ)
+        var touch = Touchscreen.current?.primaryTouch;
+        if (touch?.press.isPressed == true && touch.tapCount.ReadValue() == 2)
+        {
+            HandleCheatItems();
+        }
+}
 
     public List<InventoryItem> GetInventoryList()
     {

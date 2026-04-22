@@ -60,7 +60,7 @@ public class CardListManager : MonoBehaviour
             {
                 GameObject go = Instantiate(cardPrefab, cardContainer, false);
                 RectTransform rect = go.GetComponent<RectTransform>();
-                rect.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                rect.localScale = new Vector3(1f, 1f, 1f);
 
                 UI_CardSlot newSlot = go.GetComponent<UI_CardSlot>();
                 _cardPool.Add(newSlot);

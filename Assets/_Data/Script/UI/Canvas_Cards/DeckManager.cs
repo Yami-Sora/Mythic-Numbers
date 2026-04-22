@@ -120,8 +120,8 @@ public class DeckManager : MonoBehaviour
                 if (deckSlots[i] != null)
                 {
                     Transform slotTrans = deckSlots[i].transform;
-                    slotTrans.localScale = new Vector3(0.08f, 0.08f, 0.08f);
-                    slotTrans.DOScale(0.08f, 0.04f).SetEase(Ease.OutBack);
+                    slotTrans.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+                    slotTrans.DOScale(0.8f, 0.4f).SetEase(Ease.OutBack);
                 }
 
                 return true;
@@ -147,8 +147,8 @@ public class DeckManager : MonoBehaviour
                     currentDeck[slotIndex] = null;
                     RefreshDeckUI();
 
-                    // Xóa xong phải trả lại Scale = 0.08 cho cái ô trống (khung xương) hiển thị
-                    slotTrans.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+                    // Xóa xong phải trả lại Scale = 0.8 cho cái ô trống (khung xương) hiển thị
+                    slotTrans.localScale = new Vector3(0.8f, 0.8f, 0.8f);
                 });
             }
             else
@@ -168,7 +168,7 @@ public class DeckManager : MonoBehaviour
             {
                 // [BỌC THÉP]: Đảm bảo mọi ô khi load lại đều phải có Scale = 1, tránh bị dính DOTween cũ làm tàng hình
                 deckSlots[i].transform.DOKill(); // Ngắt mọi hiệu ứng cũ (nếu có) đang chạy dở
-                deckSlots[i].transform.localScale = new Vector3(0.08f, 0.08f, 0.08f); // Scale mặc định cho ô trống
+                deckSlots[i].transform.localScale = new Vector3(0.8f, 0.8f, 0.8f); // Scale mặc định cho ô trống
 
                 if (currentDeck[i] != null)
                 {
