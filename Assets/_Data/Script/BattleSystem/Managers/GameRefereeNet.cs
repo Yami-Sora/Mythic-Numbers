@@ -282,17 +282,28 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
 
             if (winnerID == 2)
             {
-                message = $"Draw\n ({s2} - {s1})";
+                message = $"Hòa\n ({s2} - {s1})";
                 resultText.color = Color.yellow;
             }
             else if (winnerID == myID)
             {
-                message = $"You Win\n ({s2} - {s1})";
+                message = $"Chiến Thắng\n ({s2} - {s1})";
                 resultText.color = Color.green;
+
+                // [PVE LOGIC]: CỘNG THƯỞNG VÀ TĂNG ẢI
+                if (PlayerPrefs.GetInt("GameMode", 0) == 0 && PlayFabDataManager.Instance != null && string.IsNullOrEmpty(customMessage))
+                {
+                    PlayFabDataManager.Instance.ClaimStageReward((gold, isBoss) => {
+                        string bonusMsg = $"\n<size=40><color=yellow>+{gold} Vàng</color>";
+                        if (isBoss) bonusMsg += "\n<color=#FF00FF>+1 Linh Ngọc</color>";
+                        bonusMsg += "</size>";
+                        resultText.text = message + bonusMsg;
+                    });
+                }
             }
             else
             {
-                message = $"You Lose\n ({s2} - {s1})";
+                message = $"Thất Bại\n ({s2} - {s1})";
                 resultText.color = Color.red;
             }
 

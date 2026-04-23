@@ -4,12 +4,16 @@ using UnityEngine.UI;
 using PlayFab;
 using PlayFab.ClientModels;
 
+using TMPro;
+
 public class Canvas_CombatManager : TabListenerBase
 {
     public static Canvas_CombatManager Instance { get; private set; }
 
     [Header("UI Controls")]
     public Button btnEnterStage; 
+    [SerializeField] private TextMeshProUGUI txtCurrentStage;
+    [SerializeField] private TextMeshProUGUI txtStageReward;
 
     protected override void Awake()
     {
@@ -28,7 +32,25 @@ public class Canvas_CombatManager : TabListenerBase
         if (targetTab == Canvas_NavigationManager.TabType.Combat)
         {
             if (btnEnterStage != null) btnEnterStage.interactable = true;
+            RefreshStageUI();
         }
+    }
+
+    private void RefreshStageUI()
+    {
+        if (PlayFabDataManager.Instance == null) return;
+
+        int stage = PlayFabDataManager.Instance.CurrentStage;
+        if (txtCurrentStage != null) txtCurrentStage.text = $"Ải hiện tại: {stage}";
+
+        // Tăng 5% Vàng mỗi ải
+        int baseGold = 50;
+        int goldReward = Mathf.RoundToInt(baseGold * (1 + 0.05f * (stage - 1)));
+        
+        string rewardText = $"Thưởng: {goldReward} Vàng";
+        if (stage % 10 == 0) rewardText += " + 1 Linh Ngọc (Boss)";
+
+        if (txtStageReward != null) txtStageReward.text = rewardText;
     }
 
     // ==========================================
@@ -36,6 +58,26 @@ public class Canvas_CombatManager : TabListenerBase
     // ==========================================
     public void TryEnterStage()
     {
+        // 0. Kiểm tra đội hình đủ 5 lá chưa sếp ơi!
+        if (DeckManager.Instance != null)
+        {
+            int cardCount = 0;
+            foreach (var card in DeckManager.Instance.currentDeck)
+            {
+                if (card != null && card.data != null) cardCount++;
+            }
+
+            if (cardCount < 5)
+            {
+                Debug.LogWarning("[Combat] Đội hình chưa đủ 5 lá, không cho đi ải!");
+                if (EffectManager.Instance != null && btnEnterStage != null)
+                {
+                    EffectManager.Instance.SpawnFloatingText("Cần đủ 5 lá bài!", btnEnterStage.transform);
+                }
+                return; 
+            }
+        }
+
         // 1. Khóa mẹ cái nút lại ngay lập tức!
         // Chống mấy tay spam click liên tục trừ 20-30 thể lực 1 lúc
         if (btnEnterStage != null) btnEnterStage.interactable = false;
@@ -55,6 +97,17 @@ public class Canvas_CombatManager : TabListenerBase
 
                 // Trừ tiền xong nhớ hú thằng PlayFabDataManager lấy lại số dư mới để UI nó nhảy số
                 if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
+
+                // Lưu lại trạng thái PlayMode (PvE)
+                PlayerPrefs.SetInt("GameMode", 0); // 0 = PvE, 1 = PvP (nếu có sau này)
+                PlayerPrefs.Save();
+
+                // CHỈ khi trừ thể lực thành công thì mới cho nhảy sang Scene chiến đấu!
+                var launcher = FindFirstObjectByType<NetworkLauncher>();
+                if (launcher != null) 
+                {
+                    launcher.OnPlayOfflineClicked();
+                }
             },
             error => {
                 // 2. Lỗi thì mở khóa lại nút để sếp còn bấm được

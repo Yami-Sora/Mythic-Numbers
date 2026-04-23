@@ -81,6 +81,14 @@ public class GameManagerNet : NetworkBehaviour
         for (int i=0; i<5; i++) p1Deck[i] = LocalDeckContext.CurrentDeck[i];
 
         p2Deck = new CardDataCache[5];
+        
+        // --- [AI SCALING PVE] ---
+        int stage = 1;
+        if (PlayFabDataManager.Instance != null) stage = PlayFabDataManager.Instance.CurrentStage;
+        
+        // Hệ số: Mỗi ải tăng 10% chỉ số gốc. Ải 1 = x1.0, Ải 2 = x1.1, Ải 10 = x1.9
+        float multiplier = 1.0f + (stage - 1) * 0.1f;
+
         for (int i=0; i<5; i++)
         {
             var rCard = CardDatabase.Instance.GetRandomCard();
@@ -88,10 +96,10 @@ public class GameManagerNet : NetworkBehaviour
             {
                 p2Deck[i] = new CardDataCache {
                     CardID = rCard.cardID,
-                    Top = rCard.top,
-                    Right = rCard.right,
-                    Bottom = rCard.bottom,
-                    Left = rCard.left
+                    Top = Mathf.RoundToInt(rCard.top * multiplier),
+                    Right = Mathf.RoundToInt(rCard.right * multiplier),
+                    Bottom = Mathf.RoundToInt(rCard.bottom * multiplier),
+                    Left = Mathf.RoundToInt(rCard.left * multiplier)
                 };
             }
         }

@@ -42,6 +42,10 @@ public class PlayFabDataManager : MonoBehaviour
 {
     public static PlayFabDataManager Instance { get; private set; }
 
+    [Header("Player Data")]
+    public int CurrentStage = 1; // Lưu ở local để các Scene khác dễ gọi
+    public bool isDataLoaded = false; // Cờ kiểm tra dữ liệu đã tải xong chưa
+
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
 
@@ -72,6 +76,11 @@ public class PlayFabDataManager : MonoBehaviour
     public void SaveGameData()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+        if (!isDataLoaded)
+        {
+            Debug.LogWarning("[PlayFab] Từ chối Save vì dữ liệu chưa được Load xong từ Server (tránh ghi đè dữ liệu rỗng)!");
+            return;
+        }
 
         // [KHIÊN BẢO VỆ]: Nếu đang ở Combat mà gọi Save thì chặn ngay!
         // Chỉ cho phép Save khi các Manager ở MenuScene đang tồn tại.
@@ -90,12 +99,34 @@ public class PlayFabDataManager : MonoBehaviour
         string json = JsonUtility.ToJson(saveData);
         var request = new UpdateUserDataRequest
         {
-            Data = new Dictionary<string, string> { { KEY_USER_DATA, json } }
+            Data = new Dictionary<string, string> 
+            { 
+                { KEY_USER_DATA, json },
+                { "CurrentStage", CurrentStage.ToString() }
+            }
         };
 
         PlayFabClientAPI.UpdateUserData(request,
             result => Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>"),
             error => Debug.LogError("[PlayFab] Lỗi Save: " + error.GenerateErrorReport())
+        );
+    }
+
+    public void SaveStageDataOnly()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        var request = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string> 
+            { 
+                { "CurrentStage", CurrentStage.ToString() }
+            }
+        };
+
+        PlayFabClientAPI.UpdateUserData(request,
+            result => Debug.Log($"<color=green>[PlayFab] Đã backup Ải {CurrentStage} lên mây thành công!</color>"),
+            error => Debug.LogError("[PlayFab] Lỗi Save Stage: " + error.GenerateErrorReport())
         );
     }
 
@@ -136,9 +167,22 @@ public class PlayFabDataManager : MonoBehaviour
 
                 RestoreInventory(loadedData.inventory);
                 RestoreCards(loadedData.cards);
-
-                Debug.Log("<color=cyan>[PlayFab] Đã đồng bộ toàn bộ tài sản từ server!</color>");
             }
+
+            // 1.5 Phục hồi CurrentStage từ Key riêng
+            if (result.Data != null && result.Data.ContainsKey("CurrentStage"))
+            {
+                if (int.TryParse(result.Data["CurrentStage"].Value, out int stage))
+                {
+                    this.CurrentStage = stage > 0 ? stage : 1;
+                }
+            }
+            else
+            {
+                this.CurrentStage = 1;
+            }
+
+            Debug.Log($"<color=cyan>[PlayFab] Đã đồng bộ toàn bộ tài sản từ server! Đang ở Ải: {CurrentStage}</color>");
 
             // 2. Phục hồi Deck
             if (result.Data != null && result.Data.ContainsKey(KEY_PLAYER_DECK))
@@ -147,9 +191,51 @@ public class PlayFabDataManager : MonoBehaviour
                 RestoreDeck(JsonUtility.FromJson<DeckSaveData>(deckJson));
             }
 
+            isDataLoaded = true; // Đánh dấu đã Load xong toàn bộ dữ liệu
+
         }, error => Debug.LogError("Lỗi Load: " + error.GenerateErrorReport()));
     }
 
+
+    // ==========================================
+    // LOGIC NHẬN THƯỞNG PVE
+    // ==========================================
+    public void ClaimStageReward(Action<int, bool> onSuccess)
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        int stageCleared = CurrentStage;
+        int baseGold = 50;
+        int goldReward = Mathf.RoundToInt(baseGold * (1 + 0.05f * (stageCleared - 1)));
+        bool isBossStage = (stageCleared % 10 == 0);
+
+        CurrentStage++; // Tăng ải
+
+        // Add Gold Request
+        var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GOLD, Amount = goldReward };
+        PlayFabClientAPI.AddUserVirtualCurrency(request,
+            res => {
+                Debug.Log($"<color=yellow>[PvE] Nhận thưởng {goldReward} Vàng. Lên ải {CurrentStage}!</color>");
+                
+                if (isBossStage)
+                {
+                    // Thưởng thêm Linh Ngọc (Thêm vào đơn vị tiền tệ GM hoặc hòm đồ tùy sếp)
+                    var gemReq = new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GEM, Amount = 1 };
+                    PlayFabClientAPI.AddUserVirtualCurrency(gemReq, 
+                        gRes => Debug.Log("<color=magenta>[PvE BOSS] Rớt 1 Linh Ngọc!</color>"), 
+                        gErr => {}
+                    );
+                }
+
+                SaveStageDataOnly(); // Chỉ lưu lại ải mới lên đám mây, không đụng đến Card/Inventory
+                FetchVirtualCurrencies(); // Cập nhật lại UI tiền tệ
+                onSuccess?.Invoke(goldReward, isBossStage);
+            },
+            err => {
+                Debug.LogError("Lỗi nhận thưởng PvE: " + err.ErrorMessage);
+            }
+        );
+    }
 
     // ==========================================
     // LẤY SỐ DƯ TIỀN TỆ & THỜI GIAN HỒI THỂ LỰC

@@ -11,8 +11,9 @@ public class TransitionManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        transitionOverlay.alpha = 0f;
-        transitionOverlay.blocksRaycasts = false;
+            transitionOverlay.alpha = 0f;
+            transitionOverlay.blocksRaycasts = false;
+        }
     }
 
     public void PlayTransition(Action onMidWay)

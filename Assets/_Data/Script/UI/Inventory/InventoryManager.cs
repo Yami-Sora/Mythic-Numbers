@@ -52,11 +52,11 @@ public class InventoryManager : YamiMonoBehaviour
 
         // Check Double Tap cho Mobile (Ngắn - Gọn - Đúng hệ)
         var touch = Touchscreen.current?.primaryTouch;
-        if (touch?.press.isPressed == true && touch.tapCount.ReadValue() == 2)
+        if (touch != null && touch.press.wasPressedThisFrame && touch.tapCount.ReadValue() == 2)
         {
             HandleCheatItems();
         }
-}
+    }
 
     public List<InventoryItem> GetInventoryList()
     {
