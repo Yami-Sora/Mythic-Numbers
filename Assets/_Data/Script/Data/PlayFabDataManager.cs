@@ -291,6 +291,7 @@ public class PlayFabDataManager : MonoBehaviour
         }
 
         DeckManager.Instance.RefreshDeckUI();
+        LocalDeckContext.SetDeck(DeckManager.Instance.currentDeck);
         Debug.Log("<color=green>[PlayFab] Đã xếp lại Đội Hình chuẩn xác!</color>");
     }
 

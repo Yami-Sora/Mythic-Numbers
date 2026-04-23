@@ -25,6 +25,12 @@ public class GameManagerNet : NetworkBehaviour
 
     private IRuleSet currentStrategy;
 
+    // --- DECK DATA ---
+    private CardDataCache[] p1Deck;
+    private CardDataCache[] p2Deck;
+    private bool isP1Ready;
+    private bool isP2Ready;
+
     // --- SETUP ---
     public override void Spawned()
     {
@@ -51,9 +57,107 @@ public class GameManagerNet : NetworkBehaviour
         {
             RandomizeRule();
             CurrentTurn = 0;
-            _cardDealer.DealCards();
+            
+            if (Runner.GameMode == GameMode.Single)
+            {
+                PrepareSinglePlayerDecks();
+                _cardDealer.DealCards(p1Deck, p2Deck);
+            }
+            else
+            {
+                SubmitLocalDeck();
+            }
+        }
+        else
+        {
+            SubmitLocalDeck();
         }
         UpdateRuleStrategy();
+    }
+
+    private void PrepareSinglePlayerDecks()
+    {
+        p1Deck = new CardDataCache[5];
+        for (int i=0; i<5; i++) p1Deck[i] = LocalDeckContext.CurrentDeck[i];
+
+        p2Deck = new CardDataCache[5];
+        for (int i=0; i<5; i++)
+        {
+            var rCard = CardDatabase.Instance.GetRandomCard();
+            if (rCard != null)
+            {
+                p2Deck[i] = new CardDataCache {
+                    CardID = rCard.cardID,
+                    Top = rCard.top,
+                    Right = rCard.right,
+                    Bottom = rCard.bottom,
+                    Left = rCard.left
+                };
+            }
+        }
+    }
+
+    private void SubmitLocalDeck()
+    {
+        if (!LocalDeckContext.HasDeck) 
+        {
+            Debug.LogWarning("[GameManager] Không tìm thấy Local Deck!");
+        }
+        
+        int[] ids = new int[5];
+        int[] tops = new int[5];
+        int[] rights = new int[5];
+        int[] bottoms = new int[5];
+        int[] lefts = new int[5];
+
+        for (int i=0; i<5; i++)
+        {
+            ids[i] = LocalDeckContext.CurrentDeck[i].CardID;
+            tops[i] = LocalDeckContext.CurrentDeck[i].Top;
+            rights[i] = LocalDeckContext.CurrentDeck[i].Right;
+            bottoms[i] = LocalDeckContext.CurrentDeck[i].Bottom;
+            lefts[i] = LocalDeckContext.CurrentDeck[i].Left;
+        }
+
+        RPC_SubmitDeck(ids, tops, rights, bottoms, lefts);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_SubmitDeck(int[] ids, int[] tops, int[] rights, int[] bottoms, int[] lefts, RpcInfo info = default)
+    {
+        int playerId = (info.Source == Runner.LocalPlayer) ? 0 : 1;
+        CardDataCache[] submittedDeck = new CardDataCache[5];
+        for (int i=0; i<5; i++)
+        {
+            submittedDeck[i] = new CardDataCache {
+                CardID = ids[i],
+                Top = tops[i],
+                Right = rights[i],
+                Bottom = bottoms[i],
+                Left = lefts[i]
+            };
+        }
+
+        if (playerId == 0)
+        {
+            p1Deck = submittedDeck;
+            isP1Ready = true;
+        }
+        else
+        {
+            p2Deck = submittedDeck;
+            isP2Ready = true;
+        }
+
+        CheckAndStartMatch();
+    }
+
+    private void CheckAndStartMatch()
+    {
+        if (isP1Ready && isP2Ready)
+        {
+            _cardDealer.DealCards(p1Deck, p2Deck);
+        }
     }
 
     // Hàm này giữ lại để tương thích với NetworkAppManager cũ, nhưng sẽ đẩy data sang GameUIManager
@@ -176,7 +280,25 @@ public class GameManagerNet : NetworkBehaviour
         RPC_ResetUIOnClients();
 
         CurrentTurn = 0;
-        _cardDealer.DealCards();
+        
+        if (Runner.GameMode == GameMode.Single)
+        {
+            PrepareSinglePlayerDecks();
+            _cardDealer.DealCards(p1Deck, p2Deck);
+        }
+        else
+        {
+            isP1Ready = false;
+            isP2Ready = false;
+            SubmitLocalDeck();
+            RPC_RequestClientSubmitDeck();
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    private void RPC_RequestClientSubmitDeck()
+    {
+        SubmitLocalDeck();
     }
 
     // Helper để gọi UI reset trên tất cả máy

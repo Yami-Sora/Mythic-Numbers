@@ -61,6 +61,11 @@ public class GemUpgradeManager : MonoBehaviour
             {
                 txtAmount.gameObject.SetActive(true);
                 txtAmount.text = group.Count().ToString();
+                txtAmount.fontSize = 3;
+                
+                // Ép RectTransform nhỏ lại 10 lần (cả offset và khung) để khớp với Slot
+                txtAmount.rectTransform.anchoredPosition = Vector2.zero; // Pos X = 0, Pos Y = 0
+                txtAmount.rectTransform.sizeDelta = new Vector2(10f, 4f); // Width = 10, Height = 4
             }
         }
     }

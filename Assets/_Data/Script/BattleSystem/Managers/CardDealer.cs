@@ -15,16 +15,16 @@ public class CardDealer
         _cardPrefab = cardPrefab;
     }
 
-    public void DealCards()
+    public void DealCards(CardDataCache[] p1Deck, CardDataCache[] p2Deck)
     {
         for (int i = 0; i < 5; i++)
         {
-            SpawnCard(0, i);
-            SpawnCard(1, i);
+            SpawnCard(0, i, p1Deck[i]);
+            SpawnCard(1, i, p2Deck[i]);
         }
     }
 
-    public void SpawnCard(int ownerID, int index)
+    public void SpawnCard(int ownerID, int index, CardDataCache cardData)
     {
         if (CardDatabase.Instance == null)
         {
@@ -32,7 +32,9 @@ public class CardDealer
             return;
         }
 
-        CardDataSO data = CardDatabase.Instance.GetRandomCard();
+        if (cardData.CardID == -1) return; // Không có bài trong slot này
+
+        CardDataSO data = CardDatabase.Instance.GetCardData(cardData.CardID);
         if (data == null) return;
 
         var no = _runner.Spawn(_cardPrefab, Vector3.zero, Quaternion.identity);
@@ -41,10 +43,11 @@ public class CardDealer
         card.OwnerID = ownerID;
         card.HandIndex = index;
         card.CardID = data.cardID;
-        card.Top = data.top;
-        card.Right = data.right;
-        card.Bottom = data.bottom;
-        card.Left = data.left;
+        // Sử dụng chỉ số đã buff truyền từ Menu sang
+        card.Top = cardData.Top;
+        card.Right = cardData.Right;
+        card.Bottom = cardData.Bottom;
+        card.Left = cardData.Left;
 
         if (data.skill != null)
             data.skill.OnCardSpawned(card);

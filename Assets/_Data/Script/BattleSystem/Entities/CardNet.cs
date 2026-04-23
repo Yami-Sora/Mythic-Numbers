@@ -142,9 +142,10 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         // 1. Nếu bài đang trên tay -> Lấy vị trí tay từ GameUIManager
         if (HandIndex != -1)
         {
-            Transform targetParent = (OwnerID == 0) ?
-                InGameUIManager.Instance.RightHandPos : // Player 1 (Host) thường bên phải
-                InGameUIManager.Instance.LeftHandPos;
+            int localId = GameManagerNet.Instance.GetLocalPlayerID();
+            Transform targetParent = (OwnerID == localId) ?
+                InGameUIManager.Instance.RightHandPos : // "Tôi" luôn ở bên phải
+                InGameUIManager.Instance.LeftHandPos;   // Đối thủ bên trái
 
             SetParentIfChanged(targetParent);
         }
@@ -220,7 +221,8 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         if (HandIndex == -1 && transform.parent != null)
         {
             Image image = transform.parent.GetComponent<Image>();
-            if (image != null) image.color = (OwnerID == 0) ? colorP1 : colorP2;
+            int localId = GameManagerNet.Instance.GetLocalPlayerID();
+            if (image != null) image.color = (OwnerID == localId) ? colorP1 : colorP2;
         }
     }
 

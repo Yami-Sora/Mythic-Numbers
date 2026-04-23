@@ -62,6 +62,7 @@ public class DeckManager : MonoBehaviour
         if (btnCancelEdit != null) btnCancelEdit.gameObject.SetActive(false);
 
         PlayFabDataManager.Instance.SaveCurrentDeck(currentDeck);
+        LocalDeckContext.SetDeck(currentDeck);
 
         RefreshDeckUI();
     }

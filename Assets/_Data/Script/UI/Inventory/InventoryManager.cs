@@ -72,12 +72,14 @@ public class InventoryManager : YamiMonoBehaviour
     {
         if (testItemsArray == null || testItemsArray.Length == 0) return;
 
-        for (int i = 0; i < 3; i++)
+        foreach (var item in testItemsArray)
         {
-            int randomIndex = Random.Range(0, testItemsArray.Length);
-            AddItem(testItemsArray[randomIndex], Random.Range(1, 51));
+            AddItem(item, Random.Range(1, 51), true); // isSilent = true để tránh lag UI khi add nhiều
         }
-        Debug.Log("<color=cyan>[Hack] Mưa sao băng đã rơi vào túi!</color>");
+        RefreshUI();
+        
+        Debug.Log("<color=cyan>[Hack] Mưa sao băng lại rơi vào túi (Tất cả test items)!</color>");
+        
         if (PlayFabDataManager.Instance != null)
         {
             PlayFabDataManager.Instance.SaveGameData();

@@ -90,6 +90,9 @@ public class Canvas_NavigationManager : MonoBehaviour
             // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab
             // (Thằng CardManager hay InventoryManager nghe thấy sẽ tự động reset)
             OnTabChanged?.Invoke(targetTab);
+
+            // Lưu dữ liệu khi chuyển Tab chính (Navigation)
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
         });
     }
 

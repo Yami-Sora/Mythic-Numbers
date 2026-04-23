@@ -44,6 +44,9 @@ public class GameServices : MonoBehaviour
                     PlayFabDataManager.Instance.FetchVirtualCurrencies(); // Kéo tiền về UI
                     PlayFabDataManager.Instance.LoadGameData();           // Kéo túi đồ và bài về UI
                 }
+                
+                // === BẬT TÍNH NĂNG TỰ ĐỘNG CẬP NHẬT RANKING MỖI 5 PHÚT ===
+                StartCoroutine(Leaderboard.AutoFetchRoutine());
                 // ===================================
 
                 // Lấy ELO hiện tại và in ra để debug (Đoạn code cũ của sếp giữ nguyên)

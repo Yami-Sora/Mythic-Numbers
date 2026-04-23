@@ -227,7 +227,6 @@ public class CardDetailManager : YamiMonoBehaviour
             RefreshCardInfo();
 
             if (CardListManager.Instance != null) CardListManager.Instance.DisplayCards();
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
         }
     }
 
@@ -306,8 +305,6 @@ public class CardDetailManager : YamiMonoBehaviour
                 if (gemInventoryUI != null) gemInventoryUI.RefreshGemList();
 
                 RefreshStatsDisplay();
-
-                if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
             }
 
             _pendingGemToEquip = null;
@@ -363,7 +360,6 @@ public class CardDetailManager : YamiMonoBehaviour
             _currentSelectedSocket = null;
 
             RefreshStatsDisplay();
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
         }
     }
 
