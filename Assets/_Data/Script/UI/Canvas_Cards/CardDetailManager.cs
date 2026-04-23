@@ -222,6 +222,7 @@ public class CardDetailManager : YamiMonoBehaviour
             _selectedCard.starLevel++;
 
             Debug.Log($"[Upgrade] 💥 Đột phá thành công! {_selectedCard.data.cardName} đã lên {_selectedCard.starLevel} Sao!");
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
 
             // Tính lại số ô ngọc mới được mở và load lại 2 con số Text
             RefreshCardInfo();
@@ -304,6 +305,7 @@ public class CardDetailManager : YamiMonoBehaviour
                 if (InventoryManager.Instance != null) InventoryManager.Instance.RemoveItem(_pendingGemToEquip);
                 if (gemInventoryUI != null) gemInventoryUI.RefreshGemList();
 
+                if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
                 RefreshStatsDisplay();
             }
 
@@ -359,6 +361,7 @@ public class CardDetailManager : YamiMonoBehaviour
             _currentSelectedSocket.ClearSocket();
             _currentSelectedSocket = null;
 
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
             RefreshStatsDisplay();
         }
     }

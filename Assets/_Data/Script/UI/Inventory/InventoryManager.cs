@@ -13,9 +13,8 @@ public class InventoryManager : YamiMonoBehaviour
     [SerializeField] private GameObject slotPrefab;
 
     [Header("Tab Visuals")]
-    [SerializeField] private Image imgTabAll;
-    [SerializeField] private Image imgTabGems;
-    [SerializeField] private Image imgTabProps;
+    public Image imgTabProps;
+    public Image imgTabGems;
 
     [Header("Layout Settings")]
     [SerializeField] private int minSlots = 40;
@@ -39,7 +38,7 @@ public class InventoryManager : YamiMonoBehaviour
     protected override void Start()
     {
         base.Start();
-        ShowAll();
+        ShowProps(); // Mặc định vào túi là xem Đạo cụ trước
     }
 
     private void Update()
@@ -82,7 +81,7 @@ public class InventoryManager : YamiMonoBehaviour
         
         if (PlayFabDataManager.Instance != null)
         {
-            PlayFabDataManager.Instance.SaveGameData();
+            PlayFabDataManager.Instance.MarkDirty();
         }
     }
 
@@ -116,7 +115,11 @@ public class InventoryManager : YamiMonoBehaviour
             remaining -= toAdd;
         }
 
-        if (!isSilent) RefreshUI();
+        if (!isSilent) 
+        {
+            RefreshUI();
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
+        }
     }
 
     // ==========================================
@@ -185,13 +188,11 @@ public class InventoryManager : YamiMonoBehaviour
     // ==========================================
     // 3. XỬ LÝ NÚT BẤM VÀ ĐỔI MÀU
     // ==========================================
-    public void ShowAll() { DisplayInventory(null); HighlightTab(imgTabAll); }
-    public void ShowGems() { DisplayInventory(ItemDataSO.ItemType.Gem); HighlightTab(imgTabGems); }
     public void ShowProps() { DisplayInventory(ItemDataSO.ItemType.Prop); HighlightTab(imgTabProps); }
+    public void ShowGems() { DisplayInventory(ItemDataSO.ItemType.Gem); HighlightTab(imgTabGems); }
 
     private void HighlightTab(Image activeTabImg)
     {
-        if (imgTabAll) imgTabAll.color = _normalColor;
         if (imgTabGems) imgTabGems.color = _normalColor;
         if (imgTabProps) imgTabProps.color = _normalColor;
 

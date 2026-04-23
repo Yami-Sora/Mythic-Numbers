@@ -52,6 +52,8 @@ public class PlayFabDataManager : MonoBehaviour
     [Header("Player Data")]
     public int CurrentStage = 1; // Lưu ở local để các Scene khác dễ gọi
     public bool isDataLoaded = false; // Cờ kiểm tra dữ liệu đã tải xong chưa
+    private bool isDirty = false; // Cờ đánh dấu dữ liệu đã thay đổi
+    private bool isDungeonDirty = false; // Cờ riêng cho Dungeon
 
     public enum GameMode { Story, GoldDungeon, GemDungeon }
     public GameMode CurrentMode = GameMode.Story;
@@ -88,6 +90,20 @@ public class PlayFabDataManager : MonoBehaviour
     }
 
     // ==========================================
+    // QUẢN LÝ TRẠNG THÁI DỮ LIỆU
+    // ==========================================
+    public void MarkDirty()
+    {
+        isDirty = true;
+        Debug.Log("[PlayFab] Dữ liệu đã thay đổi, chuẩn bị Save khi chuyển Tab.");
+    }
+
+    public void MarkDungeonDirty()
+    {
+        isDungeonDirty = true;
+    }
+
+    // ==========================================
     // LƯU DỮ LIỆU (SAVE)
     // ==========================================
     public void SaveGameData()
@@ -96,6 +112,12 @@ public class PlayFabDataManager : MonoBehaviour
         if (!isDataLoaded)
         {
             Debug.LogWarning("[PlayFab] Từ chối Save vì dữ liệu chưa được Load xong từ Server (tránh ghi đè dữ liệu rỗng)!");
+            return;
+        }
+
+        if (!isDirty)
+        {
+            // Debug.Log("[PlayFab] Dữ liệu không đổi, không cần Save tốn tài nguyên sếp ơi!");
             return;
         }
 
@@ -124,7 +146,10 @@ public class PlayFabDataManager : MonoBehaviour
         };
 
         PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>"),
+            result => {
+                Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>");
+                isDirty = false; // Reset cờ sau khi save thành công
+            },
             error => Debug.LogError("[PlayFab] Lỗi Save: " + error.GenerateErrorReport())
         );
     }
@@ -171,7 +196,10 @@ public class PlayFabDataManager : MonoBehaviour
         };
 
         PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu Dungeon lên mây!</color>"),
+            result => {
+                Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu Dungeon lên mây!</color>");
+                isDungeonDirty = false;
+            },
             error => Debug.LogError("[PlayFab] Lỗi Save Dungeon: " + error.GenerateErrorReport())
         );
     }
@@ -321,8 +349,16 @@ public class PlayFabDataManager : MonoBehaviour
         {
             if (index >= requests.Count)
             {
-                if (CurrentMode == GameMode.Story) SaveStageDataOnly();
-                else SaveDungeonDataOnly();
+                if (CurrentMode == GameMode.Story) 
+                {
+                    SaveStageDataOnly();
+                    isDirty = false; // Vì Stage đã save riêng rồi
+                }
+                else 
+                {
+                    SaveDungeonDataOnly();
+                    isDungeonDirty = false;
+                }
 
                 FetchVirtualCurrencies();
                 onSuccess?.Invoke(goldReward, isBoss, gemReward);

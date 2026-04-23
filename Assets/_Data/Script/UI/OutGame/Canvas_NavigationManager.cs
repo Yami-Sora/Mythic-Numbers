@@ -12,6 +12,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     [SerializeField] private GameObject combatCanvas;
     [SerializeField] private GameObject dungeonCanvas;
     [SerializeField] private GameObject inventoryCanvas;
+    [SerializeField] private GameObject currencyPanel;
 
     // [CLEAN CODE 1]: Gom tất cả Popup vào 1 cái túi (Mảng). Thêm bớt gì cứ kéo thả trên Inspector!
     [Header("Global Popups")]
@@ -86,6 +87,12 @@ public class Canvas_NavigationManager : MonoBehaviour
             }
 
             UpdateTabButtons(targetTab);
+
+            // [HIỂN THỊ TIỀN TỆ]: Ẩn khi vào Thẻ bài, hiện ở các chỗ khác
+            if (currencyPanel != null)
+            {
+                currencyPanel.SetActive(targetTab != TabType.Cards);
+            }
 
             // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab
             // (Thằng CardManager hay InventoryManager nghe thấy sẽ tự động reset)

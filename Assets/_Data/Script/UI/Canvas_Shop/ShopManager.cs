@@ -116,7 +116,7 @@ public class ShopManager : MonoBehaviour
         if (isAnyCardUpdated && CardListManager.Instance != null)
         {
             CardListManager.Instance.DisplayCards();
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
         }
 
         // HIỂN THỊ UI BẢNG THƯỞNG GACHA
