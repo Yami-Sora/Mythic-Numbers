@@ -68,3 +68,5 @@ Assets/Plugins/PlayFab*
 /Assets/MCPForUnity
 /Assets/MCPForUnity.met
 /Assets/SpriteOutline
+/GameDesign.md
+/Assets/Plugins/DOTween.cs
