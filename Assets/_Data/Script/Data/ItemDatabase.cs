@@ -47,4 +47,14 @@ public class ItemDatabase : YamiMonoBehaviour
         if (_itemLookup != null && _itemLookup.ContainsKey(id)) return _itemLookup[id];
         return null;
     }
+
+    public ItemDataSO GetRandomGemByColor(ColorLv targetLevel)
+    {
+        if (allItems == null) return null;
+        
+        var candidates = allItems.Where(i => i.type == ItemDataSO.ItemType.Gem && i.colorLevel == targetLevel).ToList();
+        if (candidates.Count == 0) return null;
+
+        return candidates[UnityEngine.Random.Range(0, candidates.Count)];
+    }
 }

@@ -12,6 +12,6 @@ public static class PlayFabConstants
 
     // Virtual Currencies
     public const string CURRENCY_GOLD = "GD";
-    public const string CURRENCY_GEM = "GM";
+    public const string CURRENCY_LN = "GM";
     public const string CURRENCY_STAMINA = "EN";
 }

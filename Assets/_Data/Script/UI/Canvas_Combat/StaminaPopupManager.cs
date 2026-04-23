@@ -40,7 +40,7 @@ public class StaminaPopupManager : TabListenerBase
     public Button btnBuySubmit;
 
     public int staminaPerBuy = 60;
-    public int gemCostPerBuy = 80;
+    public int lnCostPerBuy = 80;
 
     [Header("Giới Hạn Mua")]
     [SerializeField] public int maxDailyBuyLimit = 3;
@@ -63,7 +63,7 @@ public class StaminaPopupManager : TabListenerBase
     private int _buyAmount = 1;
     private int _useAmount = 1;
     private int _maxItemInInventory = 0;
-    private int _currentGemBalance = 0;
+    private int _currentLNBalance = 0;
 
     protected override void Awake() => Instance = this;
 
@@ -111,9 +111,9 @@ public class StaminaPopupManager : TabListenerBase
         if (staminaPopupPanel != null) staminaPopupPanel.SetActive(false);
     }
 
-    public void UpdatePopupRealtimeData(string timeStr, bool isMax, int gemBalance)
+    public void UpdatePopupRealtimeData(string timeStr, bool isMax, int lnBalance)
     {
-        _currentGemBalance = gemBalance;
+        _currentLNBalance = lnBalance;
 
         if (txtPopupTimer != null && staminaPopupPanel.activeSelf)
         {
@@ -192,7 +192,7 @@ public class StaminaPopupManager : TabListenerBase
         if (isBuyTab)
         {
             int remainingQuota = maxDailyBuyLimit - _currentDailyBuys;
-            int maxCanAfford = _currentGemBalance / gemCostPerBuy;
+            int maxCanAfford = _currentLNBalance / lnCostPerBuy;
 
             if (remainingQuota <= 0 || maxCanAfford <= 0) _buyAmount = 0;
             else _buyAmount = 1;
@@ -224,7 +224,7 @@ public class StaminaPopupManager : TabListenerBase
         }
 
         int targetAmount = _buyAmount + change;
-        int maxCanAfford = _currentGemBalance / gemCostPerBuy;
+        int maxCanAfford = _currentLNBalance / lnCostPerBuy;
         int trueMaxAllowed = Mathf.Min(maxCanAfford, remainingQuota);
 
         // [TÍNH NĂNG MỚI]: Bắt lỗi khi sếp bấm nút tăng (+)
@@ -263,7 +263,7 @@ public class StaminaPopupManager : TabListenerBase
             return;
         }
 
-        int maxCanAfford = _currentGemBalance / gemCostPerBuy;
+        int maxCanAfford = _currentLNBalance / lnCostPerBuy;
 
         // Đỗ nghèo khỉ bấm "Tối đa"
         if (maxCanAfford <= 0)
@@ -295,7 +295,7 @@ public class StaminaPopupManager : TabListenerBase
     {
         if (txtBuyAmount != null) txtBuyAmount.text = _buyAmount.ToString();
         if (txtBuyBonusInfo != null) txtBuyBonusInfo.text = $"Lần mua này có thể bổ sung: x{_buyAmount * staminaPerBuy} Thể lực";
-        if (txtBuyCost != null) txtBuyCost.text = $"x{_buyAmount * gemCostPerBuy}";
+        if (txtBuyCost != null) txtBuyCost.text = $"x{_buyAmount * lnCostPerBuy}";
 
         if (txtBuyLimitInfo != null)
         {
@@ -312,18 +312,18 @@ public class StaminaPopupManager : TabListenerBase
     {
         if (_buyAmount <= 0) return;
 
-        int totalGemCost = _buyAmount * gemCostPerBuy;
+        int totalLNCost = _buyAmount * lnCostPerBuy;
         int totalStaminaGained = _buyAmount * staminaPerBuy;
 
         if (btnBuySubmit != null) btnBuySubmit.interactable = false;
 
-        var subtractGemRequest = new SubtractUserVirtualCurrencyRequest
+        var subtractLNRequest = new SubtractUserVirtualCurrencyRequest
         {
             VirtualCurrency = "GM",
-            Amount = totalGemCost
+            Amount = totalLNCost
         };
 
-        PlayFabClientAPI.SubtractUserVirtualCurrency(subtractGemRequest,
+        PlayFabClientAPI.SubtractUserVirtualCurrency(subtractLNRequest,
             subResult =>
             {
                 var addStaminaRequest = new AddUserVirtualCurrencyRequest
@@ -343,7 +343,7 @@ public class StaminaPopupManager : TabListenerBase
                         SaveDailyBuyData();
 
                         int remainingQuota = maxDailyBuyLimit - _currentDailyBuys;
-                        int maxCanAfford = subResult.Balance / gemCostPerBuy;
+                        int maxCanAfford = subResult.Balance / lnCostPerBuy;
 
                         if (remainingQuota <= 0 || maxCanAfford <= 0) _buyAmount = 0;
                         else _buyAmount = 1;

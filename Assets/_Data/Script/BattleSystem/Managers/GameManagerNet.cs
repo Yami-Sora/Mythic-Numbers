@@ -93,10 +93,15 @@ public class GameManagerNet : NetworkBehaviour
                 stage = PlayFabDataManager.Instance.GoldDungeonStage;
                 powerStep = 0.2f; // Dungeon tăng 20%
             }
-            else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GemDungeon)
+            else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.LNDungeon)
             {
-                stage = PlayFabDataManager.Instance.GemDungeonStage;
+                stage = PlayFabDataManager.Instance.LNDungeonStage;
                 powerStep = 0.2f; // Dungeon tăng 20%
+            }
+            else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GemMine)
+            {
+                stage = PlayFabDataManager.Instance.GemMineStage;
+                powerStep = 0.2f; // Mỏ Gem cũng tăng 20% cho gắt
             }
             else
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,14 +23,16 @@ public class PlayFabDataManager : MonoBehaviour
     private bool isDirty = false; 
     private bool isDungeonDirty = false; 
 
-    public enum GameMode { Story, GoldDungeon, GemDungeon }
+    public enum GameMode { Story, GoldDungeon, LNDungeon, GemMine }
     public GameMode CurrentMode = GameMode.Story;
 
     // Dữ liệu Dungeon
     public int GoldDungeonStage = 1;
-    public int GemDungeonStage = 1;
+    public int LNDungeonStage = 1;
+    public int GemMineStage = 1;
     public int GoldEntriesToday = 0;
-    public int GemEntriesToday = 0;
+    public int LNEntriesToday = 0;
+    public int GemMineEntriesToday = 0;
 
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
@@ -175,9 +177,11 @@ public class PlayFabDataManager : MonoBehaviour
         DungeonSaveData dData = new DungeonSaveData
         {
             goldStage = GoldDungeonStage,
-            gemStage = GemDungeonStage,
+            lnStage = LNDungeonStage,
+            gemMineStage = GemMineStage,
             goldEntries = GoldEntriesToday,
-            gemEntries = GemEntriesToday,
+            lnEntries = LNEntriesToday,
+            gemMineEntries = GemMineEntriesToday,
             lastDate = DateTime.Now.ToString("yyyy-MM-dd")
         };
 
@@ -270,19 +274,22 @@ public class PlayFabDataManager : MonoBehaviour
                 DungeonSaveData loadedData = JsonUtility.FromJson<DungeonSaveData>(json);
                 
                 GoldDungeonStage = Mathf.Max(1, loadedData.goldStage);
-                GemDungeonStage = Mathf.Max(1, loadedData.gemStage);
+                LNDungeonStage = Mathf.Max(1, loadedData.lnStage);
+                GemMineStage = Mathf.Max(1, loadedData.gemMineStage);
 
                 string today = DateTime.Now.ToString("yyyy-MM-dd");
                 if (loadedData.lastDate != today)
                 {
                     // Qua ngày mới rồi, reset lượt đi sếp ơi!
                     GoldEntriesToday = 0;
-                    GemEntriesToday = 0;
+                    LNEntriesToday = 0;
+                    GemMineEntriesToday = 0;
                 }
                 else
                 {
                     GoldEntriesToday = loadedData.goldEntries;
-                    GemEntriesToday = loadedData.gemEntries;
+                    LNEntriesToday = loadedData.lnEntries;
+                    GemMineEntriesToday = loadedData.gemMineEntries;
                 }
             }
 
@@ -298,37 +305,55 @@ public class PlayFabDataManager : MonoBehaviour
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
 
         int goldReward = 0;
-        int gemReward = 0;
+        int lnReward = 0;
+        ItemDataSO droppedGem = null;
         bool isBoss = false;
         int currentStage = 0;
 
-        if (CurrentMode == GameMode.GoldDungeon)
-        {
-            currentStage = GoldDungeonStage;
-            goldReward = Mathf.RoundToInt(100 * (1 + 0.1f * (currentStage - 1)));
-            gemReward = 0;
-            GoldDungeonStage++;
-        }
-        else if (CurrentMode == GameMode.GemDungeon)
-        {
-            currentStage = GemDungeonStage;
-            goldReward = 0;
-            gemReward = Mathf.RoundToInt(20 * (1 + 0.1f * (currentStage - 1)));
-            GemDungeonStage++;
-        }
-        else
+        if (CurrentMode == GameMode.Story)
         {
             currentStage = CurrentStage;
             goldReward = Mathf.RoundToInt(50 * (1 + 0.05f * (currentStage - 1)));
             isBoss = (currentStage % 10 == 0);
-            gemReward = isBoss ? 1 : 0;
+            lnReward = isBoss ? 1 : 0;
             CurrentStage++;
+        }
+        else if (CurrentMode == GameMode.GoldDungeon)
+        {
+            currentStage = GoldDungeonStage;
+            goldReward = Mathf.RoundToInt(100 * (1 + 0.1f * (currentStage - 1)));
+            lnReward = 0;
+            GoldDungeonStage++;
+            GoldEntriesToday++;
+        }
+        else if (CurrentMode == GameMode.LNDungeon)
+        {
+            currentStage = LNDungeonStage;
+            goldReward = 0;
+            lnReward = Mathf.RoundToInt(20 * (1 + 0.1f * (currentStage - 1)));
+            LNDungeonStage++;
+            LNEntriesToday++;
+        }
+        else if (CurrentMode == GameMode.GemMine)
+        {
+            currentStage = GemMineStage;
+            goldReward = 0;
+            lnReward = 0;
+
+            // Logic rớt Gem: Mỗi 10 ải tăng 1 phẩm chất màu
+            int colorIndex = ((currentStage - 1) / 10) + 1; // 1-White, 2-Green...
+            colorIndex = Mathf.Clamp(colorIndex, 1, 7); // Max là Red (7)
+            ColorLv targetColor = (ColorLv)colorIndex;
+
+            droppedGem = ItemDatabase.Instance.GetRandomGemByColor(targetColor);
+            GemMineStage++;
+            GemMineEntriesToday++;
         }
 
         // Thực hiện cộng tiền lên Server
         var requests = new List<AddUserVirtualCurrencyRequest>();
         if (goldReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = PlayFabConstants.CURRENCY_GOLD, Amount = goldReward });
-        if (gemReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = PlayFabConstants.CURRENCY_GEM, Amount = gemReward });
+        if (lnReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = PlayFabConstants.CURRENCY_LN, Amount = lnReward });
 
         // Chạy tuần tự các request cộng tiền
         void ProcessRequest(int index)
@@ -340,15 +365,28 @@ public class PlayFabDataManager : MonoBehaviour
                     SaveStageDataOnly();
                     isDirty = false; // Vì Stage đã save riêng rồi
                 }
+                else if (CurrentMode == GameMode.GemMine)
+                {
+                    if (droppedGem != null)
+                    {
+                        InventoryManager.Instance.AddItem(droppedGem, 1, isSilent: true);
+                        MarkDirty();
+                        SaveGameData();
+                    }
+                    MarkDungeonDirty();
+                    SaveDungeonDataOnly();
+                    isDungeonDirty = false;
+                }
                 else 
                 {
+                    MarkDungeonDirty();
                     SaveDungeonDataOnly();
                     isDungeonDirty = false;
                 }
 
                 FetchVirtualCurrencies();
             FetchPlayerProfile();
-                onSuccess?.Invoke(goldReward, isBoss, gemReward);
+                onSuccess?.Invoke(goldReward, isBoss, lnReward);
                 return;
             }
 
@@ -364,7 +402,7 @@ public class PlayFabDataManager : MonoBehaviour
         PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), result =>
         {
             int gold = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GOLD) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GOLD] : 0;
-            int gem = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GEM) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GEM] : 0;
+            int ln = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_LN) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_LN] : 0;
 
             // 1. Lấy số dư Thể Lực
             int stamina = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_STAMINA) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_STAMINA] : 0;
@@ -379,11 +417,11 @@ public class PlayFabDataManager : MonoBehaviour
             // 3. Bắn toàn bộ Data sang UI
             if (CurrencyUIManager.Instance != null)
             {
-                CurrencyUIManager.Instance.UpdateBalances(gold, gem);
+                CurrencyUIManager.Instance.UpdateBalances(gold, ln);
                 CurrencyUIManager.Instance.UpdateStamina(stamina, secondsToRecharge); // Hàm mới lát mình viết
             }
 
-            Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {gem} Ngọc | {stamina}/200 Thể lực</color>");
+            Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {ln} Linh Ngọc | {stamina}/200 Thể lực</color>");
         },
         error => Debug.LogError("[PlayFab] Lỗi lấy tiền tệ: " + error.GenerateErrorReport()));
     }
@@ -544,28 +582,28 @@ public class PlayFabDataManager : MonoBehaviour
     private void ExecuteCheat3()
     {
         Debug.Log("<color=cyan>[Cheat] Sếp Yami Double Tap Phải: +100 Linh Ngọc!</color>");
-        HackCurrency(PlayFabConstants.CURRENCY_GEM, 100);
+        HackCurrency(PlayFabConstants.CURRENCY_LN, 100);
     }
 
     private void HackCurrency(string currencyCode, int amount)
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn())
         {
-            if (!PlayFabClientAPI.IsClientLoggedIn())
-            {
-                Debug.LogWarning("<color=orange>[Cheat] Bình tĩnh sếp ơi! PlayFab đang kết nối!</color>");
-                return;
-            }
-
-            var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = currencyCode, Amount = amount };
-            PlayFabClientAPI.AddUserVirtualCurrency(request,
-                result =>
-                {
-                    Debug.Log($"<color=yellow>[Cheat] Đã bơm {amount} {currencyCode}. Balance: {result.Balance}</color>");
-                    FetchVirtualCurrencies();
-            FetchPlayerProfile();
-                },
-                error => Debug.LogError("Lỗi hack tiền: " + error.GenerateErrorReport())
-            );
+            Debug.LogWarning("<color=orange>[Cheat] Bình tĩnh sếp ơi! PlayFab đang kết nối!</color>");
+            return;
         }
+
+        var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = currencyCode, Amount = amount };
+        PlayFabClientAPI.AddUserVirtualCurrency(request,
+            result =>
+            {
+                Debug.Log($"<color=yellow>[Cheat] Đã bơm {amount} {currencyCode}. Balance: {result.Balance}</color>");
+                FetchVirtualCurrencies();
+                FetchPlayerProfile();
+            },
+            error => Debug.LogError("Lỗi hack tiền: " + error.GenerateErrorReport())
+        );
+    }
 
     private void Reincarnate()
     {

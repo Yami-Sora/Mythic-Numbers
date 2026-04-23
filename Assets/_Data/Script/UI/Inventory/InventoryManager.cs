@@ -129,6 +129,8 @@ public class InventoryManager : YamiMonoBehaviour
     {
         _currentTab = filterType;
 
+        if (slotContainer == null) return;
+
         for (int i = slotContainer.childCount - 1; i >= 0; i--)
         {
             Transform child = slotContainer.GetChild(i);

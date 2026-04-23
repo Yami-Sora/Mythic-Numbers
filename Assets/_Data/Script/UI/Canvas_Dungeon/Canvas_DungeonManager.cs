@@ -14,10 +14,15 @@ public class Canvas_DungeonManager : TabListenerBase
     public TextMeshProUGUI txtGoldLimit;
     public Button btnEnterGold;
 
-    [Header("Gem Dungeon UI")]
-    public TextMeshProUGUI txtGemStage;
-    public TextMeshProUGUI txtGemLimit;
-    public Button btnEnterGem;
+    [Header("LN Dungeon UI")]
+    public TextMeshProUGUI txtLNStage;
+    public TextMeshProUGUI txtLNLimit;
+    public Button btnEnterLN;
+
+    [Header("Gem Mine UI")]
+    public TextMeshProUGUI txtGemMineStage;
+    public TextMeshProUGUI txtGemMineLimit;
+    public Button btnEnterGemMine;
 
     private const int MAX_DAILY_ENTRIES = 2;
     private const string ITEM_ID_TICKET = "Dungeon_Entry_Ticket";
@@ -28,7 +33,8 @@ public class Canvas_DungeonManager : TabListenerBase
         Instance = this;
         
         if (btnEnterGold != null) btnEnterGold.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.GoldDungeon));
-        if (btnEnterGem != null) btnEnterGem.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.GemDungeon));
+        if (btnEnterLN != null) btnEnterLN.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.LNDungeon));
+        if (btnEnterGemMine != null) btnEnterGemMine.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.GemMine));
     }
 
     protected override void OnTabChanged(Canvas_NavigationManager.TabType targetTab)
@@ -50,10 +56,15 @@ public class Canvas_DungeonManager : TabListenerBase
         if (txtGoldLimit != null) txtGoldLimit.text = $"Lượt đi: {data.GoldEntriesToday}/{MAX_DAILY_ENTRIES}";
         if (btnEnterGold != null) btnEnterGold.interactable = (data.GoldEntriesToday < MAX_DAILY_ENTRIES);
 
-        // Update Gem Dungeon UI
-        if (txtGemStage != null) txtGemStage.text = $"Ải hiện tại: {data.GemDungeonStage}";
-        if (txtGemLimit != null) txtGemLimit.text = $"Lượt đi: {data.GemEntriesToday}/{MAX_DAILY_ENTRIES}";
-        if (btnEnterGem != null) btnEnterGem.interactable = (data.GemEntriesToday < MAX_DAILY_ENTRIES);
+        // Update LN Dungeon UI
+        if (txtLNStage != null) txtLNStage.text = $"Ải hiện tại: {data.LNDungeonStage}";
+        if (txtLNLimit != null) txtLNLimit.text = $"Lượt đi: {data.LNEntriesToday}/{MAX_DAILY_ENTRIES}";
+        if (btnEnterLN != null) btnEnterLN.interactable = (data.LNEntriesToday < MAX_DAILY_ENTRIES);
+
+        // Update Gem Mine UI
+        if (txtGemMineStage != null) txtGemMineStage.text = $"Ải hiện tại: {data.GemMineStage}";
+        if (txtGemMineLimit != null) txtGemMineLimit.text = $"Lượt đi: {data.GemMineEntriesToday}/{MAX_DAILY_ENTRIES}";
+        if (btnEnterGemMine != null) btnEnterGemMine.interactable = (data.GemMineEntriesToday < MAX_DAILY_ENTRIES);
     }
 
     public void TryEnterDungeon(PlayFabDataManager.GameMode mode)
@@ -62,7 +73,11 @@ public class Canvas_DungeonManager : TabListenerBase
         var data = PlayFabDataManager.Instance;
 
         // 1. Kiểm tra số lượt (Anti-Cheat)
-        int currentEntries = (mode == PlayFabDataManager.GameMode.GoldDungeon) ? data.GoldEntriesToday : data.GemEntriesToday;
+        int currentEntries = 0;
+        if (mode == PlayFabDataManager.GameMode.GoldDungeon) currentEntries = data.GoldEntriesToday;
+        else if (mode == PlayFabDataManager.GameMode.LNDungeon) currentEntries = data.LNEntriesToday;
+        else if (mode == PlayFabDataManager.GameMode.GemMine) currentEntries = data.GemMineEntriesToday;
+
         if (currentEntries >= MAX_DAILY_ENTRIES)
         {
             VFXManager.Instance.SpawnFloatingText("Hết lượt đi ải hôm nay sếp ơi!", GetButtonTransform(mode), Color.red);
@@ -94,11 +109,9 @@ public class Canvas_DungeonManager : TabListenerBase
             VirtualCurrency = "EN"
         }, result => {
             // Thành công!
-            if (mode == PlayFabDataManager.GameMode.GoldDungeon) data.GoldEntriesToday++;
-            else data.GemEntriesToday++;
-
             data.CurrentMode = mode;
-            data.SaveDungeonDataOnly(); // Lưu lại số lượt mới
+            data.MarkDungeonDirty();
+            data.SaveDungeonDataOnly(); 
 
             VFXManager.Instance.SpawnFloatingText("Lên đường!", GetButtonTransform(mode), Color.green);
             
@@ -120,6 +133,7 @@ public class Canvas_DungeonManager : TabListenerBase
     private Transform GetButtonTransform(PlayFabDataManager.GameMode mode)
     {
         if (mode == PlayFabDataManager.GameMode.GoldDungeon) return btnEnterGold.transform;
-        return btnEnterGem.transform;
+        if (mode == PlayFabDataManager.GameMode.LNDungeon) return btnEnterLN.transform;
+        return btnEnterGemMine.transform;
     }
 }

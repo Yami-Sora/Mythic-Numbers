@@ -53,7 +53,16 @@ public class Canvas_NavigationManager : MonoBehaviour
             if (tab != null) tab.SetActive(false);
         }
 
-        SwitchTab(TabType.Combat);
+        TabType defaultTab = TabType.Combat;
+        if (PlayFabDataManager.Instance != null)
+        {
+            // Nếu vừa đi ải phụ về thì mở Tab Dungeon cho sếp
+            if (PlayFabDataManager.Instance.CurrentMode != PlayFabDataManager.GameMode.Story)
+            {
+                defaultTab = TabType.Dungeon;
+            }
+        }
+        SwitchTab(defaultTab);
     }
 
     private void InitDictionary()

@@ -9,7 +9,7 @@ public class CurrencyUIManager : MonoBehaviour
 
     [Header("UI Tiền Tệ (Top Bar)")]
     public TextMeshProUGUI txtGold;
-    public TextMeshProUGUI txtGem;
+    public TextMeshProUGUI txtLN;
 
     [Header("UI Thể Lực (Top Bar)")]
     public TextMeshProUGUI txtStamina;
@@ -20,7 +20,7 @@ public class CurrencyUIManager : MonoBehaviour
     private float regenTimer = 0f;
     private bool isRegenerating = false;
     private int _lastDisplayedSecond = -1;
-    private int _currentGemBalance = 0;
+    private int _currentLNBalance = 0;
 
     private void Awake() => Instance = this;
 
@@ -39,11 +39,11 @@ public class CurrencyUIManager : MonoBehaviour
         }
     }
 
-    public void UpdateBalances(int gold, int gem)
+    public void UpdateBalances(int gold, int ln)
     {
-        _currentGemBalance = gem;
+        _currentLNBalance = ln;
         if (txtGold) txtGold.text = gold.ToString("N0");
-        if (txtGem) txtGem.text = gem.ToString("N0");
+        if (txtLN) txtLN.text = ln.ToString("N0");
 
         // Cập nhật số dư cho Popup nếu nó đang được mở
         PushDataToPopup();
@@ -101,7 +101,7 @@ public class CurrencyUIManager : MonoBehaviour
             TimeSpan time = TimeSpan.FromSeconds(regenTimer);
             string timeStr = time.ToString(@"mm\:ss");
 
-            StaminaPopupManager.Instance.UpdatePopupRealtimeData(timeStr, isMax, _currentGemBalance);
+            StaminaPopupManager.Instance.UpdatePopupRealtimeData(timeStr, isMax, _currentLNBalance);
         }
     }
 }

@@ -44,7 +44,28 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         if (resultPanel != null)
         {
             resultPanel.SetActive(false);
+
+            // Tìm nút Back trong panel (Sếp nhớ kéo một cái Button vào cái Panel này nhé)
+            var btnBack = resultPanel.GetComponentInChildren<UnityEngine.UI.Button>(true);
+            if (btnBack != null)
+            {
+                btnBack.onClick.RemoveAllListeners();
+                btnBack.onClick.AddListener(BackToMenu);
+            }
         }
+    }
+
+    public void BackToMenu()
+    {
+        Debug.Log("<color=cyan>[Referee] Sếp Yami thu quân về thành...</color>");
+        
+        // Tắt Runner trước khi load scene mới để dọn dẹp Network Objects
+        if (Runner != null && Runner.IsRunning) 
+        {
+            Runner.Shutdown();
+        }
+        
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MenuScene");
     }
     public override void Spawned()
     {

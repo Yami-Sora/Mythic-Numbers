@@ -12,9 +12,11 @@ public class PlayFabSaveData
 
     // [DUNGEON DATA]
     public int goldDungeonStage = 1;
-    public int gemDungeonStage = 1;
+    public int lnDungeonStage = 1;
+    public int gemMineStage = 1;
     public int goldDungeonEntries = 0;
-    public int gemDungeonEntries = 0;
+    public int lnDungeonEntries = 0;
+    public int gemMineEntries = 0;
     public string lastDungeonDate = ""; // Format: yyyy-MM-dd
 }
 
@@ -45,8 +47,10 @@ public class DeckSaveData
 public class DungeonSaveData
 {
     public int goldStage;
-    public int gemStage;
+    public int lnStage;
+    public int gemMineStage;
     public int goldEntries;
-    public int gemEntries;
+    public int lnEntries;
+    public int gemMineEntries;
     public string lastDate;
 }
