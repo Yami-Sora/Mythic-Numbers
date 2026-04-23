@@ -70,3 +70,4 @@ Assets/Plugins/PlayFab*
 /Assets/SpriteOutline
 /GameDesign.md
 /Assets/Plugins/DOTween.cs
+.agents/rules/refactor-rule.md

@@ -6,7 +6,10 @@ public class PlayFabSaveData
 {
     public List<ItemSaveData> inventory = new List<ItemSaveData>();
     public List<CardSaveData> cards = new List<CardSaveData>();
-    
+    // [PLAYER STATS]
+    public int level = 1;
+    public long exp = 0;
+
     // [DUNGEON DATA]
     public int goldDungeonStage = 1;
     public int gemDungeonStage = 1;

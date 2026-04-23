@@ -65,6 +65,8 @@ public class DeckManager : MonoBehaviour
         LocalDeckContext.SetDeck(currentDeck);
 
         RefreshDeckUI();
+
+        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdatePower();
     }
 
     public void CancelEdit()
@@ -187,5 +189,7 @@ public class DeckManager : MonoBehaviour
         {
             CardListManager.Instance.DisplayCards();
         }
+
+        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdatePower();
     }
 }

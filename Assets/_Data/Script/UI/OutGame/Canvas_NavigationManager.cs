@@ -13,6 +13,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     [SerializeField] private GameObject dungeonCanvas;
     [SerializeField] private GameObject inventoryCanvas;
     [SerializeField] private GameObject currencyPanel;
+    [SerializeField] private GameObject playerInfoCanvas;
 
     // [CLEAN CODE 1]: Gom tất cả Popup vào 1 cái túi (Mảng). Thêm bớt gì cứ kéo thả trên Inspector!
     [Header("Global Popups")]
@@ -92,6 +93,11 @@ public class Canvas_NavigationManager : MonoBehaviour
             if (currencyPanel != null)
             {
                 currencyPanel.SetActive(targetTab != TabType.Cards);
+            }
+
+            if (playerInfoCanvas != null)
+            {
+                playerInfoCanvas.SetActive(targetTab == TabType.Combat);
             }
 
             // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab

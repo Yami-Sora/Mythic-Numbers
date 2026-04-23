@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,7 +16,10 @@ public class PlayFabDataManager : MonoBehaviour
     #region [1] STATE & SETTINGS
     [Header("Player Data")]
     public int CurrentStage = 1; 
-    public bool isDataLoaded = false; 
+    public bool isDataLoaded = false;
+    public string PlayerName { get; private set; } = "Anonymous"; 
+    public int PlayerLevel = 1;
+    public long PlayerExp = 0;
     private bool isDirty = false; 
     private bool isDungeonDirty = false; 
 
@@ -31,6 +34,33 @@ public class PlayFabDataManager : MonoBehaviour
 
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
+    #endregion
+
+    
+    #region [PLAYER PROGRESSION]
+    public long GetRequiredExp(int level)
+    {
+        if (level <= 1) return 100;
+        // Mỗi level tăng 10% so với level trước: 100 * (1.1 ^ (level-1))
+        return (long)(100 * Math.Pow(1.1, level - 1));
+    }
+
+    public void AddExp(long amount)
+    {
+        PlayerExp += amount;
+        long req = GetRequiredExp(PlayerLevel);
+        
+        while (PlayerExp >= req)
+        {
+            PlayerExp -= req;
+            PlayerLevel++;
+            req = GetRequiredExp(PlayerLevel);
+            Debug.Log($"<color=yellow>[Level Up] Chúc mừng sếp lên cấp {PlayerLevel}!</color>");
+        }
+
+        MarkDirty();
+        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, req);
+    }
     #endregion
 
     #region [2] UNITY LIFECYCLE
@@ -92,6 +122,8 @@ public class PlayFabDataManager : MonoBehaviour
         // Lấy dữ liệu đã đóng gói từ các Manager
         saveData.inventory = GetInventorySaveData();
         saveData.cards = GetCardsSaveData();
+        saveData.level = PlayerLevel;
+        saveData.exp = PlayerExp;
 
         string json = JsonUtility.ToJson(saveData);
         var request = new UpdateUserDataRequest
@@ -133,6 +165,12 @@ public class PlayFabDataManager : MonoBehaviour
     public void SaveDungeonDataOnly()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        if (!isDungeonDirty)
+        {
+            // Debug.Log("[PlayFab] Dữ liệu Dungeon không đổi, không cần Save.");
+            return;
+        }
 
         DungeonSaveData dData = new DungeonSaveData
         {
@@ -199,6 +237,8 @@ public class PlayFabDataManager : MonoBehaviour
 
                 RestoreInventory(loadedData.inventory);
                 RestoreCards(loadedData.cards);
+                this.PlayerLevel = loadedData.level > 0 ? loadedData.level : 1;
+                this.PlayerExp = loadedData.exp;
             }
 
             // 1.5 Phục hồi CurrentStage từ Key riêng
@@ -307,6 +347,7 @@ public class PlayFabDataManager : MonoBehaviour
                 }
 
                 FetchVirtualCurrencies();
+            FetchPlayerProfile();
                 onSuccess?.Invoke(goldReward, isBoss, gemReward);
                 return;
             }
@@ -520,6 +561,7 @@ public class PlayFabDataManager : MonoBehaviour
                 {
                     Debug.Log($"<color=yellow>[Cheat] Đã bơm {amount} {currencyCode}. Balance: {result.Balance}</color>");
                     FetchVirtualCurrencies();
+            FetchPlayerProfile();
                 },
                 error => Debug.LogError("Lỗi hack tiền: " + error.GenerateErrorReport())
             );
@@ -563,7 +605,31 @@ public class PlayFabDataManager : MonoBehaviour
 
             // Kéo luôn tiền tệ (Vàng, Ngọc) về cho chắc cú
             FetchVirtualCurrencies();
+            FetchPlayerProfile();
         }
     }
     #endregion
+
+    public void FetchPlayerProfile()
+    {
+        if (!PlayFab.PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        PlayFab.PlayFabClientAPI.GetAccountInfo(new PlayFab.ClientModels.GetAccountInfoRequest(), res =>
+        {
+            if (res.AccountInfo != null && res.AccountInfo.TitleInfo != null && !string.IsNullOrEmpty(res.AccountInfo.TitleInfo.DisplayName))
+            {
+                PlayerName = res.AccountInfo.TitleInfo.DisplayName;
+            }
+            else
+            {
+                PlayerName = "Sếp Yami"; 
+            }
+
+            if (PlayerInfoUI.Instance != null)
+            {
+                PlayerInfoUI.Instance.UpdatePlayerName(PlayerName);
+                PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
+            }
+        }, err => UnityEngine.Debug.LogError("[PlayFab] Lỗi lấy Profile: " + err.GenerateErrorReport()));
+    }
 }
