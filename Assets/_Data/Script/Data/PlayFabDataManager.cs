@@ -7,53 +7,18 @@ using PlayFab.ClientModels;
 using UnityEngine.SceneManagement;
 
 // ==========================================
-// CÁC CLASS DỮ LIỆU JSON (DATA WRAPPERS)
-// ==========================================
-[Serializable]
-public class PlayFabSaveData
-{
-    public List<ItemSaveData> inventory = new List<ItemSaveData>();
-    public List<CardSaveData> cards = new List<CardSaveData>();
-    
-    // [DUNGEON DATA]
-    public int goldDungeonStage = 1;
-    public int gemDungeonStage = 1;
-    public int goldDungeonEntries = 0;
-    public int gemDungeonEntries = 0;
-    public string lastDungeonDate = ""; // Format: yyyy-MM-dd
-}
-
-[Serializable]
-public class ItemSaveData { public string id; public int amt; }
-
-[Serializable]
-public class CardSaveData
-{
-    public int id;
-    public int lvl;
-    public int star;
-    public int shards;
-    public string[] gems = new string[PlayFabDataManager.MAX_GEMS];
-}
-
-[Serializable]
-public class DeckSaveData
-{
-    public int[] deckCardIDs = new int[PlayFabDataManager.MAX_DECK_SIZE] { -1, -1, -1, -1, -1 };
-}
-
-// ==========================================
-// MANAGER CHÍNH
+// MANAGER CHÍNH (ORCHESTRATOR)
 // ==========================================
 public class PlayFabDataManager : MonoBehaviour
 {
     public static PlayFabDataManager Instance { get; private set; }
 
+    #region [1] STATE & SETTINGS
     [Header("Player Data")]
-    public int CurrentStage = 1; // Lưu ở local để các Scene khác dễ gọi
-    public bool isDataLoaded = false; // Cờ kiểm tra dữ liệu đã tải xong chưa
-    private bool isDirty = false; // Cờ đánh dấu dữ liệu đã thay đổi
-    private bool isDungeonDirty = false; // Cờ riêng cho Dungeon
+    public int CurrentStage = 1; 
+    public bool isDataLoaded = false; 
+    private bool isDirty = false; 
+    private bool isDungeonDirty = false; 
 
     public enum GameMode { Story, GoldDungeon, GemDungeon }
     public GameMode CurrentMode = GameMode.Story;
@@ -66,16 +31,9 @@ public class PlayFabDataManager : MonoBehaviour
 
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
+    #endregion
 
-    // --- KHAI BÁO HẰNG SỐ (Chống Magic Strings/Numbers) ---
-    public const int MAX_GEMS = 12;
-    public const int MAX_DECK_SIZE = 5;
-    private const string KEY_USER_DATA = "UserSaveData";
-    private const string KEY_PLAYER_DECK = "PlayerDeck";
-    private const string KEY_DUNGEON_DATA = "DungeonData";
-    private const string CURRENCY_GOLD = "GD";
-    private const string CURRENCY_GEM = "GM";
-    private const string CURRENCY_STAMINA = "EN";
+    #region [2] UNITY LIFECYCLE
 
     private void Awake()
     {
@@ -89,9 +47,9 @@ public class PlayFabDataManager : MonoBehaviour
         if (enableDevCheats) HandleDevCheats();
     }
 
-    // ==========================================
-    // QUẢN LÝ TRẠNG THÁI DỮ LIỆU
-    // ==========================================
+    #endregion
+
+    #region [3] QUẢN LÝ TRẠNG THÁI (DIRTY CHECKING)
     public void MarkDirty()
     {
         isDirty = true;
@@ -103,9 +61,9 @@ public class PlayFabDataManager : MonoBehaviour
         isDungeonDirty = true;
     }
 
-    // ==========================================
-    // LƯU DỮ LIỆU (SAVE)
-    // ==========================================
+    #endregion
+
+    #region [4] LƯU DỮ LIỆU (SAVE)
     public void SaveGameData()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
@@ -140,8 +98,8 @@ public class PlayFabDataManager : MonoBehaviour
         {
             Data = new Dictionary<string, string> 
             { 
-                { KEY_USER_DATA, json },
-                { "CurrentStage", CurrentStage.ToString() }
+                { PlayFabConstants.KEY_USER_DATA, json },
+                { PlayFabConstants.KEY_CURRENT_STAGE, CurrentStage.ToString() }
             }
         };
 
@@ -162,7 +120,7 @@ public class PlayFabDataManager : MonoBehaviour
         {
             Data = new Dictionary<string, string> 
             { 
-                { "CurrentStage", CurrentStage.ToString() }
+                { PlayFabConstants.KEY_CURRENT_STAGE, CurrentStage.ToString() }
             }
         };
 
@@ -191,7 +149,7 @@ public class PlayFabDataManager : MonoBehaviour
         {
             Data = new Dictionary<string, string> 
             { 
-                { KEY_DUNGEON_DATA, json }
+                { PlayFabConstants.KEY_DUNGEON_DATA, json }
             }
         };
 
@@ -204,21 +162,13 @@ public class PlayFabDataManager : MonoBehaviour
         );
     }
 
-    [Serializable]
-    public class DungeonSaveData
-    {
-        public int goldStage;
-        public int gemStage;
-        public int goldEntries;
-        public int gemEntries;
-        public string lastDate;
-    }
+    #endregion
 
     public void SaveCurrentDeck(OwnedCard[] deckToSave)
     {
         DeckSaveData dataWrapper = new DeckSaveData();
 
-        for (int i = 0; i < MAX_DECK_SIZE; i++)
+        for (int i = 0; i < PlayFabConstants.MAX_DECK_SIZE; i++)
         {
             bool hasCard = deckToSave[i] != null && deckToSave[i].data != null;
             dataWrapper.deckCardIDs[i] = hasCard ? deckToSave[i].data.cardID : -1;
@@ -227,7 +177,7 @@ public class PlayFabDataManager : MonoBehaviour
         string jsonDeck = JsonUtility.ToJson(dataWrapper);
         var request = new UpdateUserDataRequest
         {
-            Data = new Dictionary<string, string> { { KEY_PLAYER_DECK, jsonDeck } }
+            Data = new Dictionary<string, string> { { PlayFabConstants.KEY_PLAYER_DECK, jsonDeck } }
         };
 
         PlayFabClientAPI.UpdateUserData(request,
@@ -236,17 +186,15 @@ public class PlayFabDataManager : MonoBehaviour
         );
     }
 
-    // ==========================================
-    // TẢI DỮ LIỆU (LOAD)
-    // ==========================================
+    #region [5] TẢI DỮ LIỆU (LOAD)
     public void LoadGameData()
     {
         PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result =>
         {
             // 1. Phục hồi Inventory & Cards
-            if (result.Data != null && result.Data.ContainsKey(KEY_USER_DATA))
+            if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_USER_DATA))
             {
-                string json = result.Data[KEY_USER_DATA].Value;
+                string json = result.Data[PlayFabConstants.KEY_USER_DATA].Value;
                 PlayFabSaveData loadedData = JsonUtility.FromJson<PlayFabSaveData>(json);
 
                 RestoreInventory(loadedData.inventory);
@@ -254,9 +202,9 @@ public class PlayFabDataManager : MonoBehaviour
             }
 
             // 1.5 Phục hồi CurrentStage từ Key riêng
-            if (result.Data != null && result.Data.ContainsKey("CurrentStage"))
+            if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_CURRENT_STAGE))
             {
-                if (int.TryParse(result.Data["CurrentStage"].Value, out int stage))
+                if (int.TryParse(result.Data[PlayFabConstants.KEY_CURRENT_STAGE].Value, out int stage))
                 {
                     this.CurrentStage = stage > 0 ? stage : 1;
                 }
@@ -269,16 +217,16 @@ public class PlayFabDataManager : MonoBehaviour
             Debug.Log($"<color=cyan>[PlayFab] Đã đồng bộ toàn bộ tài sản từ server! Đang ở Ải: {CurrentStage}</color>");
 
             // 2. Phục hồi Deck
-            if (result.Data != null && result.Data.ContainsKey(KEY_PLAYER_DECK))
+            if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_PLAYER_DECK))
             {
-                string deckJson = result.Data[KEY_PLAYER_DECK].Value;
+                string deckJson = result.Data[PlayFabConstants.KEY_PLAYER_DECK].Value;
                 RestoreDeck(JsonUtility.FromJson<DeckSaveData>(deckJson));
             }
 
             // 2. Phục hồi dữ liệu Dungeon & Kiểm tra Reset ngày
-            if (result.Data != null && result.Data.ContainsKey(KEY_DUNGEON_DATA))
+            if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_DUNGEON_DATA))
             {
-                string json = result.Data[KEY_DUNGEON_DATA].Value;
+                string json = result.Data[PlayFabConstants.KEY_DUNGEON_DATA].Value;
                 DungeonSaveData loadedData = JsonUtility.FromJson<DungeonSaveData>(json);
                 
                 GoldDungeonStage = Mathf.Max(1, loadedData.goldStage);
@@ -302,11 +250,9 @@ public class PlayFabDataManager : MonoBehaviour
 
         }, error => Debug.LogError("Lỗi Load: " + error.GenerateErrorReport()));
     }
+    #endregion
 
-
-    // ==========================================
-    // LOGIC NHẬN THƯỞNG PVE
-    // ==========================================
+    #region [6] LOGIC PHẦN THƯỞNG & TIỀN TỆ
     public void ClaimStageReward(Action<int, bool, int> onSuccess)
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
@@ -341,8 +287,8 @@ public class PlayFabDataManager : MonoBehaviour
 
         // Thực hiện cộng tiền lên Server
         var requests = new List<AddUserVirtualCurrencyRequest>();
-        if (goldReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GOLD, Amount = goldReward });
-        if (gemReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GEM, Amount = gemReward });
+        if (goldReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = PlayFabConstants.CURRENCY_GOLD, Amount = goldReward });
+        if (gemReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = PlayFabConstants.CURRENCY_GEM, Amount = gemReward });
 
         // Chạy tuần tự các request cộng tiền
         void ProcessRequest(int index)
@@ -370,27 +316,23 @@ public class PlayFabDataManager : MonoBehaviour
 
         ProcessRequest(0);
     }
-
-    // ==========================================
-    // LẤY SỐ DƯ TIỀN TỆ & THỜI GIAN HỒI THỂ LỰC
-    // ==========================================
     public void FetchVirtualCurrencies()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
 
         PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), result =>
         {
-            int gold = result.VirtualCurrency.ContainsKey(CURRENCY_GOLD) ? result.VirtualCurrency[CURRENCY_GOLD] : 0;
-            int gem = result.VirtualCurrency.ContainsKey(CURRENCY_GEM) ? result.VirtualCurrency[CURRENCY_GEM] : 0;
+            int gold = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GOLD) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GOLD] : 0;
+            int gem = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GEM) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GEM] : 0;
 
             // 1. Lấy số dư Thể Lực
-            int stamina = result.VirtualCurrency.ContainsKey(CURRENCY_STAMINA) ? result.VirtualCurrency[CURRENCY_STAMINA] : 0;
+            int stamina = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_STAMINA) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_STAMINA] : 0;
 
             // 2. Lấy số giây còn lại để hồi 1 Thể lực (Từ Server trả về, chống hack)
             int secondsToRecharge = 0;
-            if (result.VirtualCurrencyRechargeTimes != null && result.VirtualCurrencyRechargeTimes.ContainsKey(CURRENCY_STAMINA))
+            if (result.VirtualCurrencyRechargeTimes != null && result.VirtualCurrencyRechargeTimes.ContainsKey(PlayFabConstants.CURRENCY_STAMINA))
             {
-                secondsToRecharge = result.VirtualCurrencyRechargeTimes[CURRENCY_STAMINA].SecondsToRecharge;
+                secondsToRecharge = result.VirtualCurrencyRechargeTimes[PlayFabConstants.CURRENCY_STAMINA].SecondsToRecharge;
             }
 
             // 3. Bắn toàn bộ Data sang UI
@@ -405,9 +347,9 @@ public class PlayFabDataManager : MonoBehaviour
         error => Debug.LogError("[PlayFab] Lỗi lấy tiền tệ: " + error.GenerateErrorReport()));
     }
 
-    // ==========================================
-    // CÁC HÀM HELPER TÁCH NHỎ (Clean Code)
-    // ==========================================
+    #endregion
+
+    #region [7] HELPER METHODS (DATA CONVERSION)
 
     private List<ItemSaveData> GetInventorySaveData()
     {
@@ -435,7 +377,7 @@ public class PlayFabDataManager : MonoBehaviour
                 star = card.starLevel,  
                 shards = card.currentShards 
             };
-            for (int i = 0; i < MAX_GEMS; i++)
+            for (int i = 0; i < PlayFabConstants.MAX_GEMS; i++)
             {
                 bool hasGem = card.equippedGems[i] != null && card.equippedGems[i].data != null;
                 cardSave.gems[i] = hasGem ? card.equippedGems[i].data.itemID : "";
@@ -477,7 +419,7 @@ public class PlayFabDataManager : MonoBehaviour
                 currentShards = cardSave.shards 
             };
 
-            for (int i = 0; i < MAX_GEMS; i++)
+            for (int i = 0; i < PlayFabConstants.MAX_GEMS; i++)
             {
                 if (!string.IsNullOrEmpty(cardSave.gems[i]))
                 {
@@ -496,7 +438,7 @@ public class PlayFabDataManager : MonoBehaviour
 
         var khoBaiCuaSep = CardListManager.Instance.GetOwnedCards();
 
-        for (int i = 0; i < MAX_DECK_SIZE; i++)
+        for (int i = 0; i < PlayFabConstants.MAX_DECK_SIZE; i++)
         {
             int idCanTim = loadedDeck.deckCardIDs[i];
             if (idCanTim != -1)
@@ -515,9 +457,9 @@ public class PlayFabDataManager : MonoBehaviour
         Debug.Log("<color=green>[PlayFab] Đã xếp lại Đội Hình chuẩn xác!</color>");
     }
 
-    // ==========================================
-    // HỆ THỐNG CHEAT CHO DEV
-    // ==========================================
+    #endregion
+
+    #region [8] HỆ THỐNG CHEAT (DEV ONLY)
 
     private void HandleDevCheats()
     {
@@ -549,7 +491,7 @@ public class PlayFabDataManager : MonoBehaviour
     private void ExecuteCheat1()
     {
         Debug.Log("<color=yellow>[Cheat] Sếp Yami Double Tap Trái: +1000 Vàng!</color>");
-        HackCurrency(CURRENCY_GOLD, 1000);
+        HackCurrency(PlayFabConstants.CURRENCY_GOLD, 1000);
     }
 
     private void ExecuteCheat2()
@@ -561,7 +503,7 @@ public class PlayFabDataManager : MonoBehaviour
     private void ExecuteCheat3()
     {
         Debug.Log("<color=cyan>[Cheat] Sếp Yami Double Tap Phải: +100 Linh Ngọc!</color>");
-        HackCurrency(CURRENCY_GEM, 100);
+        HackCurrency(PlayFabConstants.CURRENCY_GEM, 100);
     }
 
     private void HackCurrency(string currencyCode, int amount)
@@ -594,9 +536,9 @@ public class PlayFabDataManager : MonoBehaviour
         PlayFabClientAPI.ForgetAllCredentials();
         UnityEngine.SceneManagement.SceneManager.LoadScene("MenuScene");
     }
-    // ==========================================
-    // AUTO-LOAD KHI VỀ LẠI MENU
-    // ==========================================
+    #endregion
+
+    #region [9] AUTO-LOAD LOGIC
     private void OnEnable()
     {
         // Đăng ký sự kiện: Mỗi khi load một Scene mới thì gọi hàm OnSceneLoaded
@@ -623,4 +565,5 @@ public class PlayFabDataManager : MonoBehaviour
             FetchVirtualCurrencies();
         }
     }
+    #endregion
 }

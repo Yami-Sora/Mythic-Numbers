@@ -76,9 +76,9 @@ public class Canvas_DungeonManager : TabListenerBase
             foreach (var card in DeckManager.Instance.currentDeck) 
                 if (card != null && card.data != null && card.data.cardID > 0) cardCount++;
             
-            if (cardCount < PlayFabDataManager.MAX_DECK_SIZE)
+            if (cardCount < PlayFabConstants.MAX_DECK_SIZE)
             {
-                VFXManager.Instance.SpawnFloatingText($"Cần đủ {PlayFabDataManager.MAX_DECK_SIZE} lá bài!", GetButtonTransform(mode), Color.red);
+                VFXManager.Instance.SpawnFloatingText($"Cần đủ {PlayFabConstants.MAX_DECK_SIZE} lá bài!", GetButtonTransform(mode), Color.red);
                 return;
             }
         }
