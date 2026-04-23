@@ -2,9 +2,9 @@ using UnityEngine;
 using TMPro;
 using DG.Tweening;
 
-public class EffectManager : MonoBehaviour
+public class VFXManager : MonoBehaviour
 {
-    public static EffectManager Instance { get; private set; }
+    public static VFXManager Instance { get; private set; }
 
     [Header("Global UI Effects")]
     [Tooltip("Kéo cục Prefab Floating Text vào đây")]
@@ -39,7 +39,7 @@ public class EffectManager : MonoBehaviour
             txt.color = color ?? new Color(1f, 0.2f, 0.2f, 1f);
 
             //Gom hết vào Sequence để quản lý vòng đời, chống lỗi "Destroy sớm"
-            Sequence seq = DOTween.Sequence();
+            Sequence seq = DOTween.Sequence().SetLink(go);
 
             // 1. Phóng to lên
             seq.Join(go.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack));

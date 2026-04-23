@@ -14,6 +14,13 @@ public class PlayFabSaveData
 {
     public List<ItemSaveData> inventory = new List<ItemSaveData>();
     public List<CardSaveData> cards = new List<CardSaveData>();
+    
+    // [DUNGEON DATA]
+    public int goldDungeonStage = 1;
+    public int gemDungeonStage = 1;
+    public int goldDungeonEntries = 0;
+    public int gemDungeonEntries = 0;
+    public string lastDungeonDate = ""; // Format: yyyy-MM-dd
 }
 
 [Serializable]
@@ -46,6 +53,15 @@ public class PlayFabDataManager : MonoBehaviour
     public int CurrentStage = 1; // Lưu ở local để các Scene khác dễ gọi
     public bool isDataLoaded = false; // Cờ kiểm tra dữ liệu đã tải xong chưa
 
+    public enum GameMode { Story, GoldDungeon, GemDungeon }
+    public GameMode CurrentMode = GameMode.Story;
+
+    // Dữ liệu Dungeon
+    public int GoldDungeonStage = 1;
+    public int GemDungeonStage = 1;
+    public int GoldEntriesToday = 0;
+    public int GemEntriesToday = 0;
+
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
 
@@ -54,6 +70,7 @@ public class PlayFabDataManager : MonoBehaviour
     public const int MAX_DECK_SIZE = 5;
     private const string KEY_USER_DATA = "UserSaveData";
     private const string KEY_PLAYER_DECK = "PlayerDeck";
+    private const string KEY_DUNGEON_DATA = "DungeonData";
     private const string CURRENCY_GOLD = "GD";
     private const string CURRENCY_GEM = "GM";
     private const string CURRENCY_STAMINA = "EN";
@@ -130,6 +147,45 @@ public class PlayFabDataManager : MonoBehaviour
         );
     }
 
+    public void SaveDungeonDataOnly()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        DungeonSaveData dData = new DungeonSaveData
+        {
+            goldStage = GoldDungeonStage,
+            gemStage = GemDungeonStage,
+            goldEntries = GoldEntriesToday,
+            gemEntries = GemEntriesToday,
+            lastDate = DateTime.Now.ToString("yyyy-MM-dd")
+        };
+
+        string json = JsonUtility.ToJson(dData);
+
+        var request = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string> 
+            { 
+                { KEY_DUNGEON_DATA, json }
+            }
+        };
+
+        PlayFabClientAPI.UpdateUserData(request,
+            result => Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu Dungeon lên mây!</color>"),
+            error => Debug.LogError("[PlayFab] Lỗi Save Dungeon: " + error.GenerateErrorReport())
+        );
+    }
+
+    [Serializable]
+    public class DungeonSaveData
+    {
+        public int goldStage;
+        public int gemStage;
+        public int goldEntries;
+        public int gemEntries;
+        public string lastDate;
+    }
+
     public void SaveCurrentDeck(OwnedCard[] deckToSave)
     {
         DeckSaveData dataWrapper = new DeckSaveData();
@@ -191,6 +247,29 @@ public class PlayFabDataManager : MonoBehaviour
                 RestoreDeck(JsonUtility.FromJson<DeckSaveData>(deckJson));
             }
 
+            // 2. Phục hồi dữ liệu Dungeon & Kiểm tra Reset ngày
+            if (result.Data != null && result.Data.ContainsKey(KEY_DUNGEON_DATA))
+            {
+                string json = result.Data[KEY_DUNGEON_DATA].Value;
+                DungeonSaveData loadedData = JsonUtility.FromJson<DungeonSaveData>(json);
+                
+                GoldDungeonStage = Mathf.Max(1, loadedData.goldStage);
+                GemDungeonStage = Mathf.Max(1, loadedData.gemStage);
+
+                string today = DateTime.Now.ToString("yyyy-MM-dd");
+                if (loadedData.lastDate != today)
+                {
+                    // Qua ngày mới rồi, reset lượt đi sếp ơi!
+                    GoldEntriesToday = 0;
+                    GemEntriesToday = 0;
+                }
+                else
+                {
+                    GoldEntriesToday = loadedData.goldEntries;
+                    GemEntriesToday = loadedData.gemEntries;
+                }
+            }
+
             isDataLoaded = true; // Đánh dấu đã Load xong toàn bộ dữ liệu
 
         }, error => Debug.LogError("Lỗi Load: " + error.GenerateErrorReport()));
@@ -200,41 +279,60 @@ public class PlayFabDataManager : MonoBehaviour
     // ==========================================
     // LOGIC NHẬN THƯỞNG PVE
     // ==========================================
-    public void ClaimStageReward(Action<int, bool> onSuccess)
+    public void ClaimStageReward(Action<int, bool, int> onSuccess)
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
 
-        int stageCleared = CurrentStage;
-        int baseGold = 50;
-        int goldReward = Mathf.RoundToInt(baseGold * (1 + 0.05f * (stageCleared - 1)));
-        bool isBossStage = (stageCleared % 10 == 0);
+        int goldReward = 0;
+        int gemReward = 0;
+        bool isBoss = false;
+        int currentStage = 0;
 
-        CurrentStage++; // Tăng ải
+        if (CurrentMode == GameMode.GoldDungeon)
+        {
+            currentStage = GoldDungeonStage;
+            goldReward = Mathf.RoundToInt(100 * (1 + 0.1f * (currentStage - 1)));
+            gemReward = 0;
+            GoldDungeonStage++;
+        }
+        else if (CurrentMode == GameMode.GemDungeon)
+        {
+            currentStage = GemDungeonStage;
+            goldReward = 0;
+            gemReward = Mathf.RoundToInt(20 * (1 + 0.1f * (currentStage - 1)));
+            GemDungeonStage++;
+        }
+        else
+        {
+            currentStage = CurrentStage;
+            goldReward = Mathf.RoundToInt(50 * (1 + 0.05f * (currentStage - 1)));
+            isBoss = (currentStage % 10 == 0);
+            gemReward = isBoss ? 1 : 0;
+            CurrentStage++;
+        }
 
-        // Add Gold Request
-        var request = new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GOLD, Amount = goldReward };
-        PlayFabClientAPI.AddUserVirtualCurrency(request,
-            res => {
-                Debug.Log($"<color=yellow>[PvE] Nhận thưởng {goldReward} Vàng. Lên ải {CurrentStage}!</color>");
-                
-                if (isBossStage)
-                {
-                    // Thưởng thêm Linh Ngọc (Thêm vào đơn vị tiền tệ GM hoặc hòm đồ tùy sếp)
-                    var gemReq = new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GEM, Amount = 1 };
-                    PlayFabClientAPI.AddUserVirtualCurrency(gemReq, 
-                        gRes => Debug.Log("<color=magenta>[PvE BOSS] Rớt 1 Linh Ngọc!</color>"), 
-                        gErr => {}
-                    );
-                }
+        // Thực hiện cộng tiền lên Server
+        var requests = new List<AddUserVirtualCurrencyRequest>();
+        if (goldReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GOLD, Amount = goldReward });
+        if (gemReward > 0) requests.Add(new AddUserVirtualCurrencyRequest { VirtualCurrency = CURRENCY_GEM, Amount = gemReward });
 
-                SaveStageDataOnly(); // Chỉ lưu lại ải mới lên đám mây, không đụng đến Card/Inventory
-                FetchVirtualCurrencies(); // Cập nhật lại UI tiền tệ
-                onSuccess?.Invoke(goldReward, isBossStage);
-            },
-            err => {
-                Debug.LogError("Lỗi nhận thưởng PvE: " + err.ErrorMessage);
+        // Chạy tuần tự các request cộng tiền
+        void ProcessRequest(int index)
+        {
+            if (index >= requests.Count)
+            {
+                if (CurrentMode == GameMode.Story) SaveStageDataOnly();
+                else SaveDungeonDataOnly();
+
+                FetchVirtualCurrencies();
+                onSuccess?.Invoke(goldReward, isBoss, gemReward);
+                return;
             }
-        );
+
+            PlayFabClientAPI.AddUserVirtualCurrency(requests[index], res => ProcessRequest(index + 1), err => ProcessRequest(index + 1));
+        }
+
+        ProcessRequest(0);
     }
 
     // ==========================================

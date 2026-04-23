@@ -84,10 +84,29 @@ public class GameManagerNet : NetworkBehaviour
         
         // --- [AI SCALING PVE] ---
         int stage = 1;
-        if (PlayFabDataManager.Instance != null) stage = PlayFabDataManager.Instance.CurrentStage;
+        float powerStep = 0.1f; // Mặc định Ải Story tăng 10%
         
-        // Hệ số: Mỗi ải tăng 10% chỉ số gốc. Ải 1 = x1.0, Ải 2 = x1.1, Ải 10 = x1.9
-        float multiplier = 1.0f + (stage - 1) * 0.1f;
+        if (PlayFabDataManager.Instance != null)
+        {
+            if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GoldDungeon)
+            {
+                stage = PlayFabDataManager.Instance.GoldDungeonStage;
+                powerStep = 0.2f; // Dungeon tăng 20%
+            }
+            else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GemDungeon)
+            {
+                stage = PlayFabDataManager.Instance.GemDungeonStage;
+                powerStep = 0.2f; // Dungeon tăng 20%
+            }
+            else
+            {
+                stage = PlayFabDataManager.Instance.CurrentStage;
+                powerStep = 0.1f; // Story tăng 10%
+            }
+        }
+        
+        // Hệ số: Ải 1 = x1.0, Ải 2 = 1.0 + powerStep...
+        float multiplier = 1.0f + (stage - 1) * powerStep;
 
         for (int i=0; i<5; i++)
         {

@@ -293,10 +293,11 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
                 // [PVE LOGIC]: CỘNG THƯỞNG VÀ TĂNG ẢI
                 if (PlayerPrefs.GetInt("GameMode", 0) == 0 && PlayFabDataManager.Instance != null && string.IsNullOrEmpty(customMessage))
                 {
-                    PlayFabDataManager.Instance.ClaimStageReward((gold, isBoss) => {
-                        string bonusMsg = $"\n<size=40><color=yellow>+{gold} Vàng</color>";
-                        if (isBoss) bonusMsg += "\n<color=#FF00FF>+1 Linh Ngọc</color>";
-                        bonusMsg += "</size>";
+                    PlayFabDataManager.Instance.ClaimStageReward((gold, isBoss, gems) => {
+                        string bonusMsg = "";
+                        if (gold > 0) bonusMsg += $"\n<size=40><color=yellow>+{gold} Vàng</color></size>";
+                        if (gems > 0) bonusMsg += $"\n<size=40><color=#FF00FF>+{gems} Linh Ngọc</color></size>";
+                        
                         resultText.text = message + bonusMsg;
                     });
                 }

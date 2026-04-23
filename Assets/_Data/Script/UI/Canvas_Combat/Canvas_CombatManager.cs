@@ -70,9 +70,9 @@ public class Canvas_CombatManager : TabListenerBase
             if (cardCount < 5)
             {
                 Debug.LogWarning("[Combat] Đội hình chưa đủ 5 lá, không cho đi ải!");
-                if (EffectManager.Instance != null && btnEnterStage != null)
+                if (VFXManager.Instance != null && btnEnterStage != null)
                 {
-                    EffectManager.Instance.SpawnFloatingText("Cần đủ 5 lá bài!", btnEnterStage.transform);
+                    VFXManager.Instance.SpawnFloatingText("Cần đủ 5 lá bài!", btnEnterStage.transform);
                 }
                 return; 
             }
@@ -96,7 +96,11 @@ public class Canvas_CombatManager : TabListenerBase
                 Debug.Log("<color=green>[Combat] Trừ 10 EN thành công! Load map đấm nhau thôi!</color>");
 
                 // Trừ tiền xong nhớ hú thằng PlayFabDataManager lấy lại số dư mới để UI nó nhảy số
-                if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
+                if (PlayFabDataManager.Instance != null)
+                {
+                    PlayFabDataManager.Instance.CurrentMode = PlayFabDataManager.GameMode.Story;
+                    PlayFabDataManager.Instance.FetchVirtualCurrencies();
+                }
 
                 // Lưu lại trạng thái PlayMode (PvE)
                 PlayerPrefs.SetInt("GameMode", 0); // 0 = PvE, 1 = PvP (nếu có sau này)
@@ -123,9 +127,9 @@ public class Canvas_CombatManager : TabListenerBase
                         Debug.LogWarning("Sếp ơi, hết pin (thể lực) rồi!");
 
                         // Gọi con hàng bên ShopManager sang bắn text bay cho xịn
-                        if (EffectManager.Instance != null && btnEnterStage != null)
+                        if (VFXManager.Instance != null && btnEnterStage != null)
                         {
-                            EffectManager.Instance.SpawnFloatingText("Không đủ Năng lượng!", btnEnterStage.transform);
+                            VFXManager.Instance.SpawnFloatingText("Không đủ Năng lượng!", btnEnterStage.transform);
                         }
                     }
                 }

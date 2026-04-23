@@ -285,9 +285,9 @@ public class StaminaPopupManager : TabListenerBase
     {
         // Mượn ShopManager của sếp để spawn chữ. 
         // Lấy txtBuyAmount làm mốc tọa độ bay lên cho nó nằm giữa Popup!
-        if (EffectManager.Instance != null && txtBuyAmount != null)
+        if (VFXManager.Instance != null && txtBuyAmount != null)
         {
-            EffectManager.Instance.SpawnFloatingText(message, txtBuyAmount.transform);
+            VFXManager.Instance.SpawnFloatingText(message, txtBuyAmount.transform);
         }
     }
 

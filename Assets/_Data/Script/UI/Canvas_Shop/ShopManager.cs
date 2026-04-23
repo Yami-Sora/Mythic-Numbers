@@ -42,9 +42,9 @@ public class ShopManager : MonoBehaviour
                     if (btnTransform != null) btnTransform.DOShakePosition(0.5f, 10, 10);
 
                     // 2. GỌI TEXT BAY DOTWEEN NGAY TẠI ĐÂY NÈ!
-                    if (EffectManager.Instance != null)
+                    if (VFXManager.Instance != null)
                     {
-                        EffectManager.Instance.SpawnFloatingText($"Không đủ {msg}!", btnTransform);
+                        VFXManager.Instance.SpawnFloatingText($"Không đủ {msg}!", btnTransform);
                     }
 
                     Debug.LogWarning($"[Shop] Nghèo mà đòi đú Gacha! Không đủ {msg}.");
