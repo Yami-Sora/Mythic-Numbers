@@ -45,10 +45,21 @@ public class RewardPopupManager : MonoBehaviour
             UI_ItemSlot slot = go.GetComponent<UI_ItemSlot>();
             slot.Setup(item);
 
-            // Tắt text amount khi hiển thị gacha
+            // Bật và ép thông số Amount theo chuẩn GemUpgrade (10x4, FontSize 3, Anchor BottomRight)
             var txtAmount = slot.GetComponentInChildren<TextMeshProUGUI>(true);
             if (txtAmount != null)
-                txtAmount.gameObject.SetActive(false);
+            {
+                txtAmount.gameObject.SetActive(true);
+                txtAmount.text = item.amount.ToString(); // Gán số lượng thật
+                txtAmount.fontSize = 3;
+                
+                RectTransform rt = txtAmount.rectTransform;
+                rt.anchorMin = new Vector2(1, 0);
+                rt.anchorMax = new Vector2(1, 0);
+                rt.pivot = new Vector2(1, 0);
+                rt.anchoredPosition = Vector2.zero;
+                rt.sizeDelta = new Vector2(10f, 4f);
+            }
 
             // Gọi hiệu ứng nổ cho cục ngọc
             AnimateSlotItem(go.transform, ITEM_SCALE, i);

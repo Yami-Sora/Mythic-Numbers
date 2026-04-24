@@ -89,7 +89,7 @@ public class Canvas_DungeonManager : TabListenerBase
         {
             int cardCount = 0;
             foreach (var card in DeckManager.Instance.currentDeck) 
-                if (card != null && card.data != null && card.data.cardID > 0) cardCount++;
+                if (card != null && card.data != null) cardCount++;
             
             if (cardCount < PlayFabConstants.MAX_DECK_SIZE)
             {

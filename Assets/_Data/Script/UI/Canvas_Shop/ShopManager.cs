@@ -206,26 +206,36 @@ public class ShopManager : MonoBehaviour
         if (CardListManager.Instance != null) CardListManager.Instance.DisplayCards();
         if (InventoryManager.Instance != null) InventoryManager.Instance.RefreshUI();
 
-        Debug.Log($"[Shop] Kết quả: {allCards.Count} Card, {allGems.Count} Gem.");
+        Debug.Log($"[Shop] Kết quả gacha: {allCards.Count} Card, {allGems.Count} Gem.");
+        Debug.Log($"[Shop] Trạng thái GachaPopupManager.Instance: {(GachaPopupManager.Instance != null ? "SẴN SÀNG" : "NULL")}");
 
-        if (RewardPopupManager.Instance != null)
+        if (GachaPopupManager.Instance != null)
         {
-            // 1. Nếu có Card (thường là gói bài hoặc container chứa cả hai)
-            if (allCards.Count > 0)
+            Debug.Log("[Shop] Đang gọi GachaPopupManager.Instance.ShowGachaRewards...");
+            GachaPopupManager.Instance.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
+        }
+        else
+        {
+            Debug.LogWarning("[Shop] Instance bị NULL, đang quét toàn bộ Scene để tìm GachaPopup...");
+            GachaPopupManager gp = GameObject.FindFirstObjectByType<GachaPopupManager>(FindObjectsInactive.Include); 
+            if (gp != null)
             {
-                RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ QUAY GACHA");
-                
-                // Lưu ý: Nếu sếp muốn hiện Gem TRONG CÙNG 1 BẢNG với Card, 
-                // chúng ta cần nâng cấp RewardPopupManager. Hiện tại em cứ để nó ưu tiên hiện Card nhé.
+                Debug.Log("[Shop] Đã tìm thấy GachaPopupManager (đang ẩn), bắt đầu hiển thị phần thưởng...");
+                gp.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
             }
-            // 2. Nếu CHỈ có Gem (hoặc sếp muốn hiện bảng Gem riêng)
-            else if (allGems.Count > 0)
+            else
             {
-                List<InventoryItem> gemRewards = new List<InventoryItem>();
-                foreach (var g in allGems)
-                    gemRewards.Add(new InventoryItem(g, 1));
-
-                RewardPopupManager.Instance.ShowRewards(gemRewards, "KẾT QUẢ QUAY TINH THẠCH");
+                Debug.LogError("[Shop] LỖI NGHIÊM TRỌNG: Không tìm thấy GachaPopupManager trong Scene! Đang dùng RewardPopup cũ làm fallback.");
+                if (RewardPopupManager.Instance != null)
+                {
+                    if (allCards.Count > 0) RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ QUAY GACHA");
+                    else if (allGems.Count > 0) 
+                    {
+                        List<InventoryItem> gemItems = new List<InventoryItem>();
+                        foreach(var g in allGems) gemItems.Add(new InventoryItem(g, 1));
+                        RewardPopupManager.Instance.ShowRewards(gemItems, "KẾT QUẢ QUAY TINH THẠCH");
+                    }
+                }
             }
         }
     }
