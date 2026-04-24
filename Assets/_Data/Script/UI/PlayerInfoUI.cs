@@ -20,15 +20,7 @@ public class PlayerInfoUI : MonoBehaviour
     [Header("Level & Exp")]
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private Image expFillImage;
-    [Range(0, 1)] [SerializeField] private float debugExpPercent;
 
-    private void OnValidate()
-    {
-        if (expFillImage != null)
-        {
-            expFillImage.fillAmount = debugExpPercent;
-        }
-    }
 
     public static PlayerInfoUI Instance { get; private set; }
 

@@ -36,6 +36,17 @@ public class PlayFabDataManager : MonoBehaviour
 
     [Header("Developer Settings")]
     public bool enableDevCheats = true;
+
+    // Bộ nhớ đệm tiền tệ (để check nhanh túi tiền)
+    private int _goldBalance = 0;
+    private int _lnBalance = 0;
+
+    public int GetCurrencyBalance(string code)
+    {
+        if (code == PlayFabConstants.CURRENCY_GOLD) return _goldBalance;
+        if (code == PlayFabConstants.CURRENCY_LN) return _lnBalance;
+        return 0;
+    }
     #endregion
 
     
@@ -403,6 +414,9 @@ public class PlayFabDataManager : MonoBehaviour
         {
             int gold = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GOLD) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GOLD] : 0;
             int ln = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_LN) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_LN] : 0;
+
+            _goldBalance = gold;
+            _lnBalance = ln;
 
             // 1. Lấy số dư Thể Lực
             int stamina = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_STAMINA) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_STAMINA] : 0;

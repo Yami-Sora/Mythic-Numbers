@@ -18,7 +18,7 @@ public class RewardPopupManager : MonoBehaviour
 
     // Kích thước chuẩn để DOTween phóng to tới (Tránh hardcode lặp lại)
     private readonly Vector3 ITEM_SCALE = Vector3.one;
-    private readonly Vector3 CARD_SCALE = new Vector3(0.1f, 0.1f, 0.1f);
+    private readonly Vector3 CARD_SCALE = new Vector3(0.08f, 0.08f, 0.08f);
 
     private void Awake()
     {
@@ -45,13 +45,10 @@ public class RewardPopupManager : MonoBehaviour
             UI_ItemSlot slot = go.GetComponent<UI_ItemSlot>();
             slot.Setup(item);
 
-            // Xử lý Text số lượng
+            // Tắt text amount khi hiển thị gacha
             var txtAmount = slot.GetComponentInChildren<TextMeshProUGUI>(true);
             if (txtAmount != null)
-            {
-                txtAmount.gameObject.SetActive(true);
-                txtAmount.text = item.amount > 1 ? $"x{item.amount}" : "";
-            }
+                txtAmount.gameObject.SetActive(false);
 
             // Gọi hiệu ứng nổ cho cục ngọc
             AnimateSlotItem(go.transform, ITEM_SCALE, i);

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using PlayFab;
@@ -9,17 +10,67 @@ public class ShopManager : MonoBehaviour
 {
     public static ShopManager Instance { get; private set; }
 
-    // Thêm reference tới cái nút để làm hiệu ứng rung khi hết tiền
     [SerializeField] private Transform normalPackBtn;
+    [SerializeField] private Transform normalPackX10Btn;
     [SerializeField] private Transform premiumPackBtn;
+    [SerializeField] private Transform premiumPackX10Btn;
+    [SerializeField] private Transform gemPackBtn;
+    [SerializeField] private Transform gemPackX10Btn;
+    [SerializeField] private Transform gemPremiumPackBtn;
+    [SerializeField] private Transform gemPremiumPackX10Btn;
 
-    private void Awake() { Instance = this; }
+    private Dictionary<string, ItemDataSO> _itemDatabase = new Dictionary<string, ItemDataSO>();
+    private bool _isBuying = false;
 
-    public void BuyNormalPack() => BuyAndOpenPack("Pack_Normal", "GD", 100, normalPackBtn);
-    public void BuyPremiumPack() => BuyAndOpenPack("Pack_Premium", "GM", 50, premiumPackBtn);
+    private void Awake() 
+    { 
+        Instance = this; 
+        LoadItemDatabase();
+    }
 
-    private void BuyAndOpenPack(string catalogItemId, string currencyCode, int price, Transform btnTransform)
+    private void LoadItemDatabase()
     {
+        ItemDataSO[] items = Resources.LoadAll<ItemDataSO>("ItemDataSO");
+        foreach (var it in items)
+        {
+            if (!string.IsNullOrEmpty(it.itemID) && !_itemDatabase.ContainsKey(it.itemID))
+            {
+                _itemDatabase.Add(it.itemID, it);
+            }
+        }
+        Debug.Log($"[Shop] Đã nạp {_itemDatabase.Count} vật phẩm vào database shop.");
+    }
+
+    public void BuyNormalPack() => BuyAndOpenPack("Pack_Normal", "GD", 100, 1, normalPackBtn);
+    public void BuyNormalPackX10() => BuyAndOpenPack("Pack_Normal_x10", "GD", 1000, 10, normalPackX10Btn);
+    
+    public void BuyPremiumPack() => BuyAndOpenPack("Pack_Premium", "GM", 50, 1, premiumPackBtn);
+    public void BuyPremiumPackX10() => BuyAndOpenPack("Pack_Premium_x10", "GM", 500, 10, premiumPackX10Btn);
+
+    public void BuyGemPack() => BuyAndOpenPack("Pack_Gem_Lv1", "GD", 100, 1, gemPackBtn);
+    public void BuyGemPackX10() => BuyAndOpenPack("Pack_Gem_Lv1_x10", "GD", 1000, 10, gemPackX10Btn);
+    
+    public void BuyGemPremiumPack() => BuyAndOpenPack("Pack_Gem_Premium_Lv1", "GM", 50, 1, gemPremiumPackBtn);
+    public void BuyGemPremiumPackX10() => BuyAndOpenPack("Pack_Gem_Premium_Lv1_x10", "GM", 500, 10, gemPremiumPackX10Btn);
+
+    private void BuyAndOpenPack(string catalogItemId, string currencyCode, int price, int quantity, Transform btnTransform)
+    {
+        if (_isBuying) return;
+
+        if (PlayFabDataManager.Instance != null)
+        {
+            int currentBalance = PlayFabDataManager.Instance.GetCurrencyBalance(currencyCode);
+            if (currentBalance < price)
+            {
+                string msg = currencyCode == "GD" ? "Không đủ Vàng!" : "Không đủ Linh Ngọc!";
+                if (btnTransform != null) btnTransform.DOShakePosition(0.5f, 10, 10);
+                if (VFXManager.Instance != null && btnTransform != null) VFXManager.Instance.SpawnFloatingText(msg, btnTransform);
+                return;
+            }
+        }
+
+        _isBuying = true;
+
         var purchaseReq = new PurchaseItemRequest
         {
             CatalogVersion = "MainCatalog",
@@ -28,54 +79,106 @@ public class ShopManager : MonoBehaviour
             Price = price
         };
 
+        if (btnTransform != null) btnTransform.DOScale(0.9f, 0.1f).SetLoops(2, LoopType.Yoyo);
+
         PlayFabClientAPI.PurchaseItem(purchaseReq,
             buyRes => {
                 if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
-                UnlockPack(buyRes.Items[0].ItemInstanceId);
-            },
-            error => {
-                if (error.Error == PlayFabErrorCode.InsufficientFunds)
+                
+                var results = ProcessItemsSilently(buyRes.Items);
+                List<ItemInstance> containersToOpen = buyRes.Items.FindAll(i => !string.IsNullOrEmpty(i.ItemInstanceId) && i.ItemClass == "Container");
+
+                if (containersToOpen.Count > 0)
                 {
-                    string msg = currencyCode == "GD" ? "Vàng" : "Linh Ngọc";
-
-                    // 1. Nút rung bần bật
-                    if (btnTransform != null) btnTransform.DOShakePosition(0.5f, 10, 10);
-
-                    // 2. GỌI TEXT BAY DOTWEEN NGAY TẠI ĐÂY NÈ!
-                    if (VFXManager.Instance != null)
-                    {
-                        VFXManager.Instance.SpawnFloatingText($"Không đủ {msg}!", btnTransform);
-                    }
-
-                    Debug.LogWarning($"[Shop] Nghèo mà đòi đú Gacha! Không đủ {msg}.");
+                    StartCoroutine(UnlockMultipleContainers(containersToOpen, results.cards, results.gems));
                 }
-            }
+                else
+                {
+                    ShowFinalRewards(results.cards, results.gems);
+                }
+            },
+            error => HandlePurchaseError(error, currencyCode, btnTransform)
         );
     }
 
-    private void UnlockPack(string containerInstanceId)
+    private IEnumerator UnlockMultipleContainers(List<ItemInstance> containers, List<CardDataSO> cards, List<ItemDataSO> gems)
     {
-        var unlockReq = new UnlockContainerInstanceRequest
+        List<CardDataSO> allCards = new List<CardDataSO>(cards);
+        List<ItemDataSO> allGems = new List<ItemDataSO>(gems);
+        List<ItemInstance> nextBatch = new List<ItemInstance>();
+
+        foreach (var container in containers)
         {
-            CatalogVersion = "MainCatalog",
-            ContainerItemInstanceId = containerInstanceId
-        };
+            bool currentRequestDone = false;
+            var unlockReq = new UnlockContainerInstanceRequest { CatalogVersion = "MainCatalog", ContainerItemInstanceId = container.ItemInstanceId };
 
-        PlayFabClientAPI.UnlockContainerInstance(unlockReq,
-            unlockRes => ProcessGrantedItems(unlockRes.GrantedItems),
-            error => Debug.LogError("[Shop] Lỗi khui hộp: " + error.ErrorMessage)
-        );
+            PlayFabClientAPI.UnlockContainerInstance(unlockReq,
+                unlockRes => {
+                    var res = ProcessItemsSilently(unlockRes.GrantedItems);
+                    allCards.AddRange(res.cards);
+                    allGems.AddRange(res.gems);
+                    
+                    var sub = unlockRes.GrantedItems.FindAll(i => i.ItemClass == "Container");
+                    if (sub.Count > 0) nextBatch.AddRange(sub);
+                    currentRequestDone = true;
+                },
+                error => {
+                    Debug.LogError($"[Shop] Lỗi khui hộp: {error.ErrorMessage}");
+                    currentRequestDone = true;
+                }
+            );
+
+            while (!currentRequestDone) yield return null;
+            yield return new WaitForSeconds(0.05f);
+        }
+
+        if (nextBatch.Count > 0)
+            yield return StartCoroutine(UnlockMultipleContainers(nextBatch, allCards, allGems));
+        else
+            ShowFinalRewards(allCards, allGems);
     }
 
-    // --- XỬ LÝ KẾT QUẢ QUAY GACHA ---
-    private void ProcessGrantedItems(List<ItemInstance> grantedItems)
+    private void HandlePurchaseError(PlayFabError error, string currency, Transform btn)
     {
-        List<CardDataSO> newCards = new List<CardDataSO>();
-        bool isAnyCardUpdated = false;
+        _isBuying = false;
+        
+        // Xác định xem có phải lỗi thiếu tiền không
+        bool isInsufficient = (error == null) || (error.Error == PlayFabErrorCode.InsufficientFunds);
+        string logMsg = error != null ? error.ErrorMessage : "Thiếu tiền (Client check)";
+        
+        Debug.LogError($"[Shop] Lỗi mua hàng: {logMsg}");
+        
+        if (btn != null) 
+        {
+            btn.DOShakePosition(0.5f, 10f);
+            if (VFXManager.Instance != null) 
+            {
+                string floatingMsg = isInsufficient ? "KHÔNG ĐỦ TIỀN!" : "LỖI MUA HÀNG!";
+                VFXManager.Instance.SpawnFloatingText(floatingMsg, btn);
+            }
+        }
+    }
+
+    private (List<CardDataSO> cards, List<ItemDataSO> gems) ProcessItemsSilently(List<ItemInstance> grantedItems)
+    {
+        List<CardDataSO> cards = new List<CardDataSO>();
+        List<ItemDataSO> gems = new List<ItemDataSO>();
+        bool isDirty = false;
 
         foreach (var item in grantedItems)
         {
-            if (int.TryParse(item.ItemId, out int cardId))
+            // 1. ƯU TIÊN KIỂM TRA THEO CHUỖI ID (Dành cho Gem/Prop có ID như "01", "02")
+            if (_itemDatabase.TryGetValue(item.ItemId, out ItemDataSO itemData))
+            {
+                if (InventoryManager.Instance != null)
+                {
+                    InventoryManager.Instance.AddItem(itemData, 1, true);
+                    isDirty = true;
+                }
+                if (itemData.type == ItemDataSO.ItemType.Gem) gems.Add(itemData);
+            }
+            // 2. NẾU KHÔNG THẤY THÌ MỚI THỬ PARSE SANG CARD (ID LÀ SỐ "1", "2")
+            else if (int.TryParse(item.ItemId, out int cardId))
             {
                 CardDataSO data = CardDatabase.Instance.GetCardData(cardId);
                 if (data != null)
@@ -83,46 +186,47 @@ public class ShopManager : MonoBehaviour
                     if (CardListManager.Instance != null)
                     {
                         var inventoryCards = CardListManager.Instance.GetOwnedCards();
-
-                        // [UPDATE LOGIC]: Dò tìm xem thẻ này đã có mặt trong Kho chưa?
                         var existingCard = inventoryCards.Find(c => c.data.cardID == data.cardID);
-
-                        if (existingCard != null)
-                        {
-                            // NẾU TRÙNG: Chuyển hóa thành 50 mảnh
-                            existingCard.currentShards += 50;
-                            Debug.Log($"[Shop] Quay trúng thẻ trùng: {data.cardName}. Hóa thành 50 mảnh!");
-                        }
-                        else
-                        {
-                            // NẾU MỚI TINH: Đẻ thẻ mới nhét vào kho
-                            inventoryCards.Add(new OwnedCard(data));
-                            Debug.Log($"[Shop] Nhân phẩm bùng nổ! Nhận thẻ mới: {data.cardName}");
-                        }
-                        isAnyCardUpdated = true;
+                        if (existingCard != null) existingCard.currentShards += 50;
+                        else inventoryCards.Add(new OwnedCard(data));
+                        isDirty = true;
                     }
-                    else
-                    {
-                        Debug.LogWarning("[Shop] CardListManager đang ngủ!");
-                    }
-
-                    // Vẫn đẩy thẻ vào list UI để popup hiện lên cho sướng mắt
-                    newCards.Add(data);
+                    cards.Add(data);
                 }
             }
         }
 
-        // F5 lại giao diện bộ bài (để thẻ mới hoặc số mảnh nhảy)
-        if (isAnyCardUpdated && CardListManager.Instance != null)
-        {
-            CardListManager.Instance.DisplayCards();
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
-        }
+        if (isDirty && PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
+        return (cards, gems);
+    }
 
-        // HIỂN THỊ UI BẢNG THƯỞNG GACHA
+    private void ShowFinalRewards(List<CardDataSO> allCards, List<ItemDataSO> allGems)
+    {
+        _isBuying = false;
+        if (CardListManager.Instance != null) CardListManager.Instance.DisplayCards();
+        if (InventoryManager.Instance != null) InventoryManager.Instance.RefreshUI();
+
+        Debug.Log($"[Shop] Kết quả: {allCards.Count} Card, {allGems.Count} Gem.");
+
         if (RewardPopupManager.Instance != null)
         {
-            RewardPopupManager.Instance.ShowCardRewards(newCards, "CHÚC MỪNG SẾP TRÚNG THƯỞNG");
+            // 1. Nếu có Card (thường là gói bài hoặc container chứa cả hai)
+            if (allCards.Count > 0)
+            {
+                RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ QUAY GACHA");
+                
+                // Lưu ý: Nếu sếp muốn hiện Gem TRONG CÙNG 1 BẢNG với Card, 
+                // chúng ta cần nâng cấp RewardPopupManager. Hiện tại em cứ để nó ưu tiên hiện Card nhé.
+            }
+            // 2. Nếu CHỈ có Gem (hoặc sếp muốn hiện bảng Gem riêng)
+            else if (allGems.Count > 0)
+            {
+                List<InventoryItem> gemRewards = new List<InventoryItem>();
+                foreach (var g in allGems)
+                    gemRewards.Add(new InventoryItem(g, 1));
+
+                RewardPopupManager.Instance.ShowRewards(gemRewards, "KẾT QUẢ QUAY TINH THẠCH");
+            }
         }
     }
 }
