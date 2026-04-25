@@ -36,6 +36,8 @@ public class Canvas_NavigationManager : MonoBehaviour
         if (combatCanvas) combatCanvas.SetActive(true);
         if (dungeonCanvas) dungeonCanvas.SetActive(true);
         if (inventoryCanvas) inventoryCanvas.SetActive(true);
+        if (currencyPanel) currencyPanel.SetActive(true);
+        if (playerInfoCanvas) playerInfoCanvas.SetActive(true);
 
         // Bật hết Popup lên để nó init (Awake)
         SetAllPopupsState(true);
@@ -84,6 +86,9 @@ public class Canvas_NavigationManager : MonoBehaviour
     {
         // 1. Dập hết mọi popup đang mở trên màn hình
         SetAllPopupsState(false);
+
+        // [NEW]: Đóng luôn bảng PlayerInfo nếu đang mở khi sếp chuyển Tab
+        if (PlayerInfoManager.Instance != null) PlayerInfoManager.Instance.ClosePopup();
 
         TransitionManager.Instance.PlayTransition(() => {
 

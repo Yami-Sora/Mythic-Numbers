@@ -207,25 +207,21 @@ public class ShopManager : MonoBehaviour
         if (InventoryManager.Instance != null) InventoryManager.Instance.RefreshUI();
 
         Debug.Log($"[Shop] Kết quả gacha: {allCards.Count} Card, {allGems.Count} Gem.");
-        Debug.Log($"[Shop] Trạng thái GachaPopupManager.Instance: {(GachaPopupManager.Instance != null ? "SẴN SÀNG" : "NULL")}");
 
         if (GachaPopupManager.Instance != null)
         {
-            Debug.Log("[Shop] Đang gọi GachaPopupManager.Instance.ShowGachaRewards...");
             GachaPopupManager.Instance.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
         }
         else
         {
-            Debug.LogWarning("[Shop] Instance bị NULL, đang quét toàn bộ Scene để tìm GachaPopup...");
             GachaPopupManager gp = GameObject.FindFirstObjectByType<GachaPopupManager>(FindObjectsInactive.Include); 
             if (gp != null)
             {
-                Debug.Log("[Shop] Đã tìm thấy GachaPopupManager (đang ẩn), bắt đầu hiển thị phần thưởng...");
                 gp.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
             }
             else
             {
-                Debug.LogError("[Shop] LỖI NGHIÊM TRỌNG: Không tìm thấy GachaPopupManager trong Scene! Đang dùng RewardPopup cũ làm fallback.");
+                Debug.LogWarning("[Shop] Không tìm thấy GachaPopupManager trong Scene! Đang dùng RewardPopup cũ làm fallback.");
                 if (RewardPopupManager.Instance != null)
                 {
                     if (allCards.Count > 0) RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ QUAY GACHA");

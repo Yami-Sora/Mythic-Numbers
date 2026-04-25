@@ -69,10 +69,65 @@ public class PlayFabDataManager : MonoBehaviour
             PlayerLevel++;
             req = GetRequiredExp(PlayerLevel);
             Debug.Log($"<color=yellow>[Level Up] Chúc mừng sếp lên cấp {PlayerLevel}!</color>");
+            
+            // Cập nhật Stat lên PlayFab ngay khi lên cấp
+            UpdatePlayerStatistics(PlayFabConstants.STAT_PLAYER_LEVEL, PlayerLevel);
         }
 
         MarkDirty();
+        UpdatePlayerStatistics(PlayFabConstants.STAT_PLAYER_EXP, (int)PlayerExp);
+
         if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, req);
+    }
+
+    public void UpdatePlayerStatistics(string statName, int value)
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        var request = new UpdatePlayerStatisticsRequest
+        {
+            Statistics = new List<StatisticUpdate>
+            {
+                new StatisticUpdate { StatisticName = statName, Value = value }
+            }
+        };
+
+        PlayFabClientAPI.UpdatePlayerStatistics(request, 
+            res => Debug.Log($"<color=green>[PlayFab] Đã cập nhật Statistics {statName} = {value}</color>"),
+            err => Debug.LogError("[PlayFab] Lỗi cập nhật Stat " + statName + ": " + err.GenerateErrorReport())
+        );
+    }
+
+    public void FetchPlayerStatistics()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        var request = new GetPlayerStatisticsRequest
+        {
+            StatisticNames = new List<string> 
+            { 
+                PlayFabConstants.STAT_PLAYER_LEVEL, 
+                PlayFabConstants.STAT_PLAYER_EXP, 
+                PlayFabConstants.STAT_PLAYER_POWER 
+            }
+        };
+
+        PlayFabClientAPI.GetPlayerStatistics(request, res =>
+        {
+            if (res.Statistics != null)
+            {
+                foreach (var stat in res.Statistics)
+                {
+                    if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_LEVEL) PlayerLevel = stat.Value;
+                    if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_EXP) PlayerExp = stat.Value;
+                    // PlayerPower có thể dùng để hiện thị trên UI
+                }
+
+                // Cập nhật UI sau khi lấy được Stat
+                if (PlayerInfoUI.Instance != null)
+                    PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
+            }
+        }, err => Debug.LogError("[PlayFab] Lỗi lấy Statistics: " + err.GenerateErrorReport()));
     }
     #endregion
 
@@ -255,6 +310,9 @@ public class PlayFabDataManager : MonoBehaviour
                 this.PlayerLevel = loadedData.level > 0 ? loadedData.level : 1;
                 this.PlayerExp = loadedData.exp;
             }
+
+            // Kéo luôn Statistics về cho chuẩn
+            FetchPlayerStatistics();
 
             // 1.5 Phục hồi CurrentStage từ Key riêng
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_CURRENT_STAGE))

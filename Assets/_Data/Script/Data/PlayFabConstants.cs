@@ -14,4 +14,9 @@ public static class PlayFabConstants
     public const string CURRENCY_GOLD = "GD";
     public const string CURRENCY_LN = "GM";
     public const string CURRENCY_STAMINA = "EN";
+
+    // Statistics Names
+    public const string STAT_PLAYER_LEVEL = "PlayerLevel";
+    public const string STAT_PLAYER_EXP = "PlayerExp";
+    public const string STAT_PLAYER_POWER = "PlayerPower";
 }
