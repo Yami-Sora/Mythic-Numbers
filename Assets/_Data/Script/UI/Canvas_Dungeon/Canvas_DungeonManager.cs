@@ -24,6 +24,16 @@ public class Canvas_DungeonManager : TabListenerBase
     public TextMeshProUGUI txtGemMineLimit;
     public Button btnEnterGemMine;
 
+    [Header("Dungeon Tabs & Panels")]
+    [SerializeField] private GameObject mineDungeonPanel;
+    [SerializeField] private GameObject arenaDungeonPanel;
+    [SerializeField] private Button btnMineTab;
+    [SerializeField] private Button btnArenaTab;
+
+    [Header("Arena UI")]
+    [SerializeField] private Transform arenaItemContainer;
+    [SerializeField] private GameObject arenaItemPrefab;
+
     private const int MAX_DAILY_ENTRIES = 2;
     private const string ITEM_ID_TICKET = "Dungeon_Entry_Ticket";
 
@@ -35,13 +45,16 @@ public class Canvas_DungeonManager : TabListenerBase
         if (btnEnterGold != null) btnEnterGold.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.GoldDungeon));
         if (btnEnterLN != null) btnEnterLN.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.LNDungeon));
         if (btnEnterGemMine != null) btnEnterGemMine.onClick.AddListener(() => TryEnterDungeon(PlayFabDataManager.GameMode.GemMine));
+
+        if (btnMineTab != null) btnMineTab.onClick.AddListener(Open_Mine_Panel);
+        if (btnArenaTab != null) btnArenaTab.onClick.AddListener(Open_Arena_Panel);
     }
 
     protected override void OnTabChanged(Canvas_NavigationManager.TabType targetTab)
     {
         if (targetTab == Canvas_NavigationManager.TabType.Dungeon)
         {
-            RefreshUI();
+            Open_Mine_Panel();
         }
     }
 
@@ -128,6 +141,43 @@ public class Canvas_DungeonManager : TabListenerBase
             else
                 VFXManager.Instance.SpawnFloatingText("Lỗi server: " + error.Error, GetButtonTransform(mode), Color.red);
         });
+    }
+
+    public void Open_Mine_Panel()
+    {
+        if (mineDungeonPanel) mineDungeonPanel.SetActive(true);
+        if (arenaDungeonPanel) arenaDungeonPanel.SetActive(false);
+        RefreshUI();
+    }
+
+    public void Open_Arena_Panel()
+    {
+        if (mineDungeonPanel) mineDungeonPanel.SetActive(false);
+        if (arenaDungeonPanel) arenaDungeonPanel.SetActive(true);
+        FetchArenaLeaderboard();
+    }
+
+    private void FetchArenaLeaderboard()
+    {
+        // Xóa các item cũ
+        foreach (Transform child in arenaItemContainer) Destroy(child.gameObject);
+
+        var request = new GetLeaderboardRequest
+        {
+            StatisticName = "elo", // Giả sử dùng ELO làm rank Arena
+            StartPosition = 0,
+            MaxResultsCount = 20
+        };
+
+        PlayFabClientAPI.GetLeaderboard(request, result =>
+        {
+            foreach (var item in result.Leaderboard)
+            {
+                GameObject go = Instantiate(arenaItemPrefab, arenaItemContainer);
+                UI_ArenaItem uiItem = go.GetComponent<UI_ArenaItem>();
+                if (uiItem != null) uiItem.Setup(item);
+            }
+        }, error => Debug.LogError("[Arena] Lỗi lấy Leaderboard: " + error.GenerateErrorReport()));
     }
 
     private Transform GetButtonTransform(PlayFabDataManager.GameMode mode)
