@@ -19,6 +19,7 @@ public class PlayFabDataManager : MonoBehaviour
     public bool isDataLoaded = false;
     public string PlayerName { get; private set; } = "Anonymous"; 
     public int PlayerLevel = 1;
+    public string PlayerTitle { get; set; } = "Tân Thủ";
     public long PlayerExp = 0;
     private bool isDirty = false; 
     private bool isDungeonDirty = false; 

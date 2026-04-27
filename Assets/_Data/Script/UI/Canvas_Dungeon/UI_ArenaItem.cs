@@ -7,21 +7,26 @@ public class UI_ArenaItem : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI txtRank;
-    [SerializeField] private Image imgFrame;
-    [SerializeField] private Image imgAvatar;
-    [SerializeField] private TextMeshProUGUI txtTitle;
     [SerializeField] private TextMeshProUGUI txtName;
     [SerializeField] private TextMeshProUGUI txtElo;
+    [SerializeField] private TextMeshProUGUI txtLevel;
+    [SerializeField] private TextMeshProUGUI txtTitle;
+    [SerializeField] private Image imgAvatar;
     [SerializeField] private Button btnChallenge;
 
-    public void Setup(PlayerLeaderboardEntry entry)
+    /// <summary>
+    /// Setup hiển thị thông tin người chơi trong Arena.
+    /// playerTitle: lấy từ PlayFabDataManager.Instance.PlayerTitle của người chơi hiện tại
+    /// </summary>
+    public void Setup(PlayerLeaderboardEntry entry, string playerTitle = "")
     {
-        if (txtRank) txtRank.text = (entry.Position + 1).ToString();
-        if (txtName) txtName.text = string.IsNullOrEmpty(entry.DisplayName) ? "Sếp Yami" : entry.DisplayName;
-        if (txtElo) txtElo.text = entry.StatValue.ToString();
-        
-        // Title giả lập (Sau này sếp có thể lấy từ UserData của họ)
-        if (txtTitle) txtTitle.text = "Tân Thủ"; 
+        if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
+        if (txtName) txtName.text = string.IsNullOrEmpty(entry.DisplayName) ? "Ẩn Danh" : entry.DisplayName;
+        if (txtElo) txtElo.text = entry.StatValue.ToString() + " điểm";
+        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "" : playerTitle;
+
+        // Level sẽ được bổ sung khi có UserData của các người chơi khác
+        if (txtLevel) txtLevel.text = "";
 
         if (btnChallenge)
         {
@@ -32,7 +37,7 @@ public class UI_ArenaItem : MonoBehaviour
 
     private void OnChallengeClicked(PlayerLeaderboardEntry target)
     {
-        Debug.Log($"<color=orange>[Arena]</color> Đang khiêu chiến: {target.DisplayName} (Top {target.Position + 1})");
-        // Logic khiêu chiến Arena ở đây sếp nhé
+        Debug.Log($"<color=orange>[Arena]</color> Khiêu chiến: {target.DisplayName} (Top {target.Position + 1})");
+        // TODO: Mở màn hình xác nhận khiêu chiến
     }
 }
