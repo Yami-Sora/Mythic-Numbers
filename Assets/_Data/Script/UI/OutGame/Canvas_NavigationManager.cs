@@ -90,37 +90,48 @@ public class Canvas_NavigationManager : MonoBehaviour
         // [NEW]: Đóng luôn bảng PlayerInfo nếu đang mở khi sếp chuyển Tab
         if (PlayerInfoManager.Instance != null) PlayerInfoManager.Instance.ClosePopup();
 
-        TransitionManager.Instance.PlayTransition(() => {
+        if (TransitionManager.Instance != null)
+        {
+            TransitionManager.Instance.PlayTransition(() => {
+                ExecuteTabSwitch(targetTab);
+            });
+        }
+        else
+        {
+            // Nếu không có TransitionManager, cứ đổi luôn cho nóng
+            ExecuteTabSwitch(targetTab);
+        }
+    }
 
-            // 2. Chuyển đổi Tab (Tắt cũ, Bật mới)
-            if (_currentActiveTab != null) _currentActiveTab.SetActive(false);
+    private void ExecuteTabSwitch(TabType targetTab)
+    {
+        // 2. Chuyển đổi Tab (Tắt cũ, Bật mới)
+        if (_currentActiveTab != null) _currentActiveTab.SetActive(false);
 
-            if (_tabDictionary.TryGetValue(targetTab, out GameObject targetGO))
-            {
-                targetGO.SetActive(true);
-                _currentActiveTab = targetGO;
-            }
+        if (_tabDictionary.TryGetValue(targetTab, out GameObject targetGO))
+        {
+            targetGO.SetActive(true);
+            _currentActiveTab = targetGO;
+        }
 
-            UpdateTabButtons(targetTab);
+        UpdateTabButtons(targetTab);
 
-            // [HIỂN THỊ TIỀN TỆ]: Ẩn khi vào Thẻ bài, hiện ở các chỗ khác
-            if (currencyPanel != null)
-            {
-                currencyPanel.SetActive(targetTab != TabType.Cards);
-            }
+        // [HIỂN THỊ TIỀN TỆ]: Ẩn khi vào Thẻ bài, hiện ở các chỗ khác
+        if (currencyPanel != null)
+        {
+            currencyPanel.SetActive(targetTab != TabType.Cards);
+        }
 
-            if (playerInfoCanvas != null)
-            {
-                playerInfoCanvas.SetActive(targetTab == TabType.Combat);
-            }
+        if (playerInfoCanvas != null)
+        {
+            playerInfoCanvas.SetActive(targetTab == TabType.Combat);
+        }
 
-            // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab
-            // (Thằng CardManager hay InventoryManager nghe thấy sẽ tự động reset)
-            OnTabChanged?.Invoke(targetTab);
+        // [CLEAN CODE]: 3. BẮN PHÁO SÁNG! Thông báo cho toàn cõi server biết sếp vừa chuyển Tab
+        OnTabChanged?.Invoke(targetTab);
 
-            // Lưu dữ liệu khi chuyển Tab chính (Navigation)
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
-        });
+        // Lưu dữ liệu khi chuyển Tab chính (Navigation)
+        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
     }
 
     // Hàm tiện ích: Duyệt 1 nhát hết cả mảng Popup, code cực ngắn
