@@ -35,6 +35,20 @@ public class UI_ArenaItem : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Overload để hiển thị từ dữ liệu cache cục bộ.
+    /// </summary>
+    public void Setup(LeaderboardEntry entry, string playerTitle = "")
+    {
+        if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
+        if (txtName) txtName.text = entry.DisplayName;
+        if (txtElo) txtElo.text = entry.Elo.ToString() + " điểm";
+        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "" : playerTitle;
+        if (txtLevel) txtLevel.text = "";
+        
+        if (btnChallenge) btnChallenge.gameObject.SetActive(false); // BXH chung không cho thách đấu trực tiếp
+    }
+
     private void OnChallengeClicked(PlayerLeaderboardEntry target)
     {
         Debug.Log($"<color=orange>[Arena]</color> Khiêu chiến: {target.DisplayName} (Top {target.Position + 1})");

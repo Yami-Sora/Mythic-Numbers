@@ -2,85 +2,82 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using PlayFab;
 
+/// <summary>
+/// Quản lý bảng xếp hạng (Leaderboard) trong Popup.
+/// Sử dụng dữ liệu cache được cập nhật tự động mỗi 5p từ GameServices.
+/// </summary>
 public class LeaderboardPanel : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private GameObject panelRoot;
     [SerializeField] private Transform contentParent;
-    [SerializeField] private TMP_Text loadingText;
-    [SerializeField] private TMP_Text errorText;
     [SerializeField] private Button closeButton;
-    [SerializeField] private TMP_Text rowPrefab;
 
-    [Header("Settings")]
-    [SerializeField] private Color eloColor = new Color(0.2f, 0.8f, 0.2f);
-
-    private const int TopCount = 10;
+    [Header("Arena Setup")]
+    [SerializeField] private GameObject arenaItemPrefab;
 
     private void Awake()
     {
-        if (panelRoot != null) panelRoot.SetActive(false);
         if (closeButton != null) closeButton.onClick.AddListener(Hide);
     }
 
     private void Start()
     {
-        if (panelRoot != null) panelRoot.SetActive(false);
+        // Đảm bảo ban đầu ẩn
+        gameObject.SetActive(false);
     }
 
     public void Show()
     {
-        gameObject.SetActive(true); // Bật luôn nếu đang inactive (kéo từ reference vẫn gọi được)
-        if (panelRoot != null) panelRoot.SetActive(true);
-        if (errorText != null) errorText.gameObject.SetActive(false);
-        if (loadingText != null) { loadingText.gameObject.SetActive(true); loadingText.text = "Đang tải..."; }
+        gameObject.SetActive(true);
         ClearContent();
         LoadLeaderboard();
     }
 
     public void Hide()
     {
-        if (panelRoot != null) panelRoot.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     private void ClearContent()
     {
         if (contentParent == null) return;
-        for (int i = contentParent.childCount - 1; i >= 0; i--)
-            Destroy(contentParent.GetChild(i).gameObject);
+        foreach (Transform child in contentParent)
+            Destroy(child.gameObject);
     }
 
     private void LoadLeaderboard()
     {
-        if (GameServices.Instance?.Leaderboard == null) { ShowError("Chưa kết nối. Kiểm tra PlayFab."); return; }
-        GameServices.Instance.Leaderboard.GetTopPlayersAsync(TopCount, OnLoaded, ShowError);
-    }
+        if (GameServices.Instance?.Leaderboard == null) return;
 
-    private void OnLoaded(List<LeaderboardEntry> entries)
-    {
-        if (loadingText != null) loadingText.gameObject.SetActive(false);
-        if (contentParent == null || rowPrefab == null)
+        // Lấy dữ liệu đã được cache sẵn trong LeaderboardService (cập nhật mỗi 5p)
+        List<LeaderboardEntry> entries = GameServices.Instance.Leaderboard.GetCachedLeaderboard();
+        
+        if (entries == null || entries.Count == 0)
         {
-            if (loadingText != null) loadingText.text = entries.Count > 0 ? $"Top {entries.Count} đã tải." : "Chưa có dữ liệu.";
+            Debug.Log("[Leaderboard] Chưa có dữ liệu cache, đang chờ AutoFetch...");
             return;
         }
-        
-        if (contentParent.GetComponent<Image>() != null)
-            contentParent.GetComponent<Image>().enabled = false;
-        
-        ClearContent();
-        foreach (var e in entries)
-        {
-            var row = Instantiate(rowPrefab, contentParent);
-            row.text = $"#{e.Position}  {e.DisplayName}  <color=#2ECC71>ELO {e.Elo}</color>";
-            row.gameObject.SetActive(true);
-        }
-    }
 
-    private void ShowError(string msg)
-    {
-        if (loadingText != null) loadingText.gameObject.SetActive(false);
-        if (errorText != null) { errorText.text = msg; errorText.gameObject.SetActive(true); }
+        // Lấy danh hiệu của người chơi hiện tại
+        string myTitle = PlayFabDataManager.Instance != null ? PlayFabDataManager.Instance.PlayerTitle : "";
+
+        foreach (var entry in entries)
+        {
+            if (arenaItemPrefab == null) break;
+
+            GameObject go = Instantiate(arenaItemPrefab, contentParent);
+            go.layer = LayerMask.NameToLayer("UI");
+            go.transform.localScale = Vector3.one;
+
+            UI_ArenaItem uiItem = go.GetComponent<UI_ArenaItem>();
+            if (uiItem != null)
+            {
+                // Sử dụng overload Setup cho LeaderboardEntry
+                string title = (PlayFabSettings.staticPlayer != null && entry.PlayFabId == PlayFabSettings.staticPlayer.PlayFabId) ? myTitle : "";
+                uiItem.Setup(entry, title);
+            }
+        }
     }
 }
