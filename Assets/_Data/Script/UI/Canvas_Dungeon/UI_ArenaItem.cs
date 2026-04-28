@@ -55,7 +55,14 @@ public class UI_ArenaItem : MonoBehaviour
 
     private void OnChallengeClicked(PlayerLeaderboardEntry target)
     {
-        Debug.Log($"<color=orange>[Arena]</color> Khiêu chiến: {target.DisplayName} (Top {target.Position + 1})");
-        // TODO: Mở màn hình xác nhận khiêu chiến
+        if (ArenaManager.Instance != null && ArenaManager.Instance.UseChallenge())
+        {
+            Debug.Log($"<color=orange>[Arena]</color> Bắt đầu khiêu chiến: {target.DisplayName} (Top {target.Position + 1})");
+            // TODO: Mở màn hình xác nhận hoặc load scene combat
+        }
+        else
+        {
+            Debug.LogWarning("[Arena] Hết lượt khiêu chiến rồi sếp ơi!");
+        }
     }
 }

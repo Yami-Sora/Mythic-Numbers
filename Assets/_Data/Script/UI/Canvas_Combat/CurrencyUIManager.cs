@@ -39,6 +39,8 @@ public class CurrencyUIManager : MonoBehaviour
         }
     }
 
+    public int GetCurrentLN() => _currentLNBalance;
+
     public void UpdateBalances(int gold, int ln)
     {
         _currentLNBalance = ln;
