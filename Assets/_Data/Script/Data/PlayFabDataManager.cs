@@ -41,6 +41,8 @@ public class PlayFabDataManager : MonoBehaviour
     // Bộ nhớ đệm tiền tệ (để check nhanh túi tiền)
     private int _goldBalance = 0;
     private int _lnBalance = 0;
+    private PlayFabSaveData _cachedSaveData = new PlayFabSaveData(); // Cache để bảo toàn dữ liệu khi Save
+
 
     public int GetCurrencyBalance(string code)
     {
@@ -172,29 +174,33 @@ public class PlayFabDataManager : MonoBehaviour
             return;
         }
 
-        if (!isDirty)
+        if (!isDirty) return;
+
+        // [NÂNG CẤP]: Thay vì chặn hoàn toàn, ta sẽ dùng cache để "vá" những phần Manager đang null
+        // Chỉ chặn nếu cả 2 đều null và cache cũng trống (trường hợp cực hiếm)
+        if (CardListManager.Instance == null && InventoryManager.Instance == null && _cachedSaveData.inventory == null)
         {
-            // Debug.Log("[PlayFab] Dữ liệu không đổi, không cần Save tốn tài nguyên sếp ơi!");
+            Debug.LogWarning("[PlayFab] Không có dữ liệu để Save (Managers null và Cache trống)!");
             return;
         }
 
-        // [KHIÊN BẢO VỆ]: Nếu đang ở Combat mà gọi Save thì chặn ngay!
-        // Chỉ cho phép Save khi các Manager ở MenuScene đang tồn tại.
-        if (CardListManager.Instance == null || InventoryManager.Instance == null)
+        // 1. Cập nhật Inventory (Nếu Manager đang mở thì lấy từ Manager, không thì giữ nguyên cache)
+        if (InventoryManager.Instance != null)
         {
-            Debug.LogWarning("[PlayFab] Đang ở chế độ Offline/Combat, từ chối Save để bảo toàn tài sản cho sếp!");
-            return;
+            _cachedSaveData.inventory = GetInventorySaveData();
         }
 
-        PlayFabSaveData saveData = new PlayFabSaveData();
+        // 2. Cập nhật Cards (Nếu Manager đang mở thì lấy từ Manager, không thì giữ nguyên cache)
+        if (CardListManager.Instance != null)
+        {
+            _cachedSaveData.cards = GetCardsSaveData();
+        }
 
-        // Lấy dữ liệu đã đóng gói từ các Manager
-        saveData.inventory = GetInventorySaveData();
-        saveData.cards = GetCardsSaveData();
-        saveData.level = PlayerLevel;
-        saveData.exp = PlayerExp;
+        // 3. Cập nhật các thông số khác
+        _cachedSaveData.level = PlayerLevel;
+        _cachedSaveData.exp = PlayerExp;
 
-        string json = JsonUtility.ToJson(saveData);
+        string json = JsonUtility.ToJson(_cachedSaveData);
         var request = new UpdateUserDataRequest
         {
             Data = new Dictionary<string, string> 
@@ -304,12 +310,12 @@ public class PlayFabDataManager : MonoBehaviour
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_USER_DATA))
             {
                 string json = result.Data[PlayFabConstants.KEY_USER_DATA].Value;
-                PlayFabSaveData loadedData = JsonUtility.FromJson<PlayFabSaveData>(json);
+                _cachedSaveData = JsonUtility.FromJson<PlayFabSaveData>(json);
 
-                RestoreInventory(loadedData.inventory);
-                RestoreCards(loadedData.cards);
-                this.PlayerLevel = loadedData.level > 0 ? loadedData.level : 1;
-                this.PlayerExp = loadedData.exp;
+                RestoreInventory(_cachedSaveData.inventory);
+                RestoreCards(_cachedSaveData.cards);
+                this.PlayerLevel = _cachedSaveData.level > 0 ? _cachedSaveData.level : 1;
+                this.PlayerExp = _cachedSaveData.exp;
             }
 
             // Kéo luôn Statistics về cho chuẩn

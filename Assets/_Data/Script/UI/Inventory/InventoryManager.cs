@@ -268,7 +268,11 @@ public class InventoryManager : YamiMonoBehaviour
         RefreshUI();
 
         // 3. Trừ đồ xong phải Save lên mây ngay cho nóng!
-        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+        if (PlayFabDataManager.Instance != null) 
+        {
+            PlayFabDataManager.Instance.MarkDirty();
+            PlayFabDataManager.Instance.SaveGameData();
+        }
 
         return true;
     }
