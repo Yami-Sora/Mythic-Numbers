@@ -20,13 +20,17 @@ public class UI_ArenaItem : MonoBehaviour
     /// </summary>
     public void Setup(PlayerLeaderboardEntry entry, string playerTitle = "")
     {
+        if (entry == null) return;
+        
+        Debug.Log($"[ArenaItem] Setup: {entry.DisplayName}, Position: {entry.Position}, Elo: {entry.StatValue}");
+
         if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
         if (txtName) txtName.text = string.IsNullOrEmpty(entry.DisplayName) ? "Ẩn Danh" : entry.DisplayName;
         if (txtElo) txtElo.text = entry.StatValue.ToString() + " điểm";
-        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "" : playerTitle;
+        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "Tân Thủ" : playerTitle;
 
-        // Level sẽ được bổ sung khi có UserData của các người chơi khác
-        if (txtLevel) txtLevel.text = "";
+        // Giả lập level cho đẹp UI
+        if (txtLevel) txtLevel.text = ((entry.StatValue / 50) + 1).ToString();
 
         if (btnChallenge)
         {

@@ -3,19 +3,20 @@ using UnityEngine.UI;
 using TMPro;
 using PlayFab;
 using PlayFab.ClientModels;
+using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// Quản lý toàn bộ logic của Arena Dungeon:
-/// fetch leaderboard, spawn prefab, giao việc setup cho UI_ArenaItem.
-/// Gắn vào GameObject Arena_Dungeon.
+/// Chọn ngẫu nhiên 4 đối thủ xếp trên người chơi từ top 20 phía trước.
+/// Giao diện sử dụng 4 slot tĩnh thay vì ScrollView.
 /// </summary>
 public class ArenaManager : YamiMonoBehaviour
 {
     public static ArenaManager Instance { get; private set; }
 
-    [Header("Arena Setup")]
-    [SerializeField] private Transform arenaItemContainer;
-    [SerializeField] private GameObject arenaItemPrefab;
+    [Header("Arena Setup (Static Slots)")]
+    [SerializeField] private UI_ArenaItem[] arenaSlots;
 
     protected override void Awake()
     {
@@ -26,7 +27,7 @@ public class ArenaManager : YamiMonoBehaviour
     /// <summary>Gọi từ Canvas_DungeonManager khi mở tab Arena</summary>
     public void OpenArena()
     {
-        FetchArenaLeaderboard();
+        FetchArenaOpponents();
     }
 
     public void ClosePanel()
@@ -35,47 +36,101 @@ public class ArenaManager : YamiMonoBehaviour
             Canvas_DungeonManager.Instance.Close_All_Panels();
     }
 
-    private void FetchArenaLeaderboard()
+    private void FetchArenaOpponents()
     {
-        if (arenaItemContainer == null || arenaItemPrefab == null)
+        if (arenaSlots == null || arenaSlots.Length == 0)
         {
-            Debug.LogError("[Arena] Chưa gán arenaItemContainer hoặc arenaItemPrefab!");
+            Debug.LogError("[Arena] Chưa gán arenaSlots tĩnh!");
             return;
         }
 
-        // Xóa items cũ
-        foreach (Transform child in arenaItemContainer)
-            Destroy(child.gameObject);
+        // Ban đầu ẩn hết các slot để chờ load
+        foreach (var slot in arenaSlots) if(slot != null) slot.gameObject.SetActive(false);
 
-        var request = new GetLeaderboardRequest
+        // Lấy danh sách những người xung quanh player
+        var request = new GetLeaderboardAroundPlayerRequest
         {
             StatisticName = "elo",
-            StartPosition = 0,
-            MaxResultsCount = 20
+            MaxResultsCount = 40 // Lấy rộng một chút để có nhiều lựa chọn (20 trước, 20 sau)
         };
 
-        PlayFabClientAPI.GetLeaderboard(request, OnLeaderboardSuccess,
-            error => Debug.LogError("[Arena] Lỗi lấy Leaderboard: " + error.GenerateErrorReport()));
+        PlayFabClientAPI.GetLeaderboardAroundPlayer(request, OnGetOpponentsSuccess, 
+            error => Debug.LogError("[Arena] Lỗi lấy đối thủ: " + error.GenerateErrorReport()));
     }
 
-    private void OnLeaderboardSuccess(GetLeaderboardResult result)
+    private void OnGetOpponentsSuccess(GetLeaderboardAroundPlayerResult result)
     {
-        // Lấy danh hiệu của người chơi hiện tại từ PlayerData
-        string myTitle = PlayFabDataManager.Instance != null ? PlayFabDataManager.Instance.PlayerTitle : "";
+        string myId = PlayFabSettings.staticPlayer.PlayFabId;
+        List<PlayerLeaderboardEntry> others = new List<PlayerLeaderboardEntry>();
 
-        foreach (var entry in result.Leaderboard)
+        if (result.Leaderboard != null)
         {
-            GameObject go = Instantiate(arenaItemPrefab, arenaItemContainer);
-            go.layer = LayerMask.NameToLayer("UI");
-            go.transform.localScale = Vector3.one;
+            others = result.Leaderboard.Where(e => e.PlayFabId != myId).ToList();
+        }
 
-            UI_ArenaItem uiItem = go.GetComponent<UI_ArenaItem>();
-            if (uiItem != null)
+        List<PlayerLeaderboardEntry> potentialOpponents = new List<PlayerLeaderboardEntry>();
+        
+        // Lấy hạng của mình. Nếu chưa có hạng (mới chơi), giả định là hạng 100
+        int myRank = 100;
+        var me = result.Leaderboard?.FirstOrDefault(e => e.PlayFabId == myId);
+        if (me != null) myRank = me.Position + 1;
+
+        // Lấy tối đa 4 người xếp trên mình
+        var thoseAhead = others.Where(e => e.Position < (myRank - 1))
+            .OrderByDescending(e => e.Position)
+            .Take(10) // Lấy 10 người gần mình nhất
+            .OrderBy(x => Random.value)
+            .Take(4)
+            .ToList();
+
+        potentialOpponents.AddRange(thoseAhead);
+
+        // Nếu vẫn thiếu người (ví dụ mình đang ở top đầu), lấy thêm những người xếp sau
+        if (potentialOpponents.Count < 4)
+        {
+            var thoseBehind = others.Where(e => !potentialOpponents.Contains(e))
+                .OrderBy(e => e.Position)
+                .Take(4 - potentialOpponents.Count)
+                .ToList();
+            potentialOpponents.AddRange(thoseBehind);
+        }
+
+        // Sắp xếp lại danh sách cuối cùng theo hạng
+        var finalOpponents = potentialOpponents.OrderBy(e => e.Position).ToList();
+
+        // Hiển thị lên 4 slot
+        for (int i = 0; i < arenaSlots.Length; i++)
+        {
+            if (arenaSlots[i] == null) continue;
+
+            arenaSlots[i].gameObject.SetActive(true);
+
+            if (i < finalOpponents.Count)
             {
-                // Chỉ hiện danh hiệu của bản thân (chưa thể lấy danh hiệu người khác từ Leaderboard)
-                string title = entry.PlayFabId == PlayFabSettings.staticPlayer.PlayFabId ? myTitle : "";
-                uiItem.Setup(entry, title);
+                // Gán người thật
+                arenaSlots[i].Setup(finalOpponents[i], "Thiếu Chủ");
+            }
+            else
+            {
+                // Nếu vẫn thiếu (leaderboard quá ít người), tạo Bot
+                CreateBot(arenaSlots[i], i, myRank);
             }
         }
+    }
+
+    private void CreateBot(UI_ArenaItem slot, int index, int myRank)
+    {
+        int botRank = Mathf.Max(1, myRank - (4 - index));
+        string[] botNames = { "Vô Danh", "Kiếm Khách", "Ẩn Sĩ", "Cuồng Phong", "Bá Chủ" };
+        string botName = botNames[Random.Range(0, botNames.Length)] + " (Bot)";
+        
+        PlayerLeaderboardEntry botEntry = new PlayerLeaderboardEntry
+        {
+            DisplayName = botName,
+            Position = botRank - 1,
+            StatValue = Mathf.Max(0, (100 - botRank) * 10),
+        };
+
+        slot.Setup(botEntry, "Ản Sĩ");
     }
 }
