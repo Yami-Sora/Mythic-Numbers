@@ -81,7 +81,7 @@ public class PlayFabDataManager : MonoBehaviour
         MarkDirty();
         UpdatePlayerStatistics(PlayFabConstants.STAT_PLAYER_EXP, (int)PlayerExp);
 
-        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, req);
+        PlayerInfoUI.UpdateAllExpBar(PlayerLevel, PlayerExp, req);
     }
 
     public void UpdatePlayerStatistics(string statName, int value)
@@ -129,8 +129,7 @@ public class PlayFabDataManager : MonoBehaviour
                     if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_EXP) PlayerExp = stat.Value;
                 }
 
-                if (PlayerInfoUI.Instance != null)
-                    PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
+                PlayerInfoUI.UpdateAllExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
             }
         }, err => {
             Debug.LogWarning("[PlayFab] Lỗi lấy Stats, đang thử lại sau 3s...");
@@ -778,11 +777,8 @@ public class PlayFabDataManager : MonoBehaviour
                 PlayerName = "Sếp Yami"; 
             }
 
-            if (PlayerInfoUI.Instance != null)
-            {
-                PlayerInfoUI.Instance.UpdatePlayerName(PlayerName);
-                PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
-            }
+            PlayerInfoUI.UpdateAllPlayerName(PlayerName);
+            PlayerInfoUI.UpdateAllExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
         }, err => {
             Debug.LogWarning("[PlayFab] Lỗi lấy Profile, đang thử lại sau 3s...");
             StartCoroutine(DelayRetry(FetchPlayerProfile));

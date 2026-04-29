@@ -66,7 +66,7 @@ public class DeckManager : MonoBehaviour
 
         RefreshDeckUI();
 
-        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdatePower();
+        PlayerInfoUI.UpdateAllPower();
     }
 
     public void CancelEdit()
@@ -190,6 +190,6 @@ public class DeckManager : MonoBehaviour
             CardListManager.Instance.DisplayCards();
         }
 
-        if (PlayerInfoUI.Instance != null) PlayerInfoUI.Instance.UpdatePower();
+        PlayerInfoUI.UpdateAllPower();
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class PlayerInfoUI : MonoBehaviour
 {
@@ -21,17 +22,31 @@ public class PlayerInfoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private Image expFillImage;
 
-
+    // Singleton cũ để không làm gãy code hiện tại, nhưng giờ chỉ là 1 trong nhiều instance
     public static PlayerInfoUI Instance { get; private set; }
+    
+    // Danh sách tất cả các "anh em" PlayerInfoUI đang hoạt động
+    private static readonly HashSet<PlayerInfoUI> _allInstances = new HashSet<PlayerInfoUI>();
 
     private void Awake()
     {
         Instance = this;
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        // Khởi tạo ban đầu với dữ liệu từ PlayFabDataManager nếu có
+        _allInstances.Add(this);
+        RefreshData();
+    }
+
+    private void OnDisable()
+    {
+        _allInstances.Remove(this);
+        if (Instance == this) Instance = null;
+    }
+
+    public void RefreshData()
+    {
         if (PlayFabDataManager.Instance != null)
         {
             UpdatePlayerName(PlayFabDataManager.Instance.PlayerName);
@@ -39,8 +54,23 @@ public class PlayerInfoUI : MonoBehaviour
                          PlayFabDataManager.Instance.PlayerExp, 
                          PlayFabDataManager.Instance.GetRequiredExp(PlayFabDataManager.Instance.PlayerLevel));
         }
-        
         UpdatePower();
+    }
+
+    // Static methods để update toàn bộ các UI cùng lúc
+    public static void UpdateAllPlayerName(string name)
+    {
+        foreach (var ui in _allInstances) ui.UpdatePlayerName(name);
+    }
+
+    public static void UpdateAllExpBar(int level, long currentExp, long requiredExp)
+    {
+        foreach (var ui in _allInstances) ui.UpdateExpBar(level, currentExp, requiredExp);
+    }
+
+    public static void UpdateAllPower()
+    {
+        foreach (var ui in _allInstances) ui.UpdatePower();
     }
 
     public void UpdatePlayerName(string name)
@@ -53,7 +83,7 @@ public class PlayerInfoUI : MonoBehaviour
         if (levelText != null) levelText.text = level.ToString();
         if (expFillImage != null)
         {
-            float fill = (float)currentExp / requiredExp;
+            float fill = (float)currentExp / (float)Mathf.Max(1, requiredExp);
             expFillImage.fillAmount = fill;
         }
     }
