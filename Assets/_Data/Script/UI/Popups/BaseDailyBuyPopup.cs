@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
     [Header("--- Base UI References ---")]
     public GameObject panelRoot;
     public TextMeshProUGUI txtTitle;
-    public TextMeshProUGUI txtDescription;
+    public TextMeshProUGUI txtBuyDescription;
     public Button btnClose;
 
     [Header("--- Selector ---")]
@@ -90,7 +91,6 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
     protected void LoadDailyBuyData()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
-
         PlayFabClientAPI.GetTime(new GetTimeRequest(), timeResult =>
         {
             DateTime serverTime = timeResult.Time;
@@ -98,6 +98,8 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
 
             PlayFabClientAPI.GetUserData(new GetUserDataRequest { Keys = new List<string> { playFabDataKey } }, result =>
             {
+                if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
                 if (result.Data != null && result.Data.ContainsKey(playFabDataKey))
                 {
                     string json = result.Data[playFabDataKey].Value;
@@ -112,13 +114,20 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
                 currentAmount = GetRemainingQuota() > 0 ? 1 : 0;
                 UpdateUI();
             }, error => {
-                alreadyBoughtCount = 0;
-                UpdateUI();
+                Debug.LogWarning($"[{name}] Lỗi tải dữ liệu, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(LoadDailyBuyData));
             });
         }, error => {
-            Debug.LogWarning($"[{name}] Lỗi lấy giờ server: " + error.GenerateErrorReport());
-            UpdateUI();
+            Debug.LogWarning($"[{name}] Lỗi lấy giờ server, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(LoadDailyBuyData));
         });
+    }
+
+    private IEnumerator DelayRetry(Action action)
+    {
+        if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(true);
+        yield return new WaitForSeconds(3f);
+        action?.Invoke();
     }
 
     protected void SaveDailyBuyData()
@@ -222,11 +231,18 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
 
         if (btnSubmit != null) btnSubmit.interactable = false;
 
+        SendSubtractCurrencyRequest();
+    }
+
+    private void SendSubtractCurrencyRequest()
+    {
         PlayFabClientAPI.SubtractUserVirtualCurrency(new SubtractUserVirtualCurrencyRequest
         {
             VirtualCurrency = currencyCode,
             Amount = currentAmount * pricePerUnit
         }, result => {
+            if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
             alreadyBoughtCount += currentAmount;
             SaveDailyBuyData();
             
@@ -238,8 +254,8 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
             UpdateUI();
             Close();
         }, error => {
-            Debug.LogError($"[{name}] Lỗi mua hàng: " + error.GenerateErrorReport());
-            if (btnSubmit != null) btnSubmit.interactable = true;
+            Debug.LogWarning($"[{name}] Lỗi mua hàng, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(SendSubtractCurrencyRequest));
         });
     }
 

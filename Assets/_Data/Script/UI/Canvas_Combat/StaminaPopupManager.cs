@@ -8,7 +8,16 @@ using System.Collections.Generic;
 
 public class StaminaPopupManager : BaseDailyBuyPopup
 {
-    public static StaminaPopupManager Instance { get; private set; }
+    private static StaminaPopupManager _instance;
+    public static StaminaPopupManager Instance 
+    { 
+        get 
+        {
+            if (_instance == null) return null;
+            return _instance;
+        }
+        private set => _instance = value;
+    }
 
     [Header("--- POPUP CHÍNH (STAMINA) ---")]
     public TextMeshProUGUI txtPopupTimer;
@@ -39,13 +48,25 @@ public class StaminaPopupManager : BaseDailyBuyPopup
     protected override void Awake()
     {
         base.Awake();
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning($"[Stamina] Phát hiện có nhiều hơn 1 StaminaPopupManager! Đang xóa bản cũ trên {gameObject.name}");
+            // Không xóa cả GameObject vì có thể chứa các UI khác, chỉ xóa Component hoặc báo lỗi
+        }
         Instance = this;
+        Debug.Log($"[Stamina] Awake trên {gameObject.name}");
         
         // Cấu hình base
         playFabDataKey = "DailyStaminaBuys";
         pricePerUnit = 80;
         maxDailyLimit = 3;
         currencyCode = "GM"; // Linh Ngọc
+    }
+
+    private void OnDestroy()
+    {
+        Debug.Log($"[Stamina] OnDestroy trên {gameObject.name}");
+        if (Instance == this) Instance = null;
     }
 
     protected override void Start()
@@ -73,8 +94,9 @@ public class StaminaPopupManager : BaseDailyBuyPopup
 
     public void UpdatePopupRealtimeData(string timeStr, bool isMax, int lnBalance)
     {
+        if (this == null) return; // Bảo vệ nếu object đã bị destroy nhưng vẫn bị gọi
         currentVCBalance = lnBalance;
-        if (txtPopupTimer != null && panelRoot.activeSelf)
+        if (txtPopupTimer != null && panelRoot != null && panelRoot.activeSelf)
         {
             if (isMax) txtPopupTimer.text = "Thời gian còn lại: ĐÃ ĐẦY";
             else txtPopupTimer.text = $"Thời gian còn lại: <color=#FF0000>{timeStr}</color>";
@@ -107,8 +129,8 @@ public class StaminaPopupManager : BaseDailyBuyPopup
     {
         base.UpdateUI();
         // Cập nhật thêm bonus info đặc thù của Stamina
-        if (txtDescription != null) 
-            txtDescription.text = $"Lần mua này có thể bổ sung: x{currentAmount * staminaPerBuy} Thể lực";
+        if (txtBuyDescription != null) 
+            txtBuyDescription.text = $"Lần mua này có thể bổ sung: x{currentAmount * staminaPerBuy} Thể lực";
     }
 
     protected override void OnPurchaseSuccess(int amount, int remainingBalance)
@@ -178,27 +200,44 @@ public class StaminaPopupManager : BaseDailyBuyPopup
     {
         if (_useAmount <= 0) return;
 
+        // Lưu ý: Item đã bị trừ ở Client trước khi gọi API để UX mượt
         bool isRemoved = InventoryManager.Instance.RemoveItemAmount(staminaPotionData.itemID, _useAmount);
 
         if (isRemoved)
         {
-            int staminaToRecover = _useAmount * staminaPerItem;
-
-            var request = new AddUserVirtualCurrencyRequest
-            {
-                VirtualCurrency = "EN",
-                Amount = staminaToRecover
-            };
-
-            PlayFabClientAPI.AddUserVirtualCurrency(request,
-                result => {
-                    if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
-                    RefreshUseItemData();
-                    _useAmount = _maxItemInInventory > 0 ? 1 : 0;
-                    UpdateUseUI();
-                },
-                error => Debug.LogError("Lỗi bơm thể lực: " + error.GenerateErrorReport())
-            );
+            SendAddStaminaRequest();
         }
+    }
+
+    private void SendAddStaminaRequest()
+    {
+        int staminaToRecover = _useAmount * staminaPerItem;
+
+        var request = new AddUserVirtualCurrencyRequest
+        {
+            VirtualCurrency = "EN",
+            Amount = staminaToRecover
+        };
+
+        PlayFabClientAPI.AddUserVirtualCurrency(request,
+            result => {
+                if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+                if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
+                RefreshUseItemData();
+                _useAmount = _maxItemInInventory > 0 ? 1 : 0;
+                UpdateUseUI();
+            },
+            error => {
+                Debug.LogWarning("[Stamina] Lỗi bơm thể lực, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(SendAddStaminaRequest));
+            }
+        );
+    }
+
+    private System.Collections.IEnumerator DelayRetry(System.Action action)
+    {
+        if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(true);
+        yield return new WaitForSeconds(3f);
+        action?.Invoke();
     }
 }

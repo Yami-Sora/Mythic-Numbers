@@ -115,6 +115,8 @@ public class ArenaManager : YamiMonoBehaviour
             return;
         }
 
+
+
         // Lấy thời gian chuẩn từ Server để chống hack chỉnh ngày điện thoại
         PlayFabClientAPI.GetTime(new GetTimeRequest(), timeResult =>
         {
@@ -123,6 +125,8 @@ public class ArenaManager : YamiMonoBehaviour
 
             PlayFabClientAPI.GetUserData(new GetUserDataRequest { Keys = new List<string> { ARENA_STATS_KEY } }, result =>
             {
+                if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
                 if (result.Data != null && result.Data.ContainsKey(ARENA_STATS_KEY))
                 {
                     string json = result.Data[ARENA_STATS_KEY].Value;
@@ -146,17 +150,20 @@ public class ArenaManager : YamiMonoBehaviour
                 }
                 UpdateCounterUI();
             }, error => {
-                currentChallenges = maxChallenges;
-                currentRefreshes = maxRefreshes;
-                UpdateCounterUI();
+                Debug.LogWarning("[Arena] Lỗi tải dữ liệu, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(LoadArenaData));
             });
         }, error => {
-            Debug.LogWarning("[Arena] Không lấy được thời gian server, dùng tạm local: " + error.GenerateErrorReport());
-            // Fallback nếu lỗi mạng
-            DateTime localTime = DateTime.UtcNow;
-            // ... logic tương tự như trên với localTime ...
-            UpdateCounterUI();
+            Debug.LogWarning("[Arena] Lỗi lấy thời gian server, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(LoadArenaData));
         });
+    }
+
+    private System.Collections.IEnumerator DelayRetry(Action action)
+    {
+        if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(true);
+        yield return new WaitForSeconds(3f);
+        action?.Invoke();
     }
 
     private void SaveArenaData()
@@ -201,6 +208,8 @@ public class ArenaManager : YamiMonoBehaviour
             return;
         }
 
+
+
         // Ban đầu ẩn hết các slot để chờ load
         foreach (var slot in arenaSlots) if(slot != null) slot.gameObject.SetActive(false);
 
@@ -212,11 +221,16 @@ public class ArenaManager : YamiMonoBehaviour
         };
 
         PlayFabClientAPI.GetLeaderboardAroundPlayer(request, OnGetOpponentsSuccess, 
-            error => Debug.LogError("[Arena] Lỗi lấy đối thủ: " + error.GenerateErrorReport()));
+            error => {
+                Debug.LogWarning("[Arena] Lỗi lấy đối thủ, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(FetchArenaOpponents));
+            });
     }
 
     private void OnGetOpponentsSuccess(GetLeaderboardAroundPlayerResult result)
     {
+        if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
         string myId = PlayFabSettings.staticPlayer.PlayFabId;
         List<PlayerLeaderboardEntry> others = new List<PlayerLeaderboardEntry>();
 

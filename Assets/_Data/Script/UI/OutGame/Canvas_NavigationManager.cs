@@ -90,17 +90,8 @@ public class Canvas_NavigationManager : MonoBehaviour
         // [NEW]: Đóng luôn bảng PlayerInfo nếu đang mở khi sếp chuyển Tab
         if (PlayerInfoManager.Instance != null) PlayerInfoManager.Instance.ClosePopup();
 
-        if (TransitionManager.Instance != null)
-        {
-            TransitionManager.Instance.PlayTransition(() => {
-                ExecuteTabSwitch(targetTab);
-            });
-        }
-        else
-        {
-            // Nếu không có TransitionManager, cứ đổi luôn cho nóng
-            ExecuteTabSwitch(targetTab);
-        }
+        // [REFAC]: Chuyển tab trực tiếp, không dùng TransitionManager nữa
+        ExecuteTabSwitch(targetTab);
     }
 
     private void ExecuteTabSwitch(TabType targetTab)

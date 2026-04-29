@@ -20,7 +20,7 @@ public class ArenaChallengePopup : BaseDailyBuyPopup
     public override void Open()
     {
         if (txtTitle != null) txtTitle.text = "Lượt khiêu chiến";
-        if (txtDescription != null) txtDescription.text = "Xác nhận tiêu Linh Ngọc mua Lượt khiêu chiến?";
+        if (txtBuyDescription != null) txtBuyDescription.text = "Xác nhận tiêu Linh Ngọc mua Lượt khiêu chiến?";
         base.Open();
     }
 

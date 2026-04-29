@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -105,6 +106,7 @@ public class PlayFabDataManager : MonoBehaviour
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
 
+
         var request = new GetPlayerStatisticsRequest
         {
             StatisticNames = new List<string> 
@@ -117,20 +119,23 @@ public class PlayFabDataManager : MonoBehaviour
 
         PlayFabClientAPI.GetPlayerStatistics(request, res =>
         {
+            if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
             if (res.Statistics != null)
             {
                 foreach (var stat in res.Statistics)
                 {
                     if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_LEVEL) PlayerLevel = stat.Value;
                     if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_EXP) PlayerExp = stat.Value;
-                    // PlayerPower có thể dùng để hiện thị trên UI
                 }
 
-                // Cập nhật UI sau khi lấy được Stat
                 if (PlayerInfoUI.Instance != null)
                     PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
             }
-        }, err => Debug.LogError("[PlayFab] Lỗi lấy Statistics: " + err.GenerateErrorReport()));
+        }, err => {
+            Debug.LogWarning("[PlayFab] Lỗi lấy Stats, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(FetchPlayerStatistics));
+        });
     }
     #endregion
 
@@ -177,12 +182,13 @@ public class PlayFabDataManager : MonoBehaviour
         if (!isDirty) return;
 
         // [NÂNG CẤP]: Thay vì chặn hoàn toàn, ta sẽ dùng cache để "vá" những phần Manager đang null
-        // Chỉ chặn nếu cả 2 đều null và cache cũng trống (trường hợp cực hiếm)
         if (CardListManager.Instance == null && InventoryManager.Instance == null && _cachedSaveData.inventory == null)
         {
             Debug.LogWarning("[PlayFab] Không có dữ liệu để Save (Managers null và Cache trống)!");
             return;
         }
+
+
 
         // 1. Cập nhật Inventory (Nếu Manager đang mở thì lấy từ Manager, không thì giữ nguyên cache)
         if (InventoryManager.Instance != null)
@@ -212,16 +218,21 @@ public class PlayFabDataManager : MonoBehaviour
 
         PlayFabClientAPI.UpdateUserData(request,
             result => {
+                if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
                 Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>");
                 isDirty = false; // Reset cờ sau khi save thành công
             },
-            error => Debug.LogError("[PlayFab] Lỗi Save: " + error.GenerateErrorReport())
+            error => {
+                Debug.LogWarning("[PlayFab] Lỗi Save dữ liệu, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(SaveGameData));
+            }
         );
     }
 
     public void SaveStageDataOnly()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
 
         var request = new UpdateUserDataRequest
         {
@@ -232,8 +243,14 @@ public class PlayFabDataManager : MonoBehaviour
         };
 
         PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log($"<color=green>[PlayFab] Đã backup Ải {CurrentStage} lên mây thành công!</color>"),
-            error => Debug.LogError("[PlayFab] Lỗi Save Stage: " + error.GenerateErrorReport())
+            result => {
+                if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+                Debug.Log($"<color=green>[PlayFab] Đã backup Ải {CurrentStage} lên mây thành công!</color>");
+            },
+            error => {
+                Debug.LogWarning("[PlayFab] Lỗi Save Stage, đang thử lại sau 3s...");
+                StartCoroutine(DelayRetry(SaveStageDataOnly));
+            }
         );
     }
 
@@ -304,8 +321,13 @@ public class PlayFabDataManager : MonoBehaviour
     #region [5] TẢI DỮ LIỆU (LOAD)
     public void LoadGameData()
     {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+
         PlayFabClientAPI.GetUserData(new GetUserDataRequest(), result =>
         {
+            if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
             // 1. Phục hồi Inventory & Cards
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_USER_DATA))
             {
@@ -356,7 +378,6 @@ public class PlayFabDataManager : MonoBehaviour
                 string today = DateTime.Now.ToString("yyyy-MM-dd");
                 if (loadedData.lastDate != today)
                 {
-                    // Qua ngày mới rồi, reset lượt đi sếp ơi!
                     GoldEntriesToday = 0;
                     LNEntriesToday = 0;
                     GemMineEntriesToday = 0;
@@ -371,8 +392,12 @@ public class PlayFabDataManager : MonoBehaviour
 
             isDataLoaded = true; // Đánh dấu đã Load xong toàn bộ dữ liệu
 
-        }, error => Debug.LogError("Lỗi Load: " + error.GenerateErrorReport()));
+        }, error => {
+            Debug.LogWarning("[PlayFab] Lỗi Load dữ liệu, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(LoadGameData));
+        });
     }
+
     #endregion
 
     #region [6] LOGIC PHẦN THƯỞNG & TIỀN TỆ
@@ -475,8 +500,11 @@ public class PlayFabDataManager : MonoBehaviour
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
 
+
         PlayFabClientAPI.GetUserInventory(new GetUserInventoryRequest(), result =>
         {
+            if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
             int gold = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_GOLD) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_GOLD] : 0;
             int ln = result.VirtualCurrency.ContainsKey(PlayFabConstants.CURRENCY_LN) ? result.VirtualCurrency[PlayFabConstants.CURRENCY_LN] : 0;
 
@@ -497,12 +525,15 @@ public class PlayFabDataManager : MonoBehaviour
             if (CurrencyUIManager.Instance != null)
             {
                 CurrencyUIManager.Instance.UpdateBalances(gold, ln);
-                CurrencyUIManager.Instance.UpdateStamina(stamina, secondsToRecharge); // Hàm mới lát mình viết
+                CurrencyUIManager.Instance.UpdateStamina(stamina, secondsToRecharge);
             }
 
             Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {ln} Linh Ngọc | {stamina}/200 Thể lực</color>");
         },
-        error => Debug.LogError("[PlayFab] Lỗi lấy tiền tệ: " + error.GenerateErrorReport()));
+        error => {
+            Debug.LogWarning("[PlayFab] Lỗi lấy tiền tệ, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(FetchVirtualCurrencies));
+        });
     }
 
     #endregion
@@ -731,8 +762,13 @@ public class PlayFabDataManager : MonoBehaviour
     {
         if (!PlayFab.PlayFabClientAPI.IsClientLoggedIn()) return;
 
+        // Hiện Loading để chặn sếp bấm lung tung khi đang load profile
+
+
         PlayFab.PlayFabClientAPI.GetAccountInfo(new PlayFab.ClientModels.GetAccountInfoRequest(), res =>
         {
+            if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
+
             if (res.AccountInfo != null && res.AccountInfo.TitleInfo != null && !string.IsNullOrEmpty(res.AccountInfo.TitleInfo.DisplayName))
             {
                 PlayerName = res.AccountInfo.TitleInfo.DisplayName;
@@ -747,6 +783,16 @@ public class PlayFabDataManager : MonoBehaviour
                 PlayerInfoUI.Instance.UpdatePlayerName(PlayerName);
                 PlayerInfoUI.Instance.UpdateExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
             }
-        }, err => UnityEngine.Debug.LogError("[PlayFab] Lỗi lấy Profile: " + err.GenerateErrorReport()));
+        }, err => {
+            Debug.LogWarning("[PlayFab] Lỗi lấy Profile, đang thử lại sau 3s...");
+            StartCoroutine(DelayRetry(FetchPlayerProfile));
+        });
+    }
+
+    private IEnumerator DelayRetry(Action action)
+    {
+        if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(true);
+        yield return new WaitForSeconds(3f);
+        action?.Invoke();
     }
 }
