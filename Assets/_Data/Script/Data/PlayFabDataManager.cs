@@ -22,10 +22,17 @@ public class PlayFabDataManager : MonoBehaviour
     public int PlayerLevel = 1;
     public string PlayerTitle { get; set; } = "Tân Thủ";
     public long PlayerExp = 0;
+    public int PlayerPower { get; private set; } = 0; 
+    public int PlayerRank = 0; // Hạng Arena hiện tại
+    public int Elo = 0;
+    public int Wins = 0;
+    public int Losses = 0;
+    public int TotalGames = 0;
+    public string ArenaDisplayName; // Tên hiển thị trong Arena
     private bool isDirty = false; 
     private bool isDungeonDirty = false; 
 
-    public enum GameMode { Story, GoldDungeon, LNDungeon, GemMine }
+    public enum GameMode { Story, GoldDungeon, LNDungeon, GemMine, Arena }
     public GameMode CurrentMode = GameMode.Story;
 
     // Dữ liệu Dungeon
@@ -113,7 +120,8 @@ public class PlayFabDataManager : MonoBehaviour
             { 
                 PlayFabConstants.STAT_PLAYER_LEVEL, 
                 PlayFabConstants.STAT_PLAYER_EXP, 
-                PlayFabConstants.STAT_PLAYER_POWER 
+                PlayFabConstants.STAT_PLAYER_POWER,
+                "elo", "wins", "losses", "totalGames" // Lấy thêm điểm Arena
             }
         };
 
@@ -127,15 +135,51 @@ public class PlayFabDataManager : MonoBehaviour
                 {
                     if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_LEVEL) PlayerLevel = stat.Value;
                     if (stat.StatisticName == PlayFabConstants.STAT_PLAYER_EXP) PlayerExp = stat.Value;
+                    
+                    // Gán cho các biến Arena mới
+                    if (stat.StatisticName == "elo") Elo = stat.Value;
+                    if (stat.StatisticName == "wins") Wins = stat.Value;
+                    if (stat.StatisticName == "losses") Losses = stat.Value;
+                    if (stat.StatisticName == "totalGames") TotalGames = stat.Value;
                 }
 
                 PlayerInfoUI.UpdateAllExpBar(PlayerLevel, PlayerExp, GetRequiredExp(PlayerLevel));
+                PlayerInfoUI.UpdateAllElo(Elo); // Cập nhật Elo lên toàn bộ UI
             }
         }, err => {
             Debug.LogWarning("[PlayFab] Lỗi lấy Stats, đang thử lại sau 3s...");
             StartCoroutine(DelayRetry(FetchPlayerStatistics));
         });
     }
+
+    public void FetchMyRank()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        var request = new GetLeaderboardAroundPlayerRequest
+        {
+            StatisticName = "elo",
+            MaxResultsCount = 1 
+        };
+
+        PlayFabClientAPI.GetLeaderboardAroundPlayer(request, result =>
+        {
+            var me = result.Leaderboard?.Find(e => e.PlayFabId == PlayFabSettings.staticPlayer.PlayFabId);
+            if (me != null)
+            {
+                this.PlayerRank = me.Position + 1;
+                this.Elo = me.StatValue;
+                this.ArenaDisplayName = !string.IsNullOrEmpty(me.DisplayName) ? me.DisplayName : this.PlayerName;
+                
+                PlayerInfoUI.UpdateAllArenaInfo(PlayerRank, ArenaDisplayName, Elo, PlayerTitle, CalculateTotalPower());
+                Debug.Log($"<color=white>[PlayFab] Đã dò thấy hạng: {PlayerRank}</color>");
+            }
+        }, error =>
+        {
+            Debug.LogWarning("[PlayFab] Không thể dò hạng: " + error.GenerateErrorReport());
+        });
+    }
+
     #endregion
 
     #region [2] UNITY LIFECYCLE
@@ -204,6 +248,14 @@ public class PlayFabDataManager : MonoBehaviour
         // 3. Cập nhật các thông số khác
         _cachedSaveData.level = PlayerLevel;
         _cachedSaveData.exp = PlayerExp;
+        
+        // Cập nhật Arena Data vào SaveData để đồng bộ hóa
+        _cachedSaveData.elo = Elo;
+        _cachedSaveData.wins = Wins;
+        _cachedSaveData.losses = Losses;
+        _cachedSaveData.totalGames = TotalGames;
+        _cachedSaveData.rank = PlayerRank;
+        _cachedSaveData.displayName = ArenaDisplayName;
 
         string json = JsonUtility.ToJson(_cachedSaveData);
         var request = new UpdateUserDataRequest
@@ -302,19 +354,135 @@ public class PlayFabDataManager : MonoBehaviour
         for (int i = 0; i < PlayFabConstants.MAX_DECK_SIZE; i++)
         {
             bool hasCard = deckToSave[i] != null && deckToSave[i].data != null;
-            dataWrapper.deckCardIDs[i] = hasCard ? deckToSave[i].data.cardID : -1;
+            if (hasCard)
+            {
+                dataWrapper.snapshots[i] = new CardSnapshot
+                {
+                    id = deckToSave[i].data.cardID,
+                    star = deckToSave[i].starLevel,
+                    top = deckToSave[i].GetTotalTop(),
+                    right = deckToSave[i].GetTotalRight(),
+                    bottom = deckToSave[i].GetTotalBottom(),
+                    left = deckToSave[i].GetTotalLeft()
+                };
+            }
+            else
+            {
+                dataWrapper.snapshots[i] = new CardSnapshot { id = -1 };
+            }
         }
 
         string jsonDeck = JsonUtility.ToJson(dataWrapper);
         var request = new UpdateUserDataRequest
         {
-            Data = new Dictionary<string, string> { { PlayFabConstants.KEY_PLAYER_DECK, jsonDeck } }
+            Data = new Dictionary<string, string> { { PlayFabConstants.KEY_PLAYER_DECK, jsonDeck } },
+            Permission = UserDataPermission.Public // Deck phải Public để đối thủ có thể đọc được trong Arena
         };
 
         PlayFabClientAPI.UpdateUserData(request,
-            result => Debug.Log("<color=green>Sếp Yami ơi, Deck (ID) đã lên mây an toàn!</color>"),
+            result => {
+                Debug.Log("<color=green>Sếp Yami ơi, Deck (Snapshot) đã lên mây an toàn!</color>");
+                // Sau khi lưu Deck thành công, cập nhật luôn Public Profile
+                UpdatePublicProfile(dataWrapper);
+            },
             error => Debug.LogError("Toang rồi sếp: " + error.GenerateErrorReport())
         );
+    }
+
+    /// <summary>
+    /// Cập nhật "Hộ chiếu" công khai của người chơi. 
+    /// Gom tất cả: Tên, Level, Avatar, Frame và Deck hiện tại vào 1 nơi duy nhất.
+    /// </summary>
+    public void UpdatePublicProfile(DeckSaveData currentDeck = null)
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        // Nếu không truyền deck vào, chúng ta sẽ tự tạo snapshot từ DeckManager hiện tại
+        if (currentDeck == null && DeckManager.Instance != null)
+        {
+            currentDeck = new DeckSaveData();
+            var deckCards = DeckManager.Instance.currentDeck;
+            for (int i = 0; i < PlayFabConstants.MAX_DECK_SIZE; i++)
+            {
+                if (deckCards[i] != null && deckCards[i].data != null)
+                {
+                    currentDeck.snapshots[i] = new CardSnapshot {
+                        id = deckCards[i].data.cardID,
+                        star = deckCards[i].starLevel,
+                        top = deckCards[i].GetTotalTop(),
+                        right = deckCards[i].GetTotalRight(),
+                        bottom = deckCards[i].GetTotalBottom(),
+                        left = deckCards[i].GetTotalLeft()
+                    };
+                }
+                else currentDeck.snapshots[i] = new CardSnapshot { id = -1 };
+            }
+        }
+
+        // Sử dụng hàm tính toán tập trung để lấy lực chiến mới nhất
+        int calculatedPower = CalculateTotalPower(currentDeck);
+        PlayerPower = calculatedPower;
+
+        PublicProfileSaveData profile = new PublicProfileSaveData
+        {
+            displayName = PlayerName,
+            level = PlayerLevel,
+            exp = PlayerExp,
+            avatarId = "default_avatar", // Có thể thay thế bằng biến thực tế nếu có
+            frameId = "default_frame",   // Có thể thay thế bằng biến thực tế nếu có
+            totalPower = PlayerPower,
+            arenaRank = PlayerRank,      // Cập nhật hạng để người khác thấy
+            deck = currentDeck
+        };
+
+        string jsonProfile = JsonUtility.ToJson(profile);
+        var request = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string> { { "PublicProfile", jsonProfile } },
+            Permission = UserDataPermission.Public
+        };
+
+        PlayFabClientAPI.UpdateUserData(request, 
+            res => {
+                Debug.Log("<color=cyan>[PlayFab] Đã cập nhật Public Profile (Hộ chiếu) thành công!</color>");
+                // Cập nhật lực chiến lên Statistics để leo bảng xếp hạng
+                UpdatePlayerStatistics(PlayFabConstants.STAT_PLAYER_POWER, PlayerPower);
+            },
+            err => Debug.LogWarning("[PlayFab] Lỗi cập nhật Profile: " + err.GenerateErrorReport())
+        );
+    }
+
+    /// <summary>
+    /// Hàm tính toán lực chiến duy nhất của game. 
+    /// Có thể tính từ DeckSaveData (Snapshot) hoặc từ DeckManager (Thẻ thực tế).
+    /// </summary>
+    public int CalculateTotalPower(DeckSaveData snapshotDeck = null)
+    {
+        int total = 0;
+
+        // Ưu tiên tính từ Snapshot (dùng cho Public Profile)
+        if (snapshotDeck != null && snapshotDeck.snapshots != null)
+        {
+            foreach (var snap in snapshotDeck.snapshots)
+            {
+                if (snap != null && snap.id != -1)
+                    total += snap.top + snap.right + snap.bottom + snap.left;
+            }
+            return total;
+        }
+
+        // Nếu không có snapshot, tính trực tiếp từ DeckManager (dùng cho UI/Local)
+        if (DeckManager.Instance != null && DeckManager.Instance.currentDeck != null)
+        {
+            foreach (var card in DeckManager.Instance.currentDeck)
+            {
+                if (card != null && card.data != null)
+                    total += card.GetTotalTop() + card.GetTotalRight() + card.GetTotalBottom() + card.GetTotalLeft();
+            }
+            PlayerPower = total; // Lưu lại giá trị mới nhất
+        }
+        
+        return total;
     }
 
     #region [5] TẢI DỮ LIỆU (LOAD)
@@ -337,10 +505,19 @@ public class PlayFabDataManager : MonoBehaviour
                 RestoreCards(_cachedSaveData.cards);
                 this.PlayerLevel = _cachedSaveData.level > 0 ? _cachedSaveData.level : 1;
                 this.PlayerExp = _cachedSaveData.exp;
+                
+                // Nạp luôn dữ liệu Arena từ SaveData (phòng trường hợp fetch stats chưa xong)
+                this.PlayerRank = _cachedSaveData.rank;
+                this.Elo = _cachedSaveData.elo;
+                this.Wins = _cachedSaveData.wins;
+                this.Losses = _cachedSaveData.losses;
+                this.TotalGames = _cachedSaveData.totalGames;
+                this.ArenaDisplayName = _cachedSaveData.displayName;
             }
 
             // Kéo luôn Statistics về cho chuẩn
             FetchPlayerStatistics();
+            FetchMyRank(); // Tự động dò hạng ngay khi vào game
 
             // 1.5 Phục hồi CurrentStage từ Key riêng
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_CURRENT_STAGE))
@@ -623,12 +800,23 @@ public class PlayFabDataManager : MonoBehaviour
     private void RestoreDeck(DeckSaveData loadedDeck)
     {
         if (DeckManager.Instance == null || CardListManager.Instance == null) return;
+        if (loadedDeck == null) 
+        {
+            Debug.LogWarning("[PlayFab] Dữ liệu Deck rỗng hoặc không hợp lệ.");
+            return;
+        }
 
         var khoBaiCuaSep = CardListManager.Instance.GetOwnedCards();
 
         for (int i = 0; i < PlayFabConstants.MAX_DECK_SIZE; i++)
         {
-            int idCanTim = loadedDeck.deckCardIDs[i];
+            // Kiểm tra kỹ lưỡng: snapshots không null VÀ phần tử thứ i không null
+            int idCanTim = -1;
+            if (loadedDeck.snapshots != null && i < loadedDeck.snapshots.Length && loadedDeck.snapshots[i] != null)
+            {
+                idCanTim = loadedDeck.snapshots[i].id;
+            }
+
             if (idCanTim != -1)
             {
                 var theBaiMocGoc = khoBaiCuaSep.Find(c => c.data.cardID == idCanTim);

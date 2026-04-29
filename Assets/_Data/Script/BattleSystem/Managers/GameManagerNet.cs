@@ -81,36 +81,48 @@ public class GameManagerNet : NetworkBehaviour
         for (int i=0; i<5; i++) p1Deck[i] = LocalDeckContext.CurrentDeck[i];
 
         p2Deck = new CardDataCache[5];
+
+        // --- [ARENA CHECK] ---
+        // Nếu có bộ bài đối thủ được nạp từ Arena (Snapshot), dùng luôn bộ bài đó
+        if (LocalDeckContext.HasOpponentDeck)
+        {
+            Debug.Log("<color=orange>[Battle] Trận đấu Arena: Sử dụng bộ bài Snapshot của đối thủ!</color>");
+            for (int i = 0; i < 5; i++) p2Deck[i] = LocalDeckContext.OpponentDeck[i];
+            
+            // Reset flag để không ảnh hưởng trận sau
+            LocalDeckContext.HasOpponentDeck = false;
+            return;
+        }
         
         // --- [AI SCALING PVE] ---
+        // Nếu không phải Arena, đây là trận đấu Story hoặc Dungeon bình thường
         int stage = 1;
-        float powerStep = 0.1f; // Mặc định Ải Story tăng 10%
+        float powerStep = 0.1f; 
         
         if (PlayFabDataManager.Instance != null)
         {
             if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GoldDungeon)
             {
                 stage = PlayFabDataManager.Instance.GoldDungeonStage;
-                powerStep = 0.2f; // Dungeon tăng 20%
+                powerStep = 0.2f;
             }
             else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.LNDungeon)
             {
                 stage = PlayFabDataManager.Instance.LNDungeonStage;
-                powerStep = 0.2f; // Dungeon tăng 20%
+                powerStep = 0.2f;
             }
             else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GemMine)
             {
                 stage = PlayFabDataManager.Instance.GemMineStage;
-                powerStep = 0.2f; // Mỏ Gem cũng tăng 20% cho gắt
+                powerStep = 0.2f;
             }
             else
             {
                 stage = PlayFabDataManager.Instance.CurrentStage;
-                powerStep = 0.1f; // Story tăng 10%
+                powerStep = 0.1f;
             }
         }
         
-        // Hệ số: Ải 1 = x1.0, Ải 2 = 1.0 + powerStep...
         float multiplier = 1.0f + (stage - 1) * powerStep;
 
         for (int i=0; i<5; i++)
@@ -123,7 +135,8 @@ public class GameManagerNet : NetworkBehaviour
                     Top = Mathf.RoundToInt(rCard.top * multiplier),
                     Right = Mathf.RoundToInt(rCard.right * multiplier),
                     Bottom = Mathf.RoundToInt(rCard.bottom * multiplier),
-                    Left = Mathf.RoundToInt(rCard.left * multiplier)
+                    Left = Mathf.RoundToInt(rCard.left * multiplier),
+                    StarLevel = 0
                 };
             }
         }

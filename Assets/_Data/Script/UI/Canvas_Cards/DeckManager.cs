@@ -40,6 +40,19 @@ public class DeckManager : MonoBehaviour
         CancelEdit();
     }
 
+    /// <summary>
+    /// Kiểm tra xem sếp đã lắp đủ 5 lá bài chưa
+    /// </summary>
+    public bool IsDeckFull()
+    {
+        if (currentDeck == null) return false;
+        for (int i = 0; i < maxDeckSize; i++)
+        {
+            if (currentDeck[i] == null || currentDeck[i].data == null) return false;
+        }
+        return true;
+    }
+
     public void EnterEditMode()
     {
         isEditingDeck = true;

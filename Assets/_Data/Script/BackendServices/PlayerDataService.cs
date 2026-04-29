@@ -166,7 +166,13 @@ public class PlayerDataService
         }
 
         if (success)
+        {
+            // Ép cập nhật bảng xếp hạng ngay sau khi đổi Elo
+            if (GameServices.Instance?.Leaderboard != null)
+                GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
+
             onSuccess?.Invoke();
+        }
         else
             onError?.Invoke(errorMsg ?? "Cập nhật ELO thất bại.");
     }

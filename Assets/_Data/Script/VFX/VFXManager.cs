@@ -24,8 +24,11 @@ public class VFXManager : MonoBehaviour
             return;
         }
 
-        // Đẻ cục text ra ngay tại vị trí spawnPos
-        GameObject go = Instantiate(floatingTextPrefab, spawnPos.position, Quaternion.identity, spawnPos.parent);
+        // Đẻ cục text ra. Tìm Canvas để làm cha thay vì dùng spawnPos.parent (tránh làm loạn Layout Group)
+        Canvas canvas = spawnPos.GetComponentInParent<Canvas>();
+        Transform targetParent = (canvas != null) ? canvas.transform : spawnPos.parent;
+        
+        GameObject go = Instantiate(floatingTextPrefab, spawnPos.position, Quaternion.identity, targetParent);
 
         // Ép tạm về 0 trước để làm hiệu ứng phóng to
         go.transform.localScale = Vector3.zero;

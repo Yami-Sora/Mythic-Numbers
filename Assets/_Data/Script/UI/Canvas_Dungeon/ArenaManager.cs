@@ -231,40 +231,47 @@ public class ArenaManager : YamiMonoBehaviour
     {
         if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
 
+        // Lấy ID chính xác của mình
         string myId = PlayFabSettings.staticPlayer.PlayFabId;
-        List<PlayerLeaderboardEntry> others = new List<PlayerLeaderboardEntry>();
-
-        if (result.Leaderboard != null)
-        {
-            others = result.Leaderboard.Where(e => e.PlayFabId != myId).ToList();
-        }
-
-        List<PlayerLeaderboardEntry> selectedOpponents = new List<PlayerLeaderboardEntry>();
+        List<PlayerLeaderboardEntry> others = result.Leaderboard?.Where(e => e.PlayFabId != myId).ToList() ?? new List<PlayerLeaderboardEntry>();
         
         // Hạng của mình
-        int myRank = 100;
+        int myRank = 0;
+        int myElo = PlayFabDataManager.Instance.Elo;
         var me = result.Leaderboard?.FirstOrDefault(e => e.PlayFabId == myId);
-        if (me != null) myRank = me.Position + 1;
-
-        // 1. Lấy TẤT CẢ những người xếp TRÊN mình (tối đa 4 người nếu chỉ có ít người phía trước)
-        var thoseAhead = others.Where(e => e.Position < (myRank - 1))
-            .OrderByDescending(e => e.Position) // Gần mình nhất
-            .ToList();
-
-        if (thoseAhead.Count >= 4)
+        
+        if (me != null) 
         {
-            // Nếu có >= 4 người xếp trên, bốc ngẫu nhiên 4 trong số những người phía trên (tối đa 10 người)
-            selectedOpponents = thoseAhead.OrderBy(x => UnityEngine.Random.value).Take(4).ToList();
+            myRank = me.Position + 1;
+            myElo = me.StatValue;
         }
-        else
-        {
-            // Nếu có < 4 người xếp trên (đang ở Top đầu), lấy hết những người đó
-            selectedOpponents.AddRange(thoseAhead);
 
-            // 2. Lấy thêm người ngẫu nhiên xung quanh (quanh hạng mình) để lấp đầy 4 ô
-            var potentialExtra = others.Where(e => !selectedOpponents.Contains(e)).ToList();
-            var extra = potentialExtra.OrderBy(x => UnityEngine.Random.value).Take(4 - selectedOpponents.Count).ToList();
-            selectedOpponents.AddRange(extra);
+        // Luôn cập nhật UI, nếu không tìm thấy hạng thì hiện "Chưa xếp hạng" nhưng Tên và Lực chiến vẫn phải đúng
+        int myPower = PlayFabDataManager.Instance.CalculateTotalPower();
+        string myTitle = PlayFabDataManager.Instance.PlayerTitle;
+        string myDisplayName = (me != null && !string.IsNullOrEmpty(me.DisplayName)) ? me.DisplayName : PlayFabDataManager.Instance.PlayerName;
+        if (string.IsNullOrEmpty(myDisplayName)) myDisplayName = "Thiếu Chủ"; // Fallback cuối cùng
+        
+        // Ghi sổ vào DataManager để các UI khác dùng lại
+        PlayFabDataManager.Instance.PlayerRank = myRank;
+        PlayFabDataManager.Instance.ArenaDisplayName = myDisplayName;
+        PlayFabDataManager.Instance.Elo = myElo;
+
+        PlayerInfoUI.UpdateAllArenaInfo(myRank, myDisplayName, myElo, myTitle, myPower);
+
+        // --- LOGIC CHỌN ĐỐI THỦ THÔNG MINH HƠN ---
+        List<PlayerLeaderboardEntry> selectedOpponents = new List<PlayerLeaderboardEntry>();
+        
+        // 1. Lấy tất cả những người xếp TRÊN mình
+        var ahead = others.Where(e => e.Position < (myRank - 1)).OrderByDescending(e => e.Position).ToList();
+        selectedOpponents.AddRange(ahead.Take(4));
+
+        // 2. Nếu vẫn thiếu (do mình đang ở top đầu), lấy thêm những người xếp DƯỚI mình
+        if (selectedOpponents.Count < 4)
+        {
+            var behind = others.Where(e => e.Position > (myRank - 1)).OrderBy(e => e.Position).ToList();
+            var needed = 4 - selectedOpponents.Count;
+            selectedOpponents.AddRange(behind.Take(needed));
         }
 
         // Sắp xếp lại danh sách cuối cùng theo hạng từ cao xuống thấp
@@ -274,17 +281,15 @@ public class ArenaManager : YamiMonoBehaviour
         for (int i = 0; i < arenaSlots.Length; i++)
         {
             if (arenaSlots[i] == null) continue;
-
             arenaSlots[i].gameObject.SetActive(true);
 
             if (i < finalOpponents.Count)
             {
-                // Gán người thật
                 arenaSlots[i].Setup(finalOpponents[i], "Thiếu Chủ");
             }
             else
             {
-                // Nếu vẫn thiếu (leaderboard quá ít người), tạo Bot
+                // Nếu vẫn thiếu người thật, đẻ Bot ở các hạng tiếp theo (myRank + i + 1)
                 CreateBot(arenaSlots[i], i, myRank);
             }
         }
@@ -292,7 +297,9 @@ public class ArenaManager : YamiMonoBehaviour
 
     private void CreateBot(UI_ArenaItem slot, int index, int myRank)
     {
-        int botRank = Mathf.Max(1, myRank - (4 - index));
+        // Bot sẽ có hạng thấp hơn mình để lấp đầy danh sách (ví dụ mình hạng 2 thì bot hạng 3, 4, 5...)
+        int botRank = (myRank > 0) ? myRank + index + 1 : index + 1;
+        
         string[] botNames = { "Vô Danh", "Kiếm Khách", "Ẩn Sĩ", "Cuồng Phong", "Bá Chủ" };
         string botName = botNames[UnityEngine.Random.Range(0, botNames.Length)] + " (Bot)";
         
@@ -300,9 +307,9 @@ public class ArenaManager : YamiMonoBehaviour
         {
             DisplayName = botName,
             Position = botRank - 1,
-            StatValue = Mathf.Max(0, (100 - botRank) * 10),
+            StatValue = Mathf.Max(0, 100 - (botRank * 5)), // Điểm giảm dần theo hạng
         };
 
-        slot.Setup(botEntry, "Ản Sĩ");
+        slot.Setup(botEntry, "Ẩn Sĩ");
     }
 }

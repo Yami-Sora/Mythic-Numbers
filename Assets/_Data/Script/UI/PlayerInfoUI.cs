@@ -11,8 +11,24 @@ public class PlayerInfoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI titleText;
 
     [Header("Player Info")]
+    [SerializeField] private TextMeshProUGUI rankText; // Thêm ô hiện Hạng
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI powerText;
+    [SerializeField] private TextMeshProUGUI eloText; // Thêm ô hiện điểm Elo
+
+    public void UpdateArenaInfo(int rank, string name, int elo, string title, int power)
+    {
+        if (rankText != null) rankText.text = rank > 0 ? $"Hạng {rank}" : "Chưa xếp hạng";
+        if (nameText != null) nameText.text = name;
+        if (eloText != null) eloText.text = elo.ToString("N0") + " điểm";
+        if (powerText != null) powerText.text = power.ToString("N0");
+        
+        if (titleContainer != null)
+        {
+            titleContainer.SetActive(!string.IsNullOrEmpty(title));
+            if (titleText != null) titleText.text = title;
+        }
+    }
 
     [Header("Buttons")]
     [SerializeField] private Button mailButton;
@@ -37,6 +53,18 @@ public class PlayerInfoUI : MonoBehaviour
     {
         _allInstances.Add(this);
         RefreshData();
+
+        // Tự động cập nhật thông tin Arena từ kho dữ liệu khi UI được bật lên
+        if (PlayFabDataManager.Instance != null)
+        {
+            UpdateArenaInfo(
+                PlayFabDataManager.Instance.PlayerRank,
+                PlayFabDataManager.Instance.ArenaDisplayName,
+                PlayFabDataManager.Instance.Elo,
+                PlayFabDataManager.Instance.PlayerTitle,
+                PlayFabDataManager.Instance.CalculateTotalPower()
+            );
+        }
     }
 
     private void OnDisable()
@@ -53,6 +81,7 @@ public class PlayerInfoUI : MonoBehaviour
             UpdateExpBar(PlayFabDataManager.Instance.PlayerLevel, 
                          PlayFabDataManager.Instance.PlayerExp, 
                          PlayFabDataManager.Instance.GetRequiredExp(PlayFabDataManager.Instance.PlayerLevel));
+            UpdateElo(PlayFabDataManager.Instance.Elo); // Cập nhật Elo khi Refresh
         }
         UpdatePower();
     }
@@ -68,10 +97,16 @@ public class PlayerInfoUI : MonoBehaviour
         foreach (var ui in _allInstances) ui.UpdateExpBar(level, currentExp, requiredExp);
     }
 
-    public static void UpdateAllPower()
+    public static void UpdateAllElo(int elo)
     {
-        foreach (var ui in _allInstances) ui.UpdatePower();
+        foreach (var ui in _allInstances) ui.UpdateElo(elo);
     }
+
+    public static void UpdateAllArenaInfo(int rank, string name, int elo, string title, int power)
+    {
+        foreach (var ui in _allInstances) ui.UpdateArenaInfo(rank, name, elo, title, power);
+    }
+
 
     public void UpdatePlayerName(string name)
     {
@@ -88,24 +123,34 @@ public class PlayerInfoUI : MonoBehaviour
         }
     }
 
-    public void UpdatePower()
+    public void UpdateElo(int elo)
     {
-        int totalPower = 0;
-        if (DeckManager.Instance != null && DeckManager.Instance.currentDeck != null)
+        if (eloText != null) eloText.text = elo.ToString("N0");
+    }
+
+    public static void UpdateAllPower()
+    {
+        if (PlayFabDataManager.Instance == null) return;
+        
+        // Cập nhật giá trị mới nhất trong Data Manager
+        int currentPower = PlayFabDataManager.Instance.CalculateTotalPower();
+        
+        // Lưu vào Data Manager để các chỗ khác dùng (như Public Profile)
+        // Lưu ý: Chúng ta không set trực tiếp được vì PlayerPower là private set
+        // Nhưng UpdatePower của UI sẽ lấy giá trị từ việc tính toán
+        foreach (var ui in _allInstances) ui.UpdatePower(currentPower);
+    }
+
+    public void UpdatePower(int power = -1)
+    {
+        int displayPower = power;
+        if (displayPower == -1)
         {
-            foreach (var card in DeckManager.Instance.currentDeck)
-            {
-                if (card != null && card.data != null)
-                {
-                    totalPower += card.GetTotalTop();
-                    totalPower += card.GetTotalRight();
-                    totalPower += card.GetTotalBottom();
-                    totalPower += card.GetTotalLeft();
-                }
-            }
+            displayPower = (PlayFabDataManager.Instance != null) ? 
+                PlayFabDataManager.Instance.CalculateTotalPower() : 0;
         }
         
-        if (powerText != null) powerText.text = totalPower.ToString("N0");
+        if (powerText != null) powerText.text = displayPower.ToString("N0");
     }
 
     public void UpdateUI(string playerName, string playerTitle, int power)

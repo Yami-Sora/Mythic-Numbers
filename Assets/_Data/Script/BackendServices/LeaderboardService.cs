@@ -31,6 +31,23 @@ public class LeaderboardService
     public List<LeaderboardEntry> GetCachedLeaderboard() => _cachedLeaderboard;
     public bool HasData() => _hasData;
 
+    public void ForceUpdateLeaderboard()
+    {
+        if (!_config.IsValid) return;
+
+        var req = new PlayFab.ClientModels.GetLeaderboardRequest
+        {
+            StatisticName = PlayerDataService.EloStatisticName,
+            StartPosition = 0,
+            MaxResultsCount = 10
+        };
+
+        // Ép chạy Coroutine để cập nhật cache ngay lập tức
+        GameServices.Instance.StartCoroutine(DoGetLeaderboard(req, 
+            res => Debug.Log("<color=green>[Leaderboard] Đã cập nhật bảng xếp hạng mới nhất!</color>"), 
+            err => Debug.LogWarning("[Leaderboard] Cập nhật cưỡng bức thất bại: " + err)));
+    }
+
     public IEnumerator AutoFetchRoutine()
     {
         if (!_config.IsValid) yield break;

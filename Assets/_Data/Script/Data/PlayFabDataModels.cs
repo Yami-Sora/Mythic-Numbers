@@ -9,6 +9,14 @@ public class PlayFabSaveData
     // [PLAYER STATS]
     public int level = 1;
     public long exp = 0;
+    
+    // [ARENA DATA]
+    public int elo = 0;
+    public int wins = 0;
+    public int losses = 0;
+    public int totalGames = 0;
+    public int rank = 0;
+    public string displayName = "";
 
     // [DUNGEON DATA]
     public int goldDungeonStage = 1;
@@ -38,9 +46,33 @@ public class CardSaveData
 }
 
 [Serializable]
+public class CardSnapshot
+{
+    public int id;
+    public int star;
+    public int top;
+    public int right;
+    public int bottom;
+    public int left;
+}
+
+[Serializable]
 public class DeckSaveData
 {
-    public int[] deckCardIDs = new int[PlayFabConstants.MAX_DECK_SIZE] { -1, -1, -1, -1, -1 };
+    public CardSnapshot[] snapshots = new CardSnapshot[PlayFabConstants.MAX_DECK_SIZE];
+}
+
+[Serializable]
+public class PublicProfileSaveData
+{
+    public string displayName;
+    public int level;
+    public long exp;
+    public string avatarId;
+    public string frameId;
+    public int totalPower;
+    public int arenaRank; // Hiện hạng cho người khác soi
+    public DeckSaveData deck;
 }
 
 [Serializable]

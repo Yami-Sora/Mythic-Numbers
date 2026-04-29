@@ -3536,7 +3536,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 38225078}
   m_HandleRect: {fileID: 38225077}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -8012,6 +8012,7 @@ MonoBehaviour:
   - {fileID: 2018357941}
   - {fileID: 232815634}
   - {fileID: 89514374}
+  myInfoBar: {fileID: 671862230}
   txtChallengeCount: {fileID: 431098564}
   txtRefreshCount: {fileID: 345193204}
   btnRefresh: {fileID: 1983167890}
@@ -12495,8 +12496,10 @@ MonoBehaviour:
   avatarImage: {fileID: 1066874259}
   titleContainer: {fileID: 824335739}
   titleText: {fileID: 1149664043}
+  rankText: {fileID: 0}
   nameText: {fileID: 1094978667}
   powerText: {fileID: 142715074}
+  eloText: {fileID: 0}
   mailButton: {fileID: 187352279}
   friendsButton: {fileID: 625292133}
   levelText: {fileID: 1544262145}
@@ -17363,8 +17366,10 @@ MonoBehaviour:
   avatarImage: {fileID: 234012416}
   titleContainer: {fileID: 22758168}
   titleText: {fileID: 1768522882}
+  rankText: {fileID: 2138270754}
   nameText: {fileID: 1942250389}
   powerText: {fileID: 755430967}
+  eloText: {fileID: 537211419}
   mailButton: {fileID: 0}
   friendsButton: {fileID: 0}
   levelText: {fileID: 205045269}
@@ -47773,6 +47778,12 @@ MonoBehaviour:
   isDataLoaded: 0
   PlayerLevel: 1
   PlayerExp: 0
+  PlayerRank: 0
+  Elo: 0
+  Wins: 0
+  Losses: 0
+  TotalGames: 0
+  ArenaDisplayName: 
   CurrentMode: 0
   GoldDungeonStage: 1
   LNDungeonStage: 1
@@ -54090,8 +54101,10 @@ MonoBehaviour:
   avatarImage: {fileID: 1283194003}
   titleContainer: {fileID: 735450710}
   titleText: {fileID: 970178254}
+  rankText: {fileID: 2140315708}
   nameText: {fileID: 1607204793}
   powerText: {fileID: 979076280}
+  eloText: {fileID: 1118850386}
   mailButton: {fileID: 0}
   friendsButton: {fileID: 0}
   levelText: {fileID: 123498847}
