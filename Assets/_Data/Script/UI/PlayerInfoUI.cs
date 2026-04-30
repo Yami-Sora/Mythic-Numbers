@@ -16,10 +16,24 @@ public class PlayerInfoUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI powerText;
     [SerializeField] private TextMeshProUGUI eloText; // Thêm ô hiện điểm Elo
 
+    public static string GetSafeName(string name)
+    {
+        if (string.IsNullOrEmpty(name) || name == "Anonymous")
+        {
+            if (PlayFab.PlayFabSettings.staticPlayer != null && !string.IsNullOrEmpty(PlayFab.PlayFabSettings.staticPlayer.PlayFabId))
+            {
+                string id = PlayFab.PlayFabSettings.staticPlayer.PlayFabId;
+                return id.Length > 8 ? id.Substring(0, 8) + "..." : id;
+            }
+            return "Vô Danh";
+        }
+        return name;
+    }
+
     public void UpdateArenaInfo(int rank, string name, int elo, string title, int power)
     {
         if (rankText != null) rankText.text = rank > 0 ? $"Hạng {rank}" : "Chưa xếp hạng";
-        if (nameText != null) nameText.text = name;
+        if (nameText != null) nameText.text = GetSafeName(name);
         if (eloText != null) eloText.text = elo.ToString("N0") + " điểm";
         if (powerText != null) powerText.text = power.ToString("N0");
         
@@ -110,7 +124,7 @@ public class PlayerInfoUI : MonoBehaviour
 
     public void UpdatePlayerName(string name)
     {
-        if (nameText != null) nameText.text = name;
+        if (nameText != null) nameText.text = GetSafeName(name);
     }
 
     public void UpdateExpBar(int level, long currentExp, long requiredExp)
@@ -155,7 +169,7 @@ public class PlayerInfoUI : MonoBehaviour
 
     public void UpdateUI(string playerName, string playerTitle, int power)
     {
-        if (nameText != null) nameText.text = playerName;
+        if (nameText != null) nameText.text = GetSafeName(playerName);
         if (powerText != null) powerText.text = power.ToString("N0");
 
         if (titleContainer != null)

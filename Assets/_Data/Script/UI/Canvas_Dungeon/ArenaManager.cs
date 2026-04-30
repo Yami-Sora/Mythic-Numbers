@@ -250,7 +250,7 @@ public class ArenaManager : YamiMonoBehaviour
         int myPower = PlayFabDataManager.Instance.CalculateTotalPower();
         string myTitle = PlayFabDataManager.Instance.PlayerTitle;
         string myDisplayName = (me != null && !string.IsNullOrEmpty(me.DisplayName)) ? me.DisplayName : PlayFabDataManager.Instance.PlayerName;
-        if (string.IsNullOrEmpty(myDisplayName)) myDisplayName = "Thiếu Chủ"; // Fallback cuối cùng
+        myDisplayName = PlayerInfoUI.GetSafeName(myDisplayName); // Thay "Thiếu Chủ" bằng PlayFabId nếu trống
         
         // Ghi sổ vào DataManager để các UI khác dùng lại
         PlayFabDataManager.Instance.PlayerRank = myRank;
@@ -285,7 +285,7 @@ public class ArenaManager : YamiMonoBehaviour
 
             if (i < finalOpponents.Count)
             {
-                arenaSlots[i].Setup(finalOpponents[i], "Thiếu Chủ");
+                arenaSlots[i].Setup(finalOpponents[i], "Tân Thủ");
             }
             else
             {

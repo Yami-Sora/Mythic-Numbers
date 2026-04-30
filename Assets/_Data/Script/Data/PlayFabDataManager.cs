@@ -18,7 +18,7 @@ public class PlayFabDataManager : MonoBehaviour
     [Header("Player Data")]
     public int CurrentStage = 1; 
     public bool isDataLoaded = false;
-    public string PlayerName { get; private set; } = "Anonymous"; 
+    public string PlayerName { get; private set; } = ""; 
     public int PlayerLevel = 1;
     public string PlayerTitle { get; set; } = "Tân Thủ";
     public long PlayerExp = 0;
@@ -169,7 +169,7 @@ public class PlayFabDataManager : MonoBehaviour
             {
                 this.PlayerRank = me.Position + 1;
                 this.Elo = me.StatValue;
-                this.ArenaDisplayName = !string.IsNullOrEmpty(me.DisplayName) ? me.DisplayName : this.PlayerName;
+                this.ArenaDisplayName = PlayerInfoUI.GetSafeName(!string.IsNullOrEmpty(me.DisplayName) ? me.DisplayName : this.PlayerName);
                 
                 PlayerInfoUI.UpdateAllArenaInfo(PlayerRank, ArenaDisplayName, Elo, PlayerTitle, CalculateTotalPower());
                 Debug.Log($"<color=white>[PlayFab] Đã dò thấy hạng: {PlayerRank}</color>");
@@ -178,6 +178,25 @@ public class PlayFabDataManager : MonoBehaviour
         {
             Debug.LogWarning("[PlayFab] Không thể dò hạng: " + error.GenerateErrorReport());
         });
+    }
+
+    public void FetchAccountInfo()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+
+        PlayFabClientAPI.GetAccountInfo(new GetAccountInfoRequest(), result =>
+        {
+            if (result.AccountInfo != null && result.AccountInfo.TitleInfo != null)
+            {
+                string dName = result.AccountInfo.TitleInfo.DisplayName;
+                if (!string.IsNullOrEmpty(dName))
+                {
+                    this.ArenaDisplayName = dName;
+                    PlayerInfoUI.UpdateAllArenaInfo(PlayerRank, ArenaDisplayName, Elo, PlayerTitle, CalculateTotalPower());
+                    Debug.Log($"<color=white>[PlayFab] Tên hiển thị chuẩn: {ArenaDisplayName}</color>");
+                }
+            }
+        }, null);
     }
 
     #endregion
@@ -272,6 +291,10 @@ public class PlayFabDataManager : MonoBehaviour
                 if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
                 Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>");
                 isDirty = false; // Reset cờ sau khi save thành công
+
+                // RẤT QUAN TRỌNG: Cập nhật luôn Public Profile (lực chiến, tên, v.v.)
+                // vì có thể người chơi vừa nâng cấp thẻ bài trong Canvas_Cards
+                UpdatePublicProfile();
             },
             error => {
                 Debug.LogWarning("[PlayFab] Lỗi Save dữ liệu, đang thử lại sau 3s...");
@@ -423,9 +446,12 @@ public class PlayFabDataManager : MonoBehaviour
         int calculatedPower = CalculateTotalPower(currentDeck);
         PlayerPower = calculatedPower;
 
+        // Đảm bảo lấy tên chuẩn nhất (ArenaDisplayName > PlayerName)
+        string finalName = PlayerInfoUI.GetSafeName(!string.IsNullOrEmpty(ArenaDisplayName) ? ArenaDisplayName : PlayerName);
+
         PublicProfileSaveData profile = new PublicProfileSaveData
         {
-            displayName = PlayerName,
+            displayName = finalName,
             level = PlayerLevel,
             exp = PlayerExp,
             avatarId = "default_avatar", // Có thể thay thế bằng biến thực tế nếu có
@@ -518,6 +544,7 @@ public class PlayFabDataManager : MonoBehaviour
             // Kéo luôn Statistics về cho chuẩn
             FetchPlayerStatistics();
             FetchMyRank(); // Tự động dò hạng ngay khi vào game
+            FetchAccountInfo(); // Tự động lấy tên chuẩn ngay khi vào game
 
             // 1.5 Phục hồi CurrentStage từ Key riêng
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_CURRENT_STAGE))
@@ -538,7 +565,9 @@ public class PlayFabDataManager : MonoBehaviour
             if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_PLAYER_DECK))
             {
                 string deckJson = result.Data[PlayFabConstants.KEY_PLAYER_DECK].Value;
-                RestoreDeck(JsonUtility.FromJson<DeckSaveData>(deckJson));
+                DeckSaveData loadedDeck = JsonUtility.FromJson<DeckSaveData>(deckJson);
+                RestoreDeck(loadedDeck);
+                UpdatePublicProfile(loadedDeck);
             }
 
             // 2. Phục hồi dữ liệu Dungeon & Kiểm tra Reset ngày
@@ -962,7 +991,7 @@ public class PlayFabDataManager : MonoBehaviour
             }
             else
             {
-                PlayerName = "Sếp Yami"; 
+                PlayerName = ""; 
             }
 
             PlayerInfoUI.UpdateAllPlayerName(PlayerName);

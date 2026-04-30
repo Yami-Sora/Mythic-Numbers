@@ -31,6 +31,8 @@ public class LeaderboardService
     public List<LeaderboardEntry> GetCachedLeaderboard() => _cachedLeaderboard;
     public bool HasData() => _hasData;
 
+    public event Action OnLeaderboardUpdated;
+
     public void ForceUpdateLeaderboard()
     {
         if (!_config.IsValid) return;
@@ -44,7 +46,10 @@ public class LeaderboardService
 
         // Ép chạy Coroutine để cập nhật cache ngay lập tức
         GameServices.Instance.StartCoroutine(DoGetLeaderboard(req, 
-            res => Debug.Log("<color=green>[Leaderboard] Đã cập nhật bảng xếp hạng mới nhất!</color>"), 
+            res => {
+                Debug.Log("<color=green>[Leaderboard] Đã cập nhật bảng xếp hạng mới nhất!</color>");
+                OnLeaderboardUpdated?.Invoke();
+            }, 
             err => Debug.LogWarning("[Leaderboard] Cập nhật cưỡng bức thất bại: " + err)));
     }
 
@@ -80,6 +85,7 @@ public class LeaderboardService
                         }
                         _cachedLeaderboard = list;
                         _hasData = true;
+                        OnLeaderboardUpdated?.Invoke();
                     }
                     done = true;
                 },

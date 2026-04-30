@@ -1318,6 +1318,7 @@ MonoBehaviour:
   txtElo: {fileID: 7345955040534656608}
   txtLevel: {fileID: 5111744984628476495}
   txtTitle: {fileID: 2400534839341607463}
+  txtPower: {fileID: 4883009467393458034}
   imgAvatar: {fileID: 5047909096566520530}
   btnChallenge: {fileID: 5045164623080162621}
 --- !u!1 &7102066169733306351

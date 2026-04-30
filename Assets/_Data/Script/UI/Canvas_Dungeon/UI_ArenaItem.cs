@@ -12,6 +12,7 @@ public class UI_ArenaItem : MonoBehaviour
     [SerializeField] private TextMeshProUGUI txtElo;
     [SerializeField] private TextMeshProUGUI txtLevel;
     [SerializeField] private TextMeshProUGUI txtTitle;
+    [SerializeField] private TextMeshProUGUI txtPower;
     [SerializeField] private Image imgAvatar;
     [SerializeField] private Button btnChallenge;
 
@@ -25,19 +26,67 @@ public class UI_ArenaItem : MonoBehaviour
     {
         if (entry == null) return;
         
+        string fallbackName = string.IsNullOrEmpty(entry.PlayFabId) ? "Vô Danh" : (entry.PlayFabId.Length > 8 ? entry.PlayFabId.Substring(0, 8) + "..." : entry.PlayFabId);
+        
+        string dName = string.IsNullOrEmpty(entry.DisplayName) || entry.DisplayName == "Anonymous" ? fallbackName : entry.DisplayName;
+
         if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
-        if (txtName) txtName.text = string.IsNullOrEmpty(entry.DisplayName) ? "Ẩn Danh" : entry.DisplayName;
+        if (txtName) txtName.text = dName;
         if (txtElo) txtElo.text = entry.StatValue.ToString() + " điểm";
         
         // Mặc định cho Bot hoặc người chơi chưa có Profile (Sửa lại mặc định là Level 1)
         if (txtLevel) txtLevel.text = "1";
         if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "Tân Thủ" : playerTitle;
+        if (txtPower) txtPower.text = "0";
 
         cachedProfile = null;
 
-        // TỰ ĐI LẤY HỘ CHIẾU CỦA ĐỐI THỦ (VÌ LEADERBOARD KHÔNG KÈM THEO)
+        if (btnChallenge)
+        {
+            btnChallenge.onClick.RemoveAllListeners();
+            btnChallenge.onClick.AddListener(() => OnChallengeClicked(entry, cachedProfile));
+        }
+
+        FetchProfileAndUpdateUI(entry.PlayFabId, profile => {
+            if (btnChallenge)
+            {
+                btnChallenge.onClick.RemoveAllListeners();
+                btnChallenge.onClick.AddListener(() => OnChallengeClicked(entry, profile));
+            }
+        });
+    }
+
+    /// <summary>
+    /// Overload để hiển thị từ dữ liệu cache cục bộ.
+    /// </summary>
+    public void Setup(LeaderboardEntry entry, string playerTitle = "")
+    {
+        string fallbackName = string.IsNullOrEmpty(entry.PlayFabId) ? "Vô Danh" : (entry.PlayFabId.Length > 8 ? entry.PlayFabId.Substring(0, 8) + "..." : entry.PlayFabId);
+
+        string dName = string.IsNullOrEmpty(entry.DisplayName) || entry.DisplayName == "Anonymous" ? fallbackName : entry.DisplayName;
+
+        if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
+        if (txtName) txtName.text = dName;
+        if (txtElo) txtElo.text = entry.Elo.ToString() + " điểm";
+        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "" : playerTitle;
+        
+        // Mặc định
+        if (txtLevel) txtLevel.text = "1";
+        if (txtPower) txtPower.text = "0";
+        
+        if (btnChallenge) btnChallenge.gameObject.SetActive(false); // BXH chung không cho thách đấu trực tiếp
+
+        cachedProfile = null;
+        
+        FetchProfileAndUpdateUI(entry.PlayFabId, null);
+    }
+
+    private void FetchProfileAndUpdateUI(string playFabId, System.Action<PublicProfileSaveData> onProfileLoaded)
+    {
+        if (string.IsNullOrEmpty(playFabId)) return; // Bỏ qua nếu là Bot
+
         PlayFabClientAPI.GetUserData(new GetUserDataRequest {
-            PlayFabId = entry.PlayFabId,
+            PlayFabId = playFabId,
             Keys = new System.Collections.Generic.List<string> { "PublicProfile" }
         }, result => {
             if (this == null) return; // Tránh lỗi nếu UI bị tắt trước khi data về
@@ -51,39 +100,19 @@ public class UI_ArenaItem : MonoBehaviour
 
                     if (cachedProfile != null)
                     {
+                        string fallbackName = playFabId.Length > 8 ? playFabId.Substring(0, 8) + "..." : playFabId;
+                        string dName = string.IsNullOrEmpty(cachedProfile.displayName) || cachedProfile.displayName == "Anonymous" ? fallbackName : cachedProfile.displayName;
+
                         if (txtLevel) txtLevel.text = cachedProfile.level.ToString();
-                        if (txtName) txtName.text = cachedProfile.displayName;
-                        // Cập nhật lại Listener với profile mới nhất
-                        if (btnChallenge)
-                        {
-                            btnChallenge.onClick.RemoveAllListeners();
-                            btnChallenge.onClick.AddListener(() => OnChallengeClicked(entry, cachedProfile));
-                        }
+                        if (txtName) txtName.text = dName;
+                        if (txtPower) txtPower.text = cachedProfile.totalPower.ToString("N0");
+                        
+                        onProfileLoaded?.Invoke(cachedProfile);
                     }
                 }
                 catch { }
             }
         }, null);
-
-        if (btnChallenge)
-        {
-            btnChallenge.onClick.RemoveAllListeners();
-            btnChallenge.onClick.AddListener(() => OnChallengeClicked(entry, cachedProfile));
-        }
-    }
-
-    /// <summary>
-    /// Overload để hiển thị từ dữ liệu cache cục bộ.
-    /// </summary>
-    public void Setup(LeaderboardEntry entry, string playerTitle = "")
-    {
-        if (txtRank) txtRank.text = "Hạng " + (entry.Position + 1);
-        if (txtName) txtName.text = entry.DisplayName;
-        if (txtElo) txtElo.text = entry.Elo.ToString() + " điểm";
-        if (txtTitle) txtTitle.text = string.IsNullOrEmpty(playerTitle) ? "" : playerTitle;
-        if (txtLevel) txtLevel.text = "";
-        
-        if (btnChallenge) btnChallenge.gameObject.SetActive(false); // BXH chung không cho thách đấu trực tiếp
     }
 
     private void OnChallengeClicked(PlayerLeaderboardEntry target, PublicProfileSaveData profile)

@@ -57,6 +57,20 @@ public class PlayerInfoManager : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private string GetSafeName(string name)
+    {
+        if (string.IsNullOrEmpty(name) || name == "Anonymous")
+        {
+            if (PlayFab.PlayFabSettings.staticPlayer != null && !string.IsNullOrEmpty(PlayFab.PlayFabSettings.staticPlayer.PlayFabId))
+            {
+                string id = PlayFab.PlayFabSettings.staticPlayer.PlayFabId;
+                return id.Length > 8 ? id.Substring(0, 8) + "..." : id;
+            }
+            return "Vô Danh";
+        }
+        return name;
+    }
+
     private void UpdatePlayerUI()
     {
         if (PlayFabDataManager.Instance == null) return;
@@ -66,7 +80,7 @@ public class PlayerInfoManager : MonoBehaviour
             txtUID.text = PlayFab.PlayFabSettings.staticPlayer.PlayFabId;
 
         // 2. Tên hiển thị
-        if (txtName) txtName.text = PlayFabDataManager.Instance.PlayerName; 
+        if (txtName) txtName.text = GetSafeName(PlayFabDataManager.Instance.PlayerName); 
 
         // 3. Logic Exp & Level
         int currentLevel = PlayFabDataManager.Instance.PlayerLevel; 

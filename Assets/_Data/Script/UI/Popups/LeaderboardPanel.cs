@@ -33,11 +33,42 @@ public class LeaderboardPanel : MonoBehaviour
         gameObject.SetActive(true);
         ClearContent();
         LoadLeaderboard();
+
+        // Ép lấy dữ liệu mới nhất từ server mỗi khi mở bảng xếp hạng
+        if (GameServices.Instance != null && GameServices.Instance.Leaderboard != null)
+        {
+            GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
+        }
     }
 
     public void Hide()
     {
         gameObject.SetActive(false);
+    }
+
+    private void OnEnable()
+    {
+        if (GameServices.Instance != null && GameServices.Instance.Leaderboard != null)
+        {
+            GameServices.Instance.Leaderboard.OnLeaderboardUpdated += RefreshLeaderboard;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (GameServices.Instance != null && GameServices.Instance.Leaderboard != null)
+        {
+            GameServices.Instance.Leaderboard.OnLeaderboardUpdated -= RefreshLeaderboard;
+        }
+    }
+
+    private void RefreshLeaderboard()
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            ClearContent();
+            LoadLeaderboard();
+        }
     }
 
     private void ClearContent()

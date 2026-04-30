@@ -167,6 +167,10 @@ public class PlayerDataService
 
         if (success)
         {
+            // Cập nhật lại Profile (Tên, Lực chiến, Hạng) lên Server để hiển thị đúng trên Leaderboard
+            if (PlayFabDataManager.Instance != null)
+                PlayFabDataManager.Instance.UpdatePublicProfile();
+
             // Ép cập nhật bảng xếp hạng ngay sau khi đổi Elo
             if (GameServices.Instance?.Leaderboard != null)
                 GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
