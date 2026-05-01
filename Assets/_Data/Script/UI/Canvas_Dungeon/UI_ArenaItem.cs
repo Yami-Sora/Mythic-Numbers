@@ -83,36 +83,25 @@ public class UI_ArenaItem : MonoBehaviour
 
     private void FetchProfileAndUpdateUI(string playFabId, System.Action<PublicProfileSaveData> onProfileLoaded)
     {
-        if (string.IsNullOrEmpty(playFabId)) return; // Bỏ qua nếu là Bot
+        if (string.IsNullOrEmpty(playFabId)) return;
 
-        PlayFabClientAPI.GetUserData(new GetUserDataRequest {
-            PlayFabId = playFabId,
-            Keys = new System.Collections.Generic.List<string> { "PublicProfile" }
-        }, result => {
-            if (this == null) return; // Tránh lỗi nếu UI bị tắt trước khi data về
-            
-            if (result.Data != null && result.Data.ContainsKey("PublicProfile"))
+        PlayFabDataManager.Instance.GetUserData(playFabId, (profile) =>
+        {
+            if (this == null) return;
+            cachedProfile = profile;
+
+            if (cachedProfile != null)
             {
-                try 
-                {
-                    string json = result.Data["PublicProfile"].Value;
-                    cachedProfile = JsonUtility.FromJson<PublicProfileSaveData>(json);
+                string fallbackName = PlayerInfoUI.GetSafeName(playFabId);
+                string dName = string.IsNullOrEmpty(cachedProfile.displayName) || cachedProfile.displayName == "Anonymous" ? fallbackName : cachedProfile.displayName;
 
-                    if (cachedProfile != null)
-                    {
-                        string fallbackName = playFabId.Length > 8 ? playFabId.Substring(0, 8) + "..." : playFabId;
-                        string dName = string.IsNullOrEmpty(cachedProfile.displayName) || cachedProfile.displayName == "Anonymous" ? fallbackName : cachedProfile.displayName;
+                if (txtLevel) txtLevel.text = cachedProfile.level.ToString();
+                if (txtName) txtName.text = dName;
+                if (txtPower) txtPower.text = cachedProfile.totalPower.ToString("N0");
 
-                        if (txtLevel) txtLevel.text = cachedProfile.level.ToString();
-                        if (txtName) txtName.text = dName;
-                        if (txtPower) txtPower.text = cachedProfile.totalPower.ToString("N0");
-                        
-                        onProfileLoaded?.Invoke(cachedProfile);
-                    }
-                }
-                catch { }
+                onProfileLoaded?.Invoke(cachedProfile);
             }
-        }, null);
+        });
     }
 
     private void OnChallengeClicked(PlayerLeaderboardEntry target, PublicProfileSaveData profile)

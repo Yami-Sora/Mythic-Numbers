@@ -85,13 +85,26 @@ public class LeaderboardService
                         }
                         _cachedLeaderboard = list;
                         _hasData = true;
-                        OnLeaderboardUpdated?.Invoke();
                     }
                     done = true;
                 },
                 error => { done = true; });
 
             while (!done) yield return null;
+
+            // Tải trước Profile cho toàn bộ danh sách ở ĐÂY (ngoài lambda) để tránh nháy UI
+            if (_cachedLeaderboard != null && PlayFabDataManager.Instance != null)
+            {
+                foreach (var entry in _cachedLeaderboard)
+                {
+                    bool profileLoaded = false;
+                    PlayFabDataManager.Instance.GetUserData(entry.PlayFabId, _ => profileLoaded = true, true);
+                    float timeout = Time.time + 2f;
+                    while (!profileLoaded && Time.time < timeout) yield return null;
+                }
+            }
+
+            OnLeaderboardUpdated?.Invoke();
 
             // Nghỉ 5 phút = 300 giây rồi lấy tiếp
             yield return new WaitForSeconds(300f);
@@ -183,6 +196,18 @@ public class LeaderboardService
             {
                 _cachedLeaderboard = list;
                 _hasData = true;
+
+                // Tải trước Profile cho danh sách vừa lấy để UI không bị nháy
+                if (PlayFabDataManager.Instance != null)
+                {
+                    foreach (var entry in list)
+                    {
+                        bool profileLoaded = false;
+                        PlayFabDataManager.Instance.GetUserData(entry.PlayFabId, _ => profileLoaded = true, true);
+                        float timeout = Time.time + 2f;
+                        while (!profileLoaded && Time.time < timeout) yield return null;
+                    }
+                }
             }
             onResult?.Invoke(list ?? new List<LeaderboardEntry>());
         }

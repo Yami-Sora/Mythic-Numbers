@@ -31,6 +31,7 @@ public class PlayFabDataManager : MonoBehaviour
     public string ArenaDisplayName; // Tên hiển thị trong Arena
     private bool isDirty = false; 
     private bool isDungeonDirty = false; 
+    private Dictionary<string, PublicProfileSaveData> _profileCache = new Dictionary<string, PublicProfileSaveData>();
 
     public enum GameMode { Story, GoldDungeon, LNDungeon, GemMine, Arena }
     public GameMode CurrentMode = GameMode.Story;
@@ -423,6 +424,44 @@ public class PlayFabDataManager : MonoBehaviour
             },
             error => Debug.LogError("Toang rồi sếp: " + error.GenerateErrorReport())
         );
+    }
+
+    public void GetUserData(string playFabId, Action<PublicProfileSaveData> callback, bool ignoreCache = false)
+    {
+        if (string.IsNullOrEmpty(playFabId))
+        {
+            callback?.Invoke(null);
+            return;
+        }
+
+        // 1. Kiểm tra trong túi lọc (Cache) trước (nếu không yêu cầu ignore)
+        if (!ignoreCache && _profileCache.ContainsKey(playFabId))
+        {
+            callback?.Invoke(_profileCache[playFabId]);
+            return;
+        }
+
+        // 2. Nếu không có hoặc yêu cầu ignore, đi hỏi PlayFab
+        PlayFabClientAPI.GetUserData(new GetUserDataRequest
+        {
+            PlayFabId = playFabId,
+            Keys = new List<string> { "PublicProfile" }
+        }, result =>
+        {
+            PublicProfileSaveData profile = null;
+            if (result.Data != null && result.Data.ContainsKey("PublicProfile"))
+            {
+                string json = result.Data["PublicProfile"].Value;
+                profile = JsonUtility.FromJson<PublicProfileSaveData>(json);
+                // Lưu vào kho để lần sau dùng luôn
+                _profileCache[playFabId] = profile;
+            }
+            callback?.Invoke(profile);
+        }, error =>
+        {
+            Debug.LogWarning($"[PlayFab] Không thể lấy profile của {playFabId}: {error.GenerateErrorReport()}");
+            callback?.Invoke(null);
+        });
     }
 
     /// <summary>
