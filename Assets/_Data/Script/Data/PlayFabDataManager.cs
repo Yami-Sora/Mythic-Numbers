@@ -167,12 +167,25 @@ public class PlayFabDataManager : MonoBehaviour
             var me = result.Leaderboard?.Find(e => e.PlayFabId == PlayFabSettings.staticPlayer.PlayFabId);
             if (me != null)
             {
-                this.PlayerRank = me.Position + 1;
+                // Chỉ công nhận hạng nếu sếp đã thực sự "thâm nhập" Arena (đã đánh ít nhất 1 trận)
+                if (this.TotalGames > 0)
+                {
+                    this.PlayerRank = me.Position + 1;
+                }
+                else
+                {
+                    this.PlayerRank = 0; // Hiển thị "Chưa xếp hạng"
+                }
+
                 this.Elo = me.StatValue;
                 this.ArenaDisplayName = PlayerInfoUI.GetSafeName(!string.IsNullOrEmpty(me.DisplayName) ? me.DisplayName : this.PlayerName);
                 
                 PlayerInfoUI.UpdateAllArenaInfo(PlayerRank, ArenaDisplayName, Elo, PlayerTitle, CalculateTotalPower());
-                Debug.Log($"<color=white>[PlayFab] Đã dò thấy hạng: {PlayerRank}</color>");
+                
+                if (PlayerRank > 0)
+                    Debug.Log($"<color=white>[PlayFab] Đã dò thấy hạng: {PlayerRank}</color>");
+                else
+                    Debug.Log("<color=yellow>[PlayFab] Sếp chưa khai trận Arena, để trạng thái Chưa xếp hạng.</color>");
             }
         }, error =>
         {

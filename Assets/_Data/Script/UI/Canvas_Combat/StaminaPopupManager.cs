@@ -5,6 +5,7 @@ using PlayFab;
 using PlayFab.ClientModels;
 using System;
 using System.Collections.Generic;
+using System.Collections;
 
 public class StaminaPopupManager : BaseDailyBuyPopup
 {
@@ -61,12 +62,6 @@ public class StaminaPopupManager : BaseDailyBuyPopup
         pricePerUnit = 80;
         maxDailyLimit = 3;
         currencyCode = "GM"; // Linh Ngọc
-    }
-
-    private void OnDestroy()
-    {
-        Debug.Log($"[Stamina] OnDestroy trên {gameObject.name}");
-        if (Instance == this) Instance = null;
     }
 
     protected override void Start()
@@ -234,7 +229,7 @@ public class StaminaPopupManager : BaseDailyBuyPopup
         );
     }
 
-    private System.Collections.IEnumerator DelayRetry(System.Action action)
+    private IEnumerator DelayRetry(Action action)
     {
         if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(true);
         yield return new WaitForSeconds(3f);

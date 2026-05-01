@@ -41,7 +41,7 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
     public string playFabDataKey = "DailyBuyData";
     public string currencyCode = "GM";
 
-    protected int currentAmount = 1;
+    protected int currentAmount = 0;
     protected int alreadyBoughtCount = 0;
     protected int currentVCBalance = 0;
 
@@ -111,7 +111,7 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
                     alreadyBoughtCount = 0;
                 }
 
-                currentAmount = GetRemainingQuota() > 0 ? 1 : 0;
+                currentAmount = 0;
                 UpdateUI();
             }, error => {
                 Debug.LogWarning($"[{name}] Lỗi tải dữ liệu, đang thử lại sau 3s...");
@@ -176,7 +176,7 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
         }
         else
         {
-            currentAmount = Mathf.Clamp(target, 1, trueMax);
+            currentAmount = Mathf.Clamp(target, 0, trueMax);
         }
 
         UpdateUI();
@@ -250,7 +250,7 @@ public abstract class BaseDailyBuyPopup : TabListenerBase
             
             if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.FetchVirtualCurrencies();
             
-            currentAmount = (GetRemainingQuota() > 0 && result.Balance >= pricePerUnit) ? 1 : 0;
+            currentAmount = 0;
             UpdateUI();
             Close();
         }, error => {
