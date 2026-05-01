@@ -148,6 +148,7 @@ public class GemUpgradeManager : MonoBehaviour
         // --- CHỐT HẠ: REFRESH UI ĐÚNG 1 LẦN ---
         RefreshUpgradeList();
         if (InventoryManager.Instance != null) InventoryManager.Instance.RefreshUI();
+        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
         if (CardDetailManager.Instance != null && CardDetailManager.Instance.gameObject.activeInHierarchy)
         {
             CardDetailManager.Instance.RefreshRightGemInventory();

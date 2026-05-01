@@ -8012,7 +8012,6 @@ MonoBehaviour:
   - {fileID: 2018357941}
   - {fileID: 232815634}
   - {fileID: 89514374}
-  myInfoBar: {fileID: 671862230}
   txtChallengeCount: {fileID: 431098564}
   txtRefreshCount: {fileID: 345193204}
   btnRefresh: {fileID: 1983167890}

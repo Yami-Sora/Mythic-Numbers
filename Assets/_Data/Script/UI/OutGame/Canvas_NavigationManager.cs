@@ -87,8 +87,9 @@ public class Canvas_NavigationManager : MonoBehaviour
         // 1. Dập hết mọi popup đang mở trên màn hình
         SetAllPopupsState(false);
 
-        // [NEW]: Đóng luôn bảng PlayerInfo nếu đang mở khi sếp chuyển Tab
+        // [NEW]: Đóng luôn bảng PlayerInfo & Leaderboard nếu đang mở khi sếp chuyển Tab
         if (PlayerInfoManager.Instance != null) PlayerInfoManager.Instance.ClosePopup();
+        if (LeaderboardPanel.Instance != null) LeaderboardPanel.Instance.Hide();
 
         // [REFAC]: Chuyển tab trực tiếp, không dùng TransitionManager nữa
         ExecuteTabSwitch(targetTab);

@@ -10,6 +10,8 @@ using PlayFab;
 /// </summary>
 public class LeaderboardPanel : MonoBehaviour
 {
+    public static LeaderboardPanel Instance { get; private set; }
+
     [Header("References")]
     [SerializeField] private Transform contentParent;
     [SerializeField] private Button closeButton;
@@ -19,13 +21,8 @@ public class LeaderboardPanel : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
         if (closeButton != null) closeButton.onClick.AddListener(Hide);
-    }
-
-    private void Start()
-    {
-        // Đảm bảo ban đầu ẩn
-        gameObject.SetActive(false);
     }
 
     public void Show()

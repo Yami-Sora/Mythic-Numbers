@@ -361,7 +361,6 @@ public class CardDetailManager : YamiMonoBehaviour
             _currentSelectedSocket.ClearSocket();
             _currentSelectedSocket = null;
 
-            if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.MarkDirty();
             RefreshStatsDisplay();
         }
     }

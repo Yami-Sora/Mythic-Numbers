@@ -48,6 +48,13 @@ public class NetworkLauncher : MonoBehaviour
 
     async Task StartGame(GameMode mode)
     {
+        // 0. BẢO HIỂM DỮ LIỆU: Cập nhật lại LocalDeckContext trước khi vào trận đấu
+        // Đảm bảo chỉ số mới nhất từ việc khảm Gem sẽ được nạp thẳng vào máy chủ trận đấu
+        if (DeckManager.Instance != null && DeckManager.Instance.currentDeck != null)
+        {
+            LocalDeckContext.SetDeck(DeckManager.Instance.currentDeck);
+        }
+
         // 1. Dọn dẹp GameManager cũ nếu còn sót lại từ lần chơi trước
         if (GameManagerNet.Instance != null)
         {
