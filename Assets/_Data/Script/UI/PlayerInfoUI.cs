@@ -33,15 +33,10 @@ public class PlayerInfoUI : MonoBehaviour
     public void UpdateArenaInfo(int rank, string name, int elo, string title, int power)
     {
         if (rankText != null) rankText.text = rank > 0 ? $"Hạng {rank}" : "Chưa xếp hạng";
-        if (nameText != null) nameText.text = GetSafeName(name);
-        if (eloText != null) eloText.text = elo.ToString("N0") + " điểm";
-        if (powerText != null) powerText.text = power.ToString("N0");
-        
-        if (titleContainer != null)
-        {
-            titleContainer.SetActive(!string.IsNullOrEmpty(title));
-            if (titleText != null) titleText.text = title;
-        }
+        UpdatePlayerName(name);
+        UpdateElo(elo);
+        UpdatePower(power);
+        UpdateTitle(title);
     }
 
     [Header("Buttons")]
@@ -68,16 +63,11 @@ public class PlayerInfoUI : MonoBehaviour
         _allInstances.Add(this);
         RefreshData();
 
-        // Tự động cập nhật thông tin Arena từ kho dữ liệu khi UI được bật lên
+        // Chỉ bổ sung thêm Rank và Title vì RefreshData đã lo các phần chung
         if (PlayFabDataManager.Instance != null)
         {
-            UpdateArenaInfo(
-                PlayFabDataManager.Instance.PlayerRank,
-                PlayFabDataManager.Instance.ArenaDisplayName,
-                PlayFabDataManager.Instance.Elo,
-                PlayFabDataManager.Instance.PlayerTitle,
-                PlayFabDataManager.Instance.CalculateTotalPower()
-            );
+            if (rankText != null) rankText.text = PlayFabDataManager.Instance.PlayerRank > 0 ? $"Hạng {PlayFabDataManager.Instance.PlayerRank}" : "Chưa xếp hạng";
+            UpdateTitle(PlayFabDataManager.Instance.PlayerTitle);
         }
     }
 
@@ -91,7 +81,12 @@ public class PlayerInfoUI : MonoBehaviour
     {
         if (PlayFabDataManager.Instance != null)
         {
-            UpdatePlayerName(PlayFabDataManager.Instance.PlayerName);
+            // Luôn ưu tiên tên Arena nếu có
+            string displayName = string.IsNullOrEmpty(PlayFabDataManager.Instance.ArenaDisplayName) 
+                ? PlayFabDataManager.Instance.PlayerName 
+                : PlayFabDataManager.Instance.ArenaDisplayName;
+            UpdatePlayerName(displayName);
+            
             UpdateExpBar(PlayFabDataManager.Instance.PlayerLevel, 
                          PlayFabDataManager.Instance.PlayerExp, 
                          PlayFabDataManager.Instance.GetRequiredExp(PlayFabDataManager.Instance.PlayerLevel));
@@ -139,7 +134,7 @@ public class PlayerInfoUI : MonoBehaviour
 
     public void UpdateElo(int elo)
     {
-        if (eloText != null) eloText.text = elo.ToString("N0");
+        if (eloText != null) eloText.text = elo.ToString("N0") + " điểm";
     }
 
     public static void UpdateAllPower()
@@ -169,20 +164,17 @@ public class PlayerInfoUI : MonoBehaviour
 
     public void UpdateUI(string playerName, string playerTitle, int power)
     {
-        if (nameText != null) nameText.text = GetSafeName(playerName);
-        if (powerText != null) powerText.text = power.ToString("N0");
+        UpdatePlayerName(playerName);
+        UpdatePower(power);
+        UpdateTitle(playerTitle);
+    }
 
+    public void UpdateTitle(string title)
+    {
         if (titleContainer != null)
         {
-            if (string.IsNullOrEmpty(playerTitle))
-            {
-                titleContainer.SetActive(false);
-            }
-            else
-            {
-                titleContainer.SetActive(true);
-                if (titleText != null) titleText.text = playerTitle;
-            }
+            titleContainer.SetActive(!string.IsNullOrEmpty(title));
+            if (titleText != null) titleText.text = title;
         }
     }
 }

@@ -66,82 +66,18 @@ public class LeaderboardService
 
         while (true)
         {
-            bool done = false;
-            PlayFabClientAPI.GetLeaderboard(req,
-                resp =>
-                {
-                    if (resp?.Leaderboard != null)
-                    {
-                        var list = new List<LeaderboardEntry>();
-                        foreach (var e in resp.Leaderboard)
-                        {
-                            list.Add(new LeaderboardEntry
-                            {
-                                Position = e.Position,
-                                PlayFabId = e.PlayFabId ?? "",
-                                DisplayName = !string.IsNullOrEmpty(e.DisplayName) ? e.DisplayName : ShortenPlayFabId(e.PlayFabId),
-                                Elo = e.StatValue
-                            });
-                        }
-                        _cachedLeaderboard = list;
-                        _hasData = true;
-                    }
-                    done = true;
-                },
-                error => { done = true; });
-
-            while (!done) yield return null;
-
-            // Tải trước Profile cho toàn bộ danh sách ở ĐÂY (ngoài lambda) để tránh nháy UI
-            if (_cachedLeaderboard != null && PlayFabDataManager.Instance != null)
-            {
-                foreach (var entry in _cachedLeaderboard)
-                {
-                    bool profileLoaded = false;
-                    PlayFabDataManager.Instance.GetUserData(entry.PlayFabId, _ => profileLoaded = true, true);
-                    float timeout = Time.time + 2f;
-                    while (!profileLoaded && Time.time < timeout) yield return null;
-                }
-            }
-
-            OnLeaderboardUpdated?.Invoke();
+            // Tận dụng lại hàm DoGetLeaderboard để tránh lặp code (DRY principle)
+            yield return DoGetLeaderboard(req, 
+                list => {
+                    OnLeaderboardUpdated?.Invoke();
+                }, 
+                error => {
+                    Debug.LogWarning("[Leaderboard] AutoFetch thất bại: " + error);
+                });
 
             // Nghỉ 5 phút = 300 giây rồi lấy tiếp
             yield return new WaitForSeconds(300f);
         }
-    }
-
-    public void GetTopPlayersAsync(int count, Action<List<LeaderboardEntry>> onResult, Action<string> onError)
-    {
-        if (!_config.IsValid)
-        {
-            onError?.Invoke("PlayFab chưa được cấu hình.");
-            return;
-        }
-
-        // Nếu đã có cache ngầm từ AutoFetch thì trả về luôn cho mượt!
-        if (_hasData)
-        {
-            onResult?.Invoke(_cachedLeaderboard);
-            return;
-        }
-
-        // Nếu xui bấm đúng lúc game mới bật chưa kịp lấy, thì ép lấy ngay
-        var req = new PlayFab.ClientModels.GetLeaderboardRequest
-        {
-            StatisticName = PlayerDataService.EloStatisticName,
-            StartPosition = 0,
-            MaxResultsCount = count
-        };
-
-        var runner = GameServices.Instance;
-        if (runner == null)
-        {
-            onError?.Invoke("Không tìm thấy GameServices.");
-            return;
-        }
-
-        runner.StartCoroutine(DoGetLeaderboard(req, onResult, onError));
     }
 
     private IEnumerator DoGetLeaderboard(PlayFab.ClientModels.GetLeaderboardRequest req, Action<List<LeaderboardEntry>> onResult, Action<string> onError)
