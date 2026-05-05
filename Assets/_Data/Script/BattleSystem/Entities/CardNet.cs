@@ -162,7 +162,7 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
                     // Truy cập mảng Slots từ GameUIManager (nơi chứa Transform)
                     if (InGameUIManager.Instance.Slots != null && InGameUIManager.Instance.Slots.Length > i)
                     {
-                        SetParentIfChanged(InGameUIManager.Instance.Slots[i]);
+                        SetParentIfChanged(InGameUIManager.Instance.Slots[i], Vector3.one * 0.9f);
                     }
                     break;
                 }
@@ -170,13 +170,14 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         }
     }
 
-    private void SetParentIfChanged(Transform target)
+    private void SetParentIfChanged(Transform target, Vector3? scale = null)
     {
-        if (target != null && transform.parent != target)
+        Vector3 targetScale = scale ?? Vector3.one;
+        if (target != null && (transform.parent != target || transform.localScale != targetScale))
         {
             transform.SetParent(target, false);
             // Reset Transform để UI không bị méo
-            transform.localScale = Vector3.one;
+            transform.localScale = targetScale;
             transform.localRotation = Quaternion.identity;
             transform.localPosition = Vector3.zero;
         }
