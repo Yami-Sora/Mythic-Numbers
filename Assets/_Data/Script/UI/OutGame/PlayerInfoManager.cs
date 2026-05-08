@@ -63,8 +63,7 @@ public class PlayerInfoManager : MonoBehaviour
         {
             if (PlayFab.PlayFabSettings.staticPlayer != null && !string.IsNullOrEmpty(PlayFab.PlayFabSettings.staticPlayer.PlayFabId))
             {
-                string id = PlayFab.PlayFabSettings.staticPlayer.PlayFabId;
-                return id.Length > 8 ? id.Substring(0, 8) + "..." : id;
+                return PlayFab.PlayFabSettings.staticPlayer.PlayFabId;
             }
             return "Vô Danh";
         }

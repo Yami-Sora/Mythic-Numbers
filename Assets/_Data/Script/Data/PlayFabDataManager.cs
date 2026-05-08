@@ -160,7 +160,7 @@ public class PlayFabDataManager : MonoBehaviour
         var request = new GetLeaderboardAroundPlayerRequest
         {
             StatisticName = "elo",
-            MaxResultsCount = 1 
+            MaxResultsCount = 3 
         };
 
         PlayFabClientAPI.GetLeaderboardAroundPlayer(request, result =>
@@ -168,10 +168,26 @@ public class PlayFabDataManager : MonoBehaviour
             var me = result.Leaderboard?.Find(e => e.PlayFabId == PlayFabSettings.staticPlayer.PlayFabId);
             if (me != null)
             {
+                int actualRank = me.Position + 1;
+
+                // Đồng bộ với bảng xếp hạng Top 10 (nếu có mặt trong Top 10)
+                if (GameServices.Instance?.Leaderboard != null)
+                {
+                    var cacheList = GameServices.Instance.Leaderboard.GetCachedLeaderboard();
+                    if (cacheList != null)
+                    {
+                        int index = cacheList.FindIndex(e => e.PlayFabId == me.PlayFabId);
+                        if (index >= 0)
+                        {
+                            actualRank = cacheList[index].Position + 1;
+                        }
+                    }
+                }
+
                 // Chỉ công nhận hạng nếu sếp đã thực sự "thâm nhập" Arena (đã đánh ít nhất 1 trận)
                 if (this.TotalGames > 0)
                 {
-                    this.PlayerRank = me.Position + 1;
+                    this.PlayerRank = actualRank;
                 }
                 else
                 {
