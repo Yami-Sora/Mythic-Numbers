@@ -79,4 +79,10 @@ public class Canvas_DungeonManager : TabListenerBase
         else
             Debug.LogWarning("[DungeonManager] Không tìm thấy ArenaManager!");
     }
+
+    public void CloseCanvas()
+    {
+        if (Canvas_NavigationManager.Instance != null)
+            Canvas_NavigationManager.Instance.SwitchTab(Canvas_NavigationManager.TabType.Combat);
+    }
 }

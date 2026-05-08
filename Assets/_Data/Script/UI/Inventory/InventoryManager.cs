@@ -276,4 +276,10 @@ public class InventoryManager : YamiMonoBehaviour
 
         return true;
     }
+
+    public void CloseCanvas()
+    {
+        if (Canvas_NavigationManager.Instance != null)
+            Canvas_NavigationManager.Instance.SwitchTab(Canvas_NavigationManager.TabType.Combat);
+    }
 }

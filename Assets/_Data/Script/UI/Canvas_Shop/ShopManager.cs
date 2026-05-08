@@ -235,4 +235,10 @@ public class ShopManager : MonoBehaviour
             }
         }
     }
+
+    public void CloseCanvas()
+    {
+        if (Canvas_NavigationManager.Instance != null)
+            Canvas_NavigationManager.Instance.SwitchTab(Canvas_NavigationManager.TabType.Combat);
+    }
 }
