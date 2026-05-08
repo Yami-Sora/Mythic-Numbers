@@ -64,6 +64,12 @@ public class InGameUIManager : MonoBehaviour
         // 2. Tắt các Panel râu ria lúc mới vào game
         if (reconnectPanel != null) reconnectPanel.SetActive(false);
         if (rulePanel != null) rulePanel.SetActive(false);
+
+        // 3. Báo cáo cho NetworkAppManager đã sẵn sàng
+        if (NetworkAppManager.Instance != null)
+        {
+            NetworkAppManager.Instance.OnUIManagerReady();
+        }
     }
 
     // =========================================================
@@ -139,6 +145,33 @@ public class InGameUIManager : MonoBehaviour
         if (reconnectPanel == null) return;
         reconnectPanel.SetActive(show);
         if (reconnectText != null) reconnectText.text = message;
+    }
+
+    public void QueueResultPanel(GameObject resultPanel, TMP_Text resultText, string message, Color color, System.Action onShown)
+    {
+        StartCoroutine(QueueResultCoroutine(resultPanel, resultText, message, color, onShown));
+    }
+
+    private System.Collections.IEnumerator QueueResultCoroutine(GameObject resultPanel, TMP_Text resultText, string message, Color color, System.Action onShown)
+    {
+        float timeOut = 15f;
+        while (isCardFocusUIOpen && timeOut > 0)
+        {
+            timeOut -= Time.deltaTime;
+            yield return null;
+        }
+
+        if (resultText != null)
+        {
+            resultText.text = message;
+            resultText.color = color;
+        }
+        if (resultPanel != null)
+        {
+            resultPanel.SetActive(true);
+        }
+
+        onShown?.Invoke();
     }
 
     // =========================================================

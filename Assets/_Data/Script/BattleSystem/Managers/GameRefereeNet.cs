@@ -90,7 +90,7 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             Debug.LogWarning("[Referee] SessionSettings not found, using default TTL.");
         }
 
-        // If resultPanel is null (client case), try to get it from NetworkAppManager
+        // Nếu resultPanel is null (client case), báo cho NetworkAppManager setup
         if (resultPanel == null)
         {
             NetworkAppManager appManager = FindFirstObjectByType<NetworkAppManager>();
@@ -213,14 +213,23 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         int p1Score = 0; // Blue (ID 0)
         int p2Score = 0; // Red (ID 1)
 
-        // Tìm tất cả bài để đếm
-        // FindObjectsSortMode.None: Tìm thôi, không cần sắp xếp thứ tự -> Nhanh hơn nhiều
-        CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
-
-        foreach (CardNet card in allCards)
+        // Tìm tất cả bài để đếm (O(1) loop 9 thay vì FindObjectsByType)
+        var board = GameManagerNet.Instance.BoardState;
+        for (int i = 0; i < 9; i++)
         {
-            if (card.OwnerID == 0) p1Score++;
-            else p2Score++;
+            if (board[i].IsValid)
+            {
+                var no = Runner.FindObject(board[i]);
+                if (no != null)
+                {
+                    CardNet card = no.GetComponent<CardNet>();
+                    if (card != null)
+                    {
+                        if (card.OwnerID == 0) p1Score++;
+                        else p2Score++;
+                    }
+                }
+            }
         }
 
         Debug.Log($"KẾT QUẢ: P1 {p1Score} - P2 {p2Score}");
@@ -252,161 +261,157 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
             p1Elo, p2Elo, p1Wins, p2Wins, p1Losses, p2Losses, p1Total, p2Total));
     }
 
-    // ✅ [LOGIC QUAN TRỌNG]: Chờ isCardFocusUIOpen == false, rồi hiện kết quả và cập nhật ELO
+    // ✅ Đẩy việc hiển thị UI cho InGameUIManager tự lo liệu
     private IEnumerator ShowResultSequence(int winnerID, int s1, int s2, string customMessage,
         int p1Elo, int p2Elo, int p1Wins, int p2Wins, int p1Losses, int p2Losses, int p1Total, int p2Total)
     {
-        Debug.Log("Game Over! Đang kiểm tra trạng thái CardFocus UI...");
-
+        Debug.Log("Game Over! Chuẩn bị truyền data cho InGameUIManager...");
         yield return new WaitForSeconds(1f);
-        // Kiểm tra xem CanvasManager có tồn tại không
-        if (InGameUIManager.Instance != null)
-        {
-            // Timeout an toàn: Nếu sau 3 giây mà UI vẫn chưa tắt (do lỗi gì đó), thì cứ hiện bảng kết quả luôn
-            // để tránh game bị treo vĩnh viễn.
-            float timeOut = 15f;
-
-            // Vòng lặp chờ: Chừng nào isCardFocusUIOpen còn TRUE thì còn đợi
-            while (InGameUIManager.Instance.isCardFocusUIOpen && timeOut > 0)
-            {
-                timeOut -= Time.deltaTime;
-                yield return null; // Đợi 1 frame rồi check tiếp
-            }
-        }
-        else
-        {
-            // Nếu không tìm thấy CanvasManager, chờ tạm 3 giây
-            yield return new WaitForSeconds(3.0f);
-        }
-
-        // --- SAU KHI ĐÃ CHỜ XONG ---
 
         if (resultPanel == null || resultText == null)
         {
-            Debug.LogError("LỖI: Result UI chưa được gán!");
+            Debug.LogError("LỖI: Result UI chưa được gán trong Referee!");
             yield break;
         }
 
-        resultPanel.SetActive(true); // BẬT BẢNG KẾT QUẢ
+        string message = "";
+        Color textColor = Color.white;
+        bool shouldUpdatePlayFab = false;
+        int myID = GameManagerNet.Instance.GetLocalPlayerID();
 
         // Xử lý hiển thị text
         if (!string.IsNullOrEmpty(customMessage))
         {
             // Trường hợp đặc biệt (ví dụ: đối thủ thoát)
-            resultText.text = customMessage;
-            if (customMessage.Contains("Win")) resultText.color = Color.green;
-            else resultText.color = Color.red;
+            message = customMessage;
+            textColor = customMessage.Contains("Win") ? Color.green : Color.red;
         }
         else
         {
             // Trường hợp kết thúc game bình thường
-            int myID = GameManagerNet.Instance.GetLocalPlayerID();
-            string message = "";
-
             if (winnerID == 2)
             {
                 message = $"Hòa\n ({s2} - {s1})";
-                resultText.color = Color.yellow;
+                textColor = Color.yellow;
             }
             else if (winnerID == myID)
             {
                 message = $"Chiến Thắng\n ({s2} - {s1})";
-                resultText.color = Color.green;
+                textColor = Color.green;
 
-                // [PVE LOGIC]: CỘNG THƯỞNG VÀ TĂNG ẢI (Chỉ dành cho chế độ Story/Dungeon, KHÔNG dành cho Arena)
+                // [PVE LOGIC]: CỘNG THƯỞNG VÀ TĂNG ẢI (Chỉ dành cho chế độ Story/Dungeon)
                 if (PlayFabDataManager.Instance != null && 
-                    PlayFabDataManager.Instance.CurrentMode != PlayFabDataManager.GameMode.Arena && 
-                    string.IsNullOrEmpty(customMessage))
+                    PlayFabDataManager.Instance.CurrentMode != PlayFabDataManager.GameMode.Arena)
                 {
                     PlayFabDataManager.Instance.ClaimStageReward((gold, isBoss, gems) => {
                         string bonusMsg = "";
                         if (gold > 0) bonusMsg += $"\n<size=40><color=yellow>+{gold} Vàng</color></size>";
                         if (gems > 0) bonusMsg += $"\n<size=40><color=#FF00FF>+{gems} Linh Ngọc</color></size>";
                         
-                        resultText.text = message + bonusMsg;
+                        // Nếu panel đã hiện rồi thì append string vào
+                        if (resultText != null) resultText.text += bonusMsg;
                     });
                 }
             }
             else
             {
                 message = $"Thất Bại\n ({s2} - {s1})";
-                resultText.color = Color.red;
+                textColor = Color.red;
             }
 
-            resultText.text = message;
-
-            // Cập nhật ELO/Điểm Arena lên backend
             if (PlayFabDataManager.Instance != null && string.IsNullOrEmpty(customMessage))
             {
-                int myId = GameManagerNet.Instance.GetLocalPlayerID();
-                bool isWin = (winnerID == myId);
-                bool isDraw = (winnerID == 2);
-
-                // --- LOGIC ARENA MỚI ---
-                if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.Arena)
-                {
-                    if (isWin)
-                    {
-                        int currentElo = PlayFabDataManager.Instance.Elo;
-                        int newElo = currentElo + 10;
-                        int newWins = PlayFabDataManager.Instance.Wins + 1;
-                        int newTotal = PlayFabDataManager.Instance.TotalGames + 1;
-
-                        // Cập nhật điểm lên PlayFab
-                        GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
-                            newElo, newWins, PlayFabDataManager.Instance.Losses, newTotal,
-                            () => {
-                                Debug.Log($"[Arena] Đã cộng 10 điểm! Điểm mới: {newElo}");
-                                
-                                // Cập nhật lại biến cục bộ
-                                PlayFabDataManager.Instance.Elo = newElo;
-                                PlayFabDataManager.Instance.Wins = newWins;
-                                PlayFabDataManager.Instance.TotalGames = newTotal;
-
-                                // --- MỚI: TRỪ ĐIỂM ĐỐI THỦ QUA CLOUDSCRIPT ---
-                                if (!string.IsNullOrEmpty(LocalDeckContext.OpponentPlayFabId))
-                                {
-                                    PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest {
-                                        FunctionName = "SubtractEloFromOpponent",
-                                        FunctionParameter = new { opponentId = LocalDeckContext.OpponentPlayFabId }
-                                    }, result => {
-                                        Debug.Log("<color=red>[Arena]</color> Đã trừ 8 điểm của đối thủ thành công!");
-                                        LocalDeckContext.OpponentPlayFabId = ""; // Reset
-                                    }, error => {
-                                        Debug.LogWarning("[Arena] Lỗi khi trừ điểm đối thủ: " + error.ErrorMessage);
-                                    });
-                                }
-                            },
-                            err => Debug.LogWarning($"[Arena] Lỗi cập nhật điểm: {err}"));
-                    }
-                    else if (!isDraw) // Thua thì không đổi điểm, chỉ tăng số trận
-                    {
-                         int newLosses = PlayFabDataManager.Instance.Losses + 1;
-                         int newTotal = PlayFabDataManager.Instance.TotalGames + 1;
-
-                         GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
-                            PlayFabDataManager.Instance.Elo, PlayFabDataManager.Instance.Wins, newLosses, newTotal,
-                            () => {
-                                Debug.Log("[Arena] Thua trận, điểm không đổi.");
-                                PlayFabDataManager.Instance.Losses = newLosses;
-                                PlayFabDataManager.Instance.TotalGames = newTotal;
-                            },
-                            null);
-                    }
-                }
-                // --- LOGIC PVP ONLINE (Nếu sếp vẫn giữ chế độ PvP thời gian thực) ---
-                else if (Runner.GameMode != GameMode.Single && GameServices.Instance?.PlayerData != null)
-                {
-                    int myElo = myId == 0 ? p1Elo : p2Elo;
-                    int oppElo = myId == 0 ? p2Elo : p1Elo;
-                    float result = isDraw ? 0.5f : (isWin ? 1f : 0f);
-                    
-                    int newElo = EloCalculator.CalculateNewElo(myElo, oppElo, result, (myId == 0 ? p1Total : p2Total));
-                    // ... (giữ nguyên logic Elo cũ cho PvP Realtime nếu cần)
-                }
+                shouldUpdatePlayFab = true;
             }
         }
+
+        // Đẩy data sang UIManager kèm callback PlayFab
+        if (InGameUIManager.Instance != null)
+        {
+            InGameUIManager.Instance.QueueResultPanel(resultPanel, resultText, message, textColor, () => 
+            {
+                // CALLBACK NÀY CHẠY SAU KHI UI KẾT QUẢ ĐÃ HIỂN THỊ
+                if (shouldUpdatePlayFab)
+                {
+                    UpdatePlayFabStats(winnerID, myID, p1Elo, p2Elo, p1Total, p2Total);
+                }
+            });
+        }
+        else 
+        {
+            // Fallback nếu ko có UIManager
+            resultText.text = message;
+            resultText.color = textColor;
+            resultPanel.SetActive(true);
+            if (shouldUpdatePlayFab) UpdatePlayFabStats(winnerID, myID, p1Elo, p2Elo, p1Total, p2Total);
+        }
     }
+
+    private void UpdatePlayFabStats(int winnerID, int myID, int p1Elo, int p2Elo, int p1Total, int p2Total)
+    {
+        bool isWin = (winnerID == myID);
+        bool isDraw = (winnerID == 2);
+
+        // --- LOGIC ARENA MỚI ---
+        if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.Arena)
+        {
+            if (isWin)
+            {
+                int currentElo = PlayFabDataManager.Instance.Elo;
+                int newElo = currentElo + 10;
+                int newWins = PlayFabDataManager.Instance.Wins + 1;
+                int newTotal = PlayFabDataManager.Instance.TotalGames + 1;
+
+                GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
+                    newElo, newWins, PlayFabDataManager.Instance.Losses, newTotal,
+                    () => {
+                        Debug.Log($"[Arena] Đã cộng 10 điểm! Điểm mới: {newElo}");
+                        PlayFabDataManager.Instance.Elo = newElo;
+                        PlayFabDataManager.Instance.Wins = newWins;
+                        PlayFabDataManager.Instance.TotalGames = newTotal;
+
+                        if (!string.IsNullOrEmpty(LocalDeckContext.OpponentPlayFabId))
+                        {
+                            PlayFabClientAPI.ExecuteCloudScript(new ExecuteCloudScriptRequest {
+                                FunctionName = "SubtractEloFromOpponent",
+                                FunctionParameter = new { opponentId = LocalDeckContext.OpponentPlayFabId }
+                            }, result => {
+                                Debug.Log("<color=red>[Arena]</color> Đã trừ 8 điểm của đối thủ thành công!");
+                                LocalDeckContext.OpponentPlayFabId = ""; 
+                            }, error => {
+                                Debug.LogWarning("[Arena] Lỗi khi trừ điểm đối thủ: " + error.ErrorMessage);
+                            });
+                        }
+                    },
+                    err => Debug.LogWarning($"[Arena] Lỗi cập nhật điểm: {err}"));
+            }
+            else if (!isDraw) // Thua thì không đổi điểm, chỉ tăng số trận
+            {
+                    int newLosses = PlayFabDataManager.Instance.Losses + 1;
+                    int newTotal = PlayFabDataManager.Instance.TotalGames + 1;
+
+                    GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
+                    PlayFabDataManager.Instance.Elo, PlayFabDataManager.Instance.Wins, newLosses, newTotal,
+                    () => {
+                        Debug.Log("[Arena] Thua trận, điểm không đổi.");
+                        PlayFabDataManager.Instance.Losses = newLosses;
+                        PlayFabDataManager.Instance.TotalGames = newTotal;
+                    },
+                    null);
+            }
+        }
+        // --- LOGIC PVP ONLINE ---
+        else if (Runner.GameMode != GameMode.Single && GameServices.Instance?.PlayerData != null)
+        {
+            int myElo = myID == 0 ? p1Elo : p2Elo;
+            int oppElo = myID == 0 ? p2Elo : p1Elo;
+            float result = isDraw ? 0.5f : (isWin ? 1f : 0f);
+            
+            int newElo = EloCalculator.CalculateNewElo(myElo, oppElo, result, (myID == 0 ? p1Total : p2Total));
+            // (giữ nguyên logic Elo cũ cho PvP Realtime nếu cần)
+        }
+    }
+
 
     // Called by ConnectionHandler when a player disconnects
     public void HandlePlayerLeft(PlayerRef player)

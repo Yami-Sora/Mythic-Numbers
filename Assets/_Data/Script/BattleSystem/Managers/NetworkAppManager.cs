@@ -27,9 +27,7 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private NetworkRunner runner;
     private FusionObjectPool _objectProvider;
-    // Flag kiểm tra xem đã cấu hình UI xong chưa để tránh gọi liên tục trong Update
-    private bool _uiConfigured = false;
-    private bool _refereeConfigured = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -94,23 +92,10 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    // VÒNG LẶP CẤU HÌNH UI
-    private void FixedUpdate()
+    public void OnUIManagerReady()
     {
-        // Chúng ta kiểm tra _uiConfigured để chỉ thực hiện việc này 1 lần
-        if (!_uiConfigured && InGameUIManager.Instance != null)
-        {
-            Debug.Log("[AppManager] Tìm thấy GameUIManager -> Đang chuyển giao tham chiếu UI...");
-            SetupUIManager();
-            _uiConfigured = true;
-        }
-
-        // 2. Cấu hình cho Referee
-        if (!_refereeConfigured && GameRefereeNet.Instance != null)
-        {
-            SetupRefereeUI(GameRefereeNet.Instance);
-            _refereeConfigured = true;
-        }
+        Debug.Log("[AppManager] Tìm thấy GameUIManager -> Đang chuyển giao tham chiếu UI...");
+        SetupUIManager();
     }
 
     private void SetupUIManager()
@@ -143,17 +128,16 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
             SpawnGameManagers();
         }
     }
+
+    // --- KẾ THỪA TỪ INetworkRunnerCallbacks ---
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
     public void OnInput(NetworkRunner runner, NetworkInput input) { }
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
-#pragma warning disable UNT0006 // Tắt cảnh báo sai về Unity Message Signature
-
+#pragma warning disable UNT0006 
     public void OnConnectedToServer(NetworkRunner runner) { }
-
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
-
 #pragma warning restore UNT0006
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
@@ -164,8 +148,6 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, System.ArraySegment<byte> data) { }
     public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
-
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
-
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
 }
