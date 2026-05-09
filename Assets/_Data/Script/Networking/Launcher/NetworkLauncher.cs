@@ -61,30 +61,27 @@ public class NetworkLauncher : MonoBehaviour
             Destroy(GameManagerNet.Instance.gameObject);
         }
         // 2. Tạo hoặc tìm Runner
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
-        if (runner == null)
+        NetworkRunner oldRunner = FindFirstObjectByType<NetworkRunner>();
+        if (oldRunner != null)
         {
-            // Tạo một GameObject tạm để chứa Runner
-            GameObject go = new GameObject("NetworkRunner");
-            runner = go.AddComponent<NetworkRunner>();
+            if (oldRunner.IsRunning)
+            {
+                await oldRunner.Shutdown();
+            }
+            Destroy(oldRunner.gameObject);
         }
 
-        var pool = runner.GetComponent<FusionObjectPool>();
-        if (pool == null)
-        {
-            pool = runner.gameObject.AddComponent<FusionObjectPool>();
-        }
+        // Tạo một GameObject mới tinh để chứa Runner (Fusion cấm dùng lại Runner cũ)
+        GameObject go = new GameObject("NetworkRunner");
+        NetworkRunner runner = go.AddComponent<NetworkRunner>();
+
+        var pool = runner.gameObject.AddComponent<FusionObjectPool>();
 
         // Attach or update session settings so server code can read TTL after start
-        var settings = runner.gameObject.GetComponent<LauncherSessionSettings>();
-        if (settings == null) settings = runner.gameObject.AddComponent<LauncherSessionSettings>();
+        var settings = runner.gameObject.AddComponent<LauncherSessionSettings>();
         settings.PlayerTtl = Mathf.Clamp(playerTtl, 60, 120);
 
-        // Đảm bảo Runner không đang chạy phiên cũ
-        if (runner.IsRunning)
-        {
-            await runner.Shutdown();
-        }
+        // Cấu hình Runner
         // Cấu hình Runner
         runner.ProvideInput = true;
 

@@ -31,34 +31,35 @@ public class GameServices : MonoBehaviour
             TestConnection();
     }
 
-    private void TestConnection()
+    public static event System.Action OnBackendReady;
+
+    private async void TestConnection()
     {
-        Auth.LoginAnonymous(
-            () =>
+        var loginSuccess = await Auth.LoginAnonymousAsync();
+        if (loginSuccess)
+        {
+            Debug.Log("<color=green>[PlayFab] Kết nối thành công!</color>");
+
+            // === BẬT TÍNH NĂNG TỰ ĐỘNG CẬP NHẬT RANKING MỖI 5 PHÚT ===
+            StartCoroutine(Leaderboard.AutoFetchRoutine());
+
+            try
             {
-                Debug.Log("<color=green>[PlayFab] Kết nối thành công!</color>");
+                // Lấy ELO hiện tại và in ra để debug
+                var result = await PlayerData.GetEloTaskAsync();
+                Debug.Log($"[PlayFab] Current stats - ELO: {result.elo}, Wins: {result.wins}, Losses: {result.losses}, TotalGames: {result.totalGames}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[PlayFab] Lỗi khi lấy thống kê người chơi: " + e.Message);
+            }
 
-                // === THÊM ĐÚNG 2 DÒNG NÀY VÀO ĐÂY ===
-                if (PlayFabDataManager.Instance != null)
-                {
-                    PlayFabDataManager.Instance.FetchVirtualCurrencies(); // Kéo tiền về UI
-                    PlayFabDataManager.Instance.LoadGameData();           // Kéo túi đồ và bài về UI
-                }
-                
-                // === BẬT TÍNH NĂNG TỰ ĐỘNG CẬP NHẬT RANKING MỖI 5 PHÚT ===
-                StartCoroutine(Leaderboard.AutoFetchRoutine());
-                // ===================================
-
-                // Lấy ELO hiện tại và in ra để debug (Đoạn code cũ của sếp giữ nguyên)
-                PlayerData.GetEloAsync(
-                    (elo, wins, losses, totalGames) =>
-                    {
-                        Debug.Log($"[PlayFab] Current stats - ELO: {elo}, Wins: {wins}, Losses: {losses}, TotalGames: {totalGames}");
-                    },
-                    err => Debug.LogWarning("[PlayFab] Lỗi khi lấy thống kê người chơi: " + err)
-                );
-            },
-            err => Debug.LogError("[PlayFab] Kết nối thất bại: " + err)
-        );
+            // Bắn tín hiệu ra ngoài để UI hoặc DataManager khác tự bắt đầu kéo dữ liệu
+            OnBackendReady?.Invoke();
+        }
+        else
+        {
+            Debug.LogError("[PlayFab] Kết nối thất bại.");
+        }
     }
 }

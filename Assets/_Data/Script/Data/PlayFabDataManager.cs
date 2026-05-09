@@ -240,6 +240,42 @@ public class PlayFabDataManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    private void Start()
+    {
+        GameServices.OnBackendReady += OnBackendReady;
+        
+        if (GameServices.Instance != null && GameServices.Instance.PlayerData != null)
+        {
+            GameServices.Instance.PlayerData.OnPlayerStatsUpdated += OnPlayerStatsUpdated;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        GameServices.OnBackendReady -= OnBackendReady;
+        
+        if (GameServices.Instance != null && GameServices.Instance.PlayerData != null)
+        {
+            GameServices.Instance.PlayerData.OnPlayerStatsUpdated -= OnPlayerStatsUpdated;
+        }
+    }
+
+    private void OnPlayerStatsUpdated()
+    {
+        UpdatePublicProfile();
+        // Ép cập nhật Leaderboard nếu có thay đổi (thay thế cho dòng cũ trong PlayerDataService)
+        if (GameServices.Instance?.Leaderboard != null)
+        {
+            GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
+        }
+    }
+
+    private void OnBackendReady()
+    {
+        FetchVirtualCurrencies();
+        LoadGameData();
+    }
+
     private void Update()
     {
         if (enableDevCheats) HandleDevCheats();
@@ -1015,21 +1051,32 @@ public class PlayFabDataManager : MonoBehaviour
     #region [9] AUTO-LOAD LOGIC
     private void OnEnable()
     {
-        // Đăng ký sự kiện: Mỗi khi load một Scene mới thì gọi hàm OnSceneLoaded
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        // Chỉ đăng ký sự kiện nếu đây là Instance chính (tránh object thừa chưa kịp Destroy gọi)
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
     }
 
     private void OnDisable()
     {
-        // Hủy đăng ký khi object bị hủy (Tránh leak memory)
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        if (Instance == this)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
     }
+
+    private float _lastLoadDataTime = 0f;
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         // Nếu cái scene vừa load xong mang tên "MenuScene" và đã đăng nhập...
         if (scene.name == "MenuScene" && PlayFabClientAPI.IsClientLoggedIn())
         {
+            // Debounce: Chống gọi API liên tục nếu Unity bị lỗi bắn event 2 lần
+            if (Time.time - _lastLoadDataTime < 2f) return;
+            _lastLoadDataTime = Time.time;
+
             Debug.Log("<color=cyan>[PlayFab] Sếp Yami vừa hạ phàm về Menu, đang tải lại toàn bộ cơ ngơi...</color>");
 
             // Kéo thẻ bài, deck và túi đồ về

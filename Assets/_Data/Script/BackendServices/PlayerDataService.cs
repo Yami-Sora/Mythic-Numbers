@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
@@ -16,6 +16,9 @@ public class PlayerDataService
     public const string LossesStatisticName = "losses";
     public const string TotalGamesStatisticName = "totalGames";
 
+    // Sự kiện được bắn ra khi ELO hoặc thống kê vừa được cập nhật thành công lên server.
+    public event Action OnPlayerStatsUpdated;
+
     public PlayerDataService(PlayFabConfig config)
     {
         _config = config;
@@ -23,13 +26,32 @@ public class PlayerDataService
 
     /// <summary>
     /// Lấy ELO hiện tại. Mặc định 0 nếu chưa có.
+    /// Có thể dùng kiểu cũ (Callback) hoặc kiểu mới (Task).
     /// </summary>
-    public void GetEloAsync(Action<int, int, int, int> onResult, Action<string> onError)
+    public async void GetEloAsync(Action<int, int, int, int> onResult, Action<string> onError)
     {
+        try
+        {
+            var result = await GetEloTaskAsync();
+            onResult?.Invoke(result.elo, result.wins, result.losses, result.totalGames);
+        }
+        catch (Exception e)
+        {
+            onError?.Invoke(e.Message);
+        }
+    }
+
+    /// <summary>
+    /// Hàm lấy Elo trả về Task (chuẩn Async).
+    /// </summary>
+    public Task<(int elo, int wins, int losses, int totalGames)> GetEloTaskAsync()
+    {
+        var tcs = new TaskCompletionSource<(int, int, int, int)>();
+
         if (!_config.IsValid)
         {
-            onError?.Invoke("PlayFab chưa được cấu hình.");
-            return;
+            tcs.TrySetException(new Exception("PlayFab chưa được cấu hình."));
+            return tcs.Task;
         }
 
         var req = new PlayFab.ClientModels.GetPlayerStatisticsRequest
@@ -37,72 +59,56 @@ public class PlayerDataService
             StatisticNames = new List<string> { EloStatisticName, WinsStatisticName, LossesStatisticName, TotalGamesStatisticName }
         };
 
-        var runner = MonoBehaviour.FindFirstObjectByType<MonoBehaviour>();
-        if (runner == null)
-        {
-            onError?.Invoke("Không tìm thấy MonoBehaviour.");
-            return;
-        }
-
-        runner.StartCoroutine(DoGetStats(req, onResult, onError));
-    }
-
-    private IEnumerator DoGetStats(PlayFab.ClientModels.GetPlayerStatisticsRequest req, Action<int, int, int, int> onResult, Action<string> onError)
-    {
-        bool done = false;
-        string errorMsg = null;
-        int elo = 0, wins = 0, losses = 0, totalGames = 0;
-
-        // Use PlayFab SDK to get player statistics
         PlayFabClientAPI.GetPlayerStatistics(req,
             resp =>
             {
-                try
+                int elo = 0, wins = 0, losses = 0, totalGames = 0;
+                if (resp?.Statistics != null)
                 {
-                    if (resp?.Statistics != null)
+                    foreach (var s in resp.Statistics)
                     {
-                        foreach (var s in resp.Statistics)
+                        switch (s.StatisticName)
                         {
-                            switch (s.StatisticName)
-                            {
-                                case EloStatisticName: elo = s.Value; break;
-                                case WinsStatisticName: wins = s.Value; break;
-                                case LossesStatisticName: losses = s.Value; break;
-                                case TotalGamesStatisticName: totalGames = s.Value; break;
-                            }
+                            case EloStatisticName: elo = s.Value; break;
+                            case WinsStatisticName: wins = s.Value; break;
+                            case LossesStatisticName: losses = s.Value; break;
+                            case TotalGamesStatisticName: totalGames = s.Value; break;
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    errorMsg = e.Message;
-                }
-                done = true;
+                tcs.TrySetResult((elo, wins, losses, totalGames));
             },
             error =>
             {
-                errorMsg = error.GenerateErrorReport();
-                done = true;
+                tcs.TrySetException(new Exception(error.GenerateErrorReport()));
             });
 
-        while (!done) yield return null;
-
-        if (errorMsg != null)
-            onError?.Invoke(errorMsg);
-        else
-            onResult?.Invoke(elo, wins, losses, totalGames);
+        return tcs.Task;
     }
 
     /// <summary>
-    /// Cập nhật ELO và thống kê sau trận đấu. Mỗi client tự gọi với kết quả của mình.
+    /// Cập nhật ELO và thống kê sau trận đấu.
     /// </summary>
-    public void UpdateEloAfterMatchAsync(int newElo, int wins, int losses, int totalGames, Action onSuccess, Action<string> onError)
+    public async void UpdateEloAfterMatchAsync(int newElo, int wins, int losses, int totalGames, Action onSuccess, Action<string> onError)
+    {
+        try
+        {
+            await UpdateEloTaskAsync(newElo, wins, losses, totalGames);
+            onSuccess?.Invoke();
+        }
+        catch (Exception e)
+        {
+            onError?.Invoke(e.Message);
+        }
+    }
+
+    /// <summary>
+    /// Cập nhật Elo chuẩn Async Task (có retry).
+    /// </summary>
+    public async Task UpdateEloTaskAsync(int newElo, int wins, int losses, int totalGames)
     {
         if (!_config.IsValid)
-        {
-            onError?.Invoke("PlayFab chưa được cấu hình.");
-            return;
-        }
+            throw new Exception("PlayFab chưa được cấu hình.");
 
         var req = new PlayFab.ClientModels.UpdatePlayerStatisticsRequest
         {
@@ -115,70 +121,39 @@ public class PlayerDataService
             }
         };
 
-        var runner = MonoBehaviour.FindFirstObjectByType<MonoBehaviour>();
-        if (runner == null)
-        {
-            onError?.Invoke("Không tìm thấy MonoBehaviour.");
-            return;
-        }
-
-        runner.StartCoroutine(DoUpdateStats(req, onSuccess, onError));
-    }
-
-    private IEnumerator DoUpdateStats(PlayFab.ClientModels.UpdatePlayerStatisticsRequest req, Action onSuccess, Action<string> onError)
-    {
         const int maxAttempts = 3;
         int attempt = 0;
-        bool success = false;
-        string errorMsg = null;
 
-        while (attempt < maxAttempts && !success)
+        while (attempt < maxAttempts)
         {
             attempt++;
-            bool done = false;
-            errorMsg = null;
+            var tcs = new TaskCompletionSource<bool>();
 
             PlayFabClientAPI.UpdatePlayerStatistics(req,
-                resp =>
-                {
-                    success = true;
-                    done = true;
-                },
-                error =>
-                {
-                    errorMsg = error.GenerateErrorReport();
-                    done = true;
-                });
+                resp => tcs.TrySetResult(true),
+                error => tcs.TrySetException(new Exception(error.GenerateErrorReport())));
 
-            while (!done) yield return null;
-
-            // If failed due to concurrent conflict, retry with backoff
-            if (!success && !string.IsNullOrEmpty(errorMsg) && errorMsg.ToLowerInvariant().Contains("conflict"))
+            try
             {
-                if (attempt < maxAttempts)
+                await tcs.Task;
+                // Nếu update thành công, bắn sự kiện ra ngoài thay vì gọi trực tiếp UI manager
+                OnPlayerStatsUpdated?.Invoke();
+                return;
+            }
+            catch (Exception e)
+            {
+                string errorMsg = e.Message.ToLowerInvariant();
+                if (errorMsg.Contains("conflict") && attempt < maxAttempts)
                 {
-                    float backoff = 0.5f * attempt; // 0.5s, 1s, ...
-                    yield return new WaitForSeconds(backoff);
-                    continue; // retry
+                    int backoffMs = 500 * attempt;
+                    await Task.Delay(backoffMs);
+                }
+                else
+                {
+                    throw;
                 }
             }
-            break;
         }
-
-        if (success)
-        {
-            // Cập nhật lại Profile (Tên, Lực chiến, Hạng) lên Server để hiển thị đúng trên Leaderboard
-            if (PlayFabDataManager.Instance != null)
-                PlayFabDataManager.Instance.UpdatePublicProfile();
-
-            // Ép cập nhật bảng xếp hạng ngay sau khi đổi Elo
-            if (GameServices.Instance?.Leaderboard != null)
-                GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
-
-            onSuccess?.Invoke();
-        }
-        else
-            onError?.Invoke(errorMsg ?? "Cập nhật ELO thất bại.");
     }
 }
 
@@ -193,5 +168,5 @@ public static class PlayFabEventSender
         _lastSent = Time.realtimeSinceStartup;
         send();
         return true;
-      }
-  }
+    }
+}

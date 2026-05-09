@@ -26,14 +26,7 @@ public class MatchmakingService
         // 1. Đăng nhập nếu chưa
         if (!GameServices.Instance.Auth.IsLoggedIn)
         {
-            var loginDone = false;
-            var loginSuccess = false;
-            GameServices.Instance.Auth.LoginAnonymous(
-                () => { loginSuccess = true; loginDone = true; },
-                err => { Debug.LogWarning($"[Matchmaking] Login failed: {err}"); loginDone = true; });
-
-            while (!loginDone) await Task.Yield();
-
+            var loginSuccess = await GameServices.Instance.Auth.LoginAnonymousAsync();
             if (!loginSuccess)
             {
                 Debug.LogWarning("[Matchmaking] Không đăng nhập được, dùng ELO 0.");
@@ -41,17 +34,23 @@ public class MatchmakingService
         }
 
         // 2. Lấy ELO
-        var statsDone = false;
         var elo = 0;
         var wins = 0;
         var losses = 0;
         var totalGames = 0;
 
-        GameServices.Instance.PlayerData.GetEloAsync(
-            (e, w, l, t) => { elo = e; wins = w; losses = l; totalGames = t; statsDone = true; },
-            _ => { statsDone = true; });
-
-        while (!statsDone) await Task.Yield();
+        try
+        {
+            var statsResult = await GameServices.Instance.PlayerData.GetEloTaskAsync();
+            elo = statsResult.elo;
+            wins = statsResult.wins;
+            losses = statsResult.losses;
+            totalGames = statsResult.totalGames;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Matchmaking] Lấy thống kê thất bại: {e.Message}");
+        }
 
         // 3. Lưu vào LauncherSessionSettings
         var settings = runner.gameObject.GetComponent<LauncherSessionSettings>();

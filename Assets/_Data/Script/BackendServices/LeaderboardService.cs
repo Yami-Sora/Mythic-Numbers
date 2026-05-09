@@ -132,18 +132,6 @@ public class LeaderboardService
             {
                 _cachedLeaderboard = list;
                 _hasData = true;
-
-                // Tải trước Profile cho danh sách vừa lấy để UI không bị nháy
-                if (PlayFabDataManager.Instance != null)
-                {
-                    foreach (var entry in list)
-                    {
-                        bool profileLoaded = false;
-                        PlayFabDataManager.Instance.GetUserData(entry.PlayFabId, _ => profileLoaded = true, true);
-                        float timeout = Time.time + 2f;
-                        while (!profileLoaded && Time.time < timeout) yield return null;
-                    }
-                }
             }
             onResult?.Invoke(list ?? new List<LeaderboardEntry>());
         }

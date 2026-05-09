@@ -57,8 +57,13 @@ public class GameRefereeNet : NetworkBehaviour, IPlayerLeft
         }
     }
 
+    private bool _isExiting = false;
+
     public void BackToMenu()
     {
+        if (_isExiting) return;
+        _isExiting = true;
+
         Debug.Log("<color=cyan>[Referee] Sếp Yami thu quân về thành...</color>");
         
         // Tắt Runner trước khi load scene mới để dọn dẹp Network Objects

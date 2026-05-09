@@ -81,8 +81,14 @@ public class NetworkAppManager : MonoBehaviour, INetworkRunnerCallbacks
 
 
 
+    private bool _hasSpawnedManagers = false;
+
     private void SpawnGameManagers()
     {
+        // Thêm cờ kiểm tra để chống spam spawn do bất đồng bộ (Instance chưa kịp gán)
+        if (_hasSpawnedManagers) return;
+        _hasSpawnedManagers = true;
+
         // Kiểm tra xem đã spawn chưa để tránh trùng lặp
         if (GameManagerNet.Instance == null)
         {

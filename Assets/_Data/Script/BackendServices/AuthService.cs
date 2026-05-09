@@ -45,6 +45,19 @@ public class AuthService
         );
     }
 
+    public System.Threading.Tasks.Task<bool> LoginAnonymousAsync()
+    {
+        var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+        LoginAnonymous(
+            () => tcs.TrySetResult(true),
+            err => {
+                Debug.LogWarning($"[PlayFab] LoginAnonymousAsync failed: {err}");
+                tcs.TrySetResult(false);
+            }
+        );
+        return tcs.Task;
+    }
+
     private static string GetOrCreateDeviceId()
     {
         string id = PlayerPrefs.GetString(DeviceIdKey, "");
