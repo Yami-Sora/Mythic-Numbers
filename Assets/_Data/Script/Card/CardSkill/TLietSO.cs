@@ -9,7 +9,7 @@ public class TLietSO : RandomStatAbstract
 
     protected override int LuckySidesCount => 4;
 
-    protected override void ApplyBuffLogic(CardNet caster, List<int> targetSides)
+    protected override void ApplyBuffLogic(CardObj caster, List<int> targetSides)
     {
         int pointsLeft = buffAmount;
         while (pointsLeft > 0)
@@ -25,7 +25,7 @@ public class TLietSO : RandomStatAbstract
         Debug.Log($"[TLiet] Added {buffAmount} points randomly. New Stats: Top:{caster.Top} Right:{caster.Right} Bottom:{caster.Bottom} Left:{caster.Left}");
     }
 
-    protected override void ApplyDebuffLogic(CardNet caster, List<int> remainingSides)
+    protected override void ApplyDebuffLogic(CardObj caster, List<int> remainingSides)
     {
         // No debuff logic for TLiet
     }

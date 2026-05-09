@@ -115,7 +115,7 @@ public class MineDungeonManager : YamiMonoBehaviour
 
             VFXManager.Instance.SpawnFloatingText("Lên đường!", GetButtonTransform(mode), Color.green);
 
-            var launcher = FindFirstObjectByType<NetworkLauncher>();
+            var launcher = FindFirstObjectByType<BattleLauncher>();
             if (launcher != null) launcher.OnPlayOfflineClicked();
 
         }, error =>

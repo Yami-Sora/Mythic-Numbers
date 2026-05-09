@@ -1,44 +1,39 @@
-using Fusion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+public class CardObj : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     [Header("UI References")]
     [SerializeField] private Image cardImage;
     [SerializeField] private TextMeshProUGUI txtTop, txtRight, txtBottom, txtLeft;
     [SerializeField] private GameObject highlightObj;
 
-    [Networked] public int Top { get; set; }
-    [Networked] public int Right { get; set; }
-    [Networked] public int Bottom { get; set; }
-    [Networked] public int Left { get; set; }
-    [Networked] public int OwnerID { get; set; }
-    [Networked] public int HandIndex { get; set; }
-    [Networked] public int CardID { get; set; }
+    // --- DATA ---
+    public int Top { get; set; }
+    public int Right { get; set; }
+    public int Bottom { get; set; }
+    public int Left { get; set; }
+    public int OwnerID { get; set; }
+    public int HandIndex { get; set; }
+    public int CardID { get; set; }
 
-    // --- CÁC BIẾN NETWORK CHO SKILL ---
-    [Networked] public NetworkBool IsInvincible { get; set; } // Trạng thái Vô Địch
-    [Networked] public int InvincibleDuration { get; set; }   // Đếm số bán lượt hiệu lực
+    // --- SKILL DATA ---
+    public bool IsInvincible { get; set; }
+    public int InvincibleDuration { get; set; }
 
     public BaseSkillSO CurrentSkill { get; private set; }
 
-    private ChangeDetector _changes;
-    private bool _isInitialized = false;
     private readonly Color colorP1 = new Color(0.2f, 0.4f, 1f);
     private readonly Color colorP2 = new Color(1f, 0.3f, 0.3f);
     private readonly Color colorInvincible = new Color(1f, 0.84f, 0f);
 
-    public override void Spawned()
+    private void Start()
     {
-        _changes = GetChangeDetector(ChangeDetector.Source.SimulationState);
-
-        // Fail-safe: Gán tạm vào Canvas nếu chưa tìm thấy vị trí chính xác
         transform.localScale = Vector3.one;
         Canvas canvas = FindFirstObjectByType<Canvas>();
-        if (canvas != null)
+        if (canvas != null && transform.parent == null)
         {
             transform.SetParent(canvas.transform, false);
             transform.localScale = Vector3.one;
@@ -48,40 +43,11 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         RefreshState();
     }
 
-    public override void Render()
-    {
-        if (!_isInitialized) RefreshState();
-
-        foreach (var change in _changes.DetectChanges(this))
-        {
-            switch (change)
-            {
-                case nameof(CardID): // Nếu ID thay đổi -> Load lại hình ảnh
-                    LoadVisualsFromID();
-                    break;
-                case nameof(Top):
-                case nameof(Right):
-                case nameof(Bottom):
-                case nameof(Left):
-                    UpdateStatTexts();
-                    break;
-                case nameof(OwnerID):
-                case nameof(HandIndex):
-                    RefreshState();
-                    break;
-                case nameof(IsInvincible): // Render hiệu ứng khi trạng thái Vô Địch thay đổi
-                    UpdateInvincibleVisuals();
-                    break;
-            }
-        }
-    }
-
     public void RefreshState()
     {
-        if (GameManagerNet.Instance == null || InGameUIManager.Instance == null) 
+        if (GameManager.Instance == null || InGameUIManager.Instance == null) 
         { 
-            Debug.LogWarning("GameManagerNet or GameUIManager is not ready yet.");
-            _isInitialized = false;
+            Debug.LogWarning("GameManager or GameUIManager is not ready yet.");
             return; 
         }
         LoadVisualsFromID();
@@ -89,15 +55,16 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         RefreshParentPosition();
         UpdateBackgroundColor();
         UpdateInvincibleVisuals();
-        _isInitialized = true;
     }
+
     public void SetInvincible(int duration)
     {
         IsInvincible = true;
         InvincibleDuration = duration;
+        UpdateInvincibleVisuals();
     }
 
-    // Hàm này được gọi từ GameManagerNet để giảm thời gian hiệu lực
+    // Hàm này được gọi từ GameManager để giảm thời gian hiệu lực
     public void TickInvincibility()
     {
         if (InvincibleDuration > 0)
@@ -106,22 +73,21 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
             if (InvincibleDuration <= 0)
             {
                 IsInvincible = false;
+                UpdateInvincibleVisuals();
             }
         }
     }
 
     private void UpdateInvincibleVisuals()
     {
-        // Cập nhật lại màu chữ
         UpdateStatTexts();
 
-        // Ám vàng cho ảnh lá bài
         if (cardImage != null)
         {
-            // Khi Vô Địch thì nhuộm vàng, bình thường thì để màu gốc của ảnh
             cardImage.color = IsInvincible ? new Color(1f, 0.84f, 0.5f) : Color.white;
         }
     }
+
     private void LoadVisualsFromID()
     {
         if (CardDatabase.Instance == null) return;
@@ -131,18 +97,17 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         {
             if (cardImage != null) cardImage.sprite = data.cardImage;
 
-            gameObject.name = $"Card_{data.cardName}_{Object.Id}";
+            gameObject.name = $"Card_{data.cardName}_{GetInstanceID()}";
             CurrentSkill = data.skill;
         }
     }
-
 
     private void RefreshParentPosition()
     {
         // 1. Nếu bài đang trên tay -> Lấy vị trí tay từ GameUIManager
         if (HandIndex != -1)
         {
-            int localId = GameManagerNet.Instance.GetLocalPlayerID();
+            int localId = GameManager.Instance.GetLocalPlayerID();
             Transform targetParent = (OwnerID == localId) ?
                 InGameUIManager.Instance.RightHandPos : // "Tôi" luôn ở bên phải
                 InGameUIManager.Instance.LeftHandPos;   // Đối thủ bên trái
@@ -152,14 +117,12 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         // 2. Nếu bài đã đánh xuống bàn -> Lấy vị trí Slot từ GameUIManager
         else
         {
-            // Truy cập BoardState từ GameManagerNet (nơi chứa dữ liệu mạng)
-            var boardState = GameManagerNet.Instance.BoardState;
+            var boardState = GameManager.Instance.BoardState;
 
             for (int i = 0; i < 9; i++)
             {
-                if (boardState[i] == Object.Id)
+                if (boardState[i] == this)
                 {
-                    // Truy cập mảng Slots từ GameUIManager (nơi chứa Transform)
                     if (InGameUIManager.Instance.Slots != null && InGameUIManager.Instance.Slots.Length > i)
                     {
                         SetParentIfChanged(InGameUIManager.Instance.Slots[i], Vector3.one * 0.9f);
@@ -185,7 +148,6 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     private void UpdateStatTexts()
     {
-        // Màu chủ đạo: Nếu Vô Địch thì dùng Vàng Kim, không thì dùng màu Cảnh Giới
         Color GetColor(int stat)
         {
             if (IsInvincible) return new Color(1f, 0.84f, 0f); // Gold
@@ -222,7 +184,7 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
         if (HandIndex == -1 && transform.parent != null)
         {
             Image image = transform.parent.GetComponent<Image>();
-            int localId = GameManagerNet.Instance.GetLocalPlayerID();
+            int localId = GameManager.Instance.GetLocalPlayerID();
             if (image != null) image.color = (OwnerID == localId) ? colorP1 : colorP2;
         }
     }
@@ -231,7 +193,7 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
     {
         if (IsInvincible) return;
         OwnerID = 1 - OwnerID;
-        // Fusion tự động sync, Render() sẽ gọi RefreshState() để cập nhật màu
+        RefreshState();
     }
 
     public void SetHighlight(bool isActive)
@@ -241,22 +203,19 @@ public class CardNet : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler,
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Khi nhấn xuống -> Báo Manager để bắt đầu đếm giờ Long Press
-        if (GameManagerNet.Instance != null)
-            GameManagerNet.Instance.OnCardInputDown(this);
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnCardInputDown(this);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        // Khi nhấc tay lên -> Báo Manager để quyết định là Click hay kết thúc Long Press
-        if (GameManagerNet.Instance != null)
-            GameManagerNet.Instance.OnCardInputUp(this);
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnCardInputUp(this);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Khi kéo chuột ra khỏi bài -> Hủy Long Press nếu đang giữ
-        if (GameManagerNet.Instance != null)
-            GameManagerNet.Instance.OnCardInputExit(this);
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnCardInputExit(this);
     }
 }

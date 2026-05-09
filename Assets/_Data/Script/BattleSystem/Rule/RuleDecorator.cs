@@ -1,4 +1,3 @@
-using Fusion;
 
 public abstract class RuleDecorator : IRuleSet
 {
@@ -16,13 +15,13 @@ public abstract class RuleDecorator : IRuleSet
     public virtual string RuleDescription => _wrappedRule.RuleDescription;
 
     // Mặc định: Chuyển tiếp việc xử lý chiến đấu cho luật bên trong
-    public virtual void ResolveBattle(GameManagerNet gm, CardNet playedCard, int slotIndex)
+    public virtual void ResolveBattle(GameManager gm, CardObj playedCard, int slotIndex)
     {
         _wrappedRule.ResolveBattle(gm, playedCard, slotIndex);
     }
 
     // Mặc định: Chuyển tiếp việc kiểm tra điều kiện cho luật bên trong
-    public virtual bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay)
+    public virtual bool CanPlayCard(GameManager gm, CardObj cardToPlay)
     {
         return _wrappedRule.CanPlayCard(gm, cardToPlay);
     }

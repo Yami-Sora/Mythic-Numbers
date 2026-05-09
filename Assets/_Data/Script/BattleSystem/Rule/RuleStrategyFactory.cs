@@ -1,5 +1,5 @@
 /// <summary>
-/// Factory tạo IRuleSet theo CurrentRuleIndex – tuân thủ OCP, thêm luật mới mà không sửa GameManagerNet.
+/// Factory tạo IRuleSet theo CurrentRuleIndex – tuân thủ OCP, thêm luật mới mà không sửa GameManager.
 /// </summary>
 public static class RuleStrategyFactory
 {

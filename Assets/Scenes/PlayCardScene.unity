@@ -5204,9 +5204,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1860739868}
   - component: {fileID: 1860739867}
-  - component: {fileID: 1860739869}
-  - component: {fileID: 1860739871}
-  - component: {fileID: 1860739870}
   m_Layer: 0
   m_Name: NetworkAppManager
   m_TagString: Untagged
@@ -5226,8 +5223,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 230b5099989d5384f898eb36faab8bb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  gameManagerNetPrefab: {fileID: 8967817571561170791, guid: 0826265f208002546bdfb2458b346939, type: 3}
-  gameRefereeNetPrefab: {fileID: 8223552480407649779, guid: c9cd47023c6a4864788c665d5ab0c2ad, type: 3}
+  gameManagerPrefab: {fileID: 843335948712489606, guid: 0826265f208002546bdfb2458b346939, type: 3}
+  gameRefereePrefab: {fileID: 6295720871302065492, guid: c9cd47023c6a4864788c665d5ab0c2ad, type: 3}
   slots:
   - {fileID: 1606471234}
   - {fileID: 590256253}
@@ -5259,46 +5256,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1860739869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1860739866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a58b7f99b2c37d449c123d6c8a64e0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ConnectionHandler
---- !u!114 &1860739870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1860739866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2d62da30828b004d9cafd7f23e028e0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FusionObjectPool
-  DelayIfSceneManagerIsBusy: 1
-  _maxPoolCount: 0
---- !u!114 &1860739871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1860739866}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2d62da30828b004d9cafd7f23e028e0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FusionObjectPool
-  DelayIfSceneManagerIsBusy: 1
-  _maxPoolCount: 0
 --- !u!1 &1924306032
 GameObject:
   m_ObjectHideFlags: 0

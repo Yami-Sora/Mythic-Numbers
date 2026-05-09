@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Fusion;
 using UnityEngine;
 
 public class GameAI : MonoBehaviour
@@ -8,10 +7,10 @@ public class GameAI : MonoBehaviour
     [Header("AI Settings")]
     [SerializeField] private float thinkingTime = 3f; // Thời gian giả vờ suy nghĩ
 
-    private GameManagerNet gameManager;
+    private GameManager gameManager;
     //Biến lưu trữ luồng suy nghĩ hiện tại, fix bug tự động đánh 2 lá sau khi reset
     private Coroutine currentThinkingCoroutine;
-    public void Init(GameManagerNet manager)
+    public void Init(GameManager manager)
     {
         this.gameManager = manager;
     }
@@ -53,8 +52,8 @@ public class GameAI : MonoBehaviour
 
         // --- BƯỚC 1: LẤY DỮ LIỆU ---
         // Tìm bài trên tay AI
-        List<CardNet> aiHand = new List<CardNet>();
-        CardNet[] allCards = FindObjectsByType<CardNet>(FindObjectsSortMode.None);
+        List<CardObj> aiHand = new List<CardObj>();
+        CardObj[] allCards = FindObjectsByType<CardObj>(FindObjectsSortMode.None);
         foreach (var card in allCards)
         {
             if (card.OwnerID == aiPlayerID && card.HandIndex != -1)
@@ -64,7 +63,7 @@ public class GameAI : MonoBehaviour
         }
         // 1b. ✅ QUAN TRỌNG: Lọc ra các lá bài HỢP LỆ (Legal Moves)
         // Nếu có luật Order, danh sách này sẽ chỉ còn 1 lá duy nhất.
-        List<CardNet> legalCards = new List<CardNet>();
+        List<CardObj> legalCards = new List<CardObj>();
         IRuleSet currentRule = gameManager.GetCurrentRule();
 
         foreach (var card in aiHand)
@@ -79,7 +78,7 @@ public class GameAI : MonoBehaviour
         List<int> emptySlots = new List<int>();
         for (int i = 0; i < 9; i++)
         {
-            if (!gameManager.BoardState[i].IsValid) emptySlots.Add(i);
+            if (gameManager.BoardState[i] == null) emptySlots.Add(i);
         }
 
         // Nếu không còn bài hoặc không còn chỗ -> Dừng
@@ -93,7 +92,7 @@ public class GameAI : MonoBehaviour
         // ID 1 (Reverse) hoặc ID 3 (Reverse + Order) là Reverse
         bool isReverseRule = (gameManager.CurrentRuleIndex == 1 || gameManager.CurrentRuleIndex == 3);
 
-        CardNet bestCard = legalCards[0];
+        CardObj bestCard = legalCards[0];
         int bestSlot = emptySlots[0];
         int maxFlips = -1;
 
@@ -119,15 +118,14 @@ public class GameAI : MonoBehaviour
         Debug.Log($"[AI] Quyết định: Dùng bài {bestCard.Top}/{bestCard.Right} đánh vào ô {bestSlot} (Ăn được {maxFlips} bài). Luật Reverse: {isReverseRule}");
 
         // Trước khi gửi RPC, kiểm tra lại trạng thái: lá vẫn ở tay, ô vẫn rỗng, và vẫn là lượt AI
-        if (bestCard == null || bestCard.HandIndex == -1 || gameManager.BoardState[bestSlot].IsValid || gameManager.CurrentTurn != aiPlayerID)
+        if (bestCard == null || bestCard.HandIndex == -1 || gameManager.BoardState[bestSlot] != null || gameManager.CurrentTurn != aiPlayerID)
         {
             currentThinkingCoroutine = null;
             yield break;
         }
 
         // --- BƯỚC 3: THỰC HIỆN NƯỚC ĐI ---
-        // Gọi ngược lại GameManager để thực hiện hành động (vì GameManager nắm quyền RPC)
-        gameManager.RPC_PlayCard(bestCard.Object.Id, bestSlot);
+        gameManager.PlayCard(bestCard, bestSlot);
         // Đánh xong thì reset biến
         currentThinkingCoroutine = null;
     }
@@ -135,7 +133,7 @@ public class GameAI : MonoBehaviour
     // --- CÁC HÀM TÍNH TOÁN GIẢ LẬP (PURE LOGIC) ---
 
     // Đếm số lượng bài lật được (không thay đổi game state)
-    private int SimulateFlipCount(CardNet cardToPlay, int slotIndex, int ownerID, bool isReverseRule)
+    private int SimulateFlipCount(CardObj cardToPlay, int slotIndex, int ownerID, bool isReverseRule)
     {
         int flips = 0;
         int row = slotIndex / 3;
@@ -155,15 +153,9 @@ public class GameAI : MonoBehaviour
         if (nIdx < 0 || nIdx >= 9 || r < 0 || r > 2 || c < 0 || c > 2) return 0;
 
         // Check ô trống
-        NetworkId nId = gameManager.BoardState[nIdx];
-        if (!nId.IsValid) return 0;
+        CardObj enemy = gameManager.BoardState[nIdx];
+        if (enemy == null) return 0;
 
-        // Lấy thông tin bài địch
-        // Lưu ý: Runner.FindObject cần truy cập qua GameManager hoặc NetworkRunner
-        NetworkObject obj = gameManager.Runner.FindObject(nId);
-        if (obj == null) return 0;
-
-        CardNet enemy = obj.GetComponent<CardNet>();
         if (enemy.OwnerID == myOwner) return 0; // Bài phe mình -> không lật
 
         // So sánh chỉ số

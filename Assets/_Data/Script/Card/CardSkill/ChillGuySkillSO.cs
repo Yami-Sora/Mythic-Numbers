@@ -5,7 +5,7 @@ public class BuffSkillSO : BaseSkillSO
 {
     public int boostAmount = 1;
 
-    public override void Execute(GameManagerNet gm, CardNet caster, int slotIndex)
+    public override void Execute(GameManager gm, CardObj caster, int slotIndex)
     {
         caster.Top += boostAmount;
         caster.Right += boostAmount;

@@ -3,7 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Mythic/Skills/Absolute Cinema")]
 public class AbsoluteCinemaSkillSO : BaseSkillSO
 {
-    public override void Execute(GameManagerNet gm, CardNet card, int slotIndex)
+    public override void Execute(GameManager gm, CardObj card, int slotIndex)
     {
         // Kích hoạt trạng thái Vô Địch
         // Duration = 2 (1 bán lượt của mình kết thúc + 1 bán lượt của đối thủ)

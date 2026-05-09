@@ -575,8 +575,15 @@ public class PlayFabDataManager : MonoBehaviour
         PlayFabClientAPI.UpdateUserData(request, 
             res => {
                 Debug.Log("<color=cyan>[PlayFab] Đã cập nhật Public Profile (Hộ chiếu) thành công!</color>");
+                
                 // Cập nhật lực chiến lên Statistics để leo bảng xếp hạng
                 UpdatePlayerStatistics(PlayFabConstants.STAT_PLAYER_POWER, PlayerPower);
+
+                // Cập nhật luôn cache cục bộ để UI (như Leaderboard) lấy ra hiển thị ngay lập tức
+                if (PlayFabSettings.staticPlayer != null && !string.IsNullOrEmpty(PlayFabSettings.staticPlayer.PlayFabId))
+                {
+                    _profileCache[PlayFabSettings.staticPlayer.PlayFabId] = profile;
+                }
             },
             err => Debug.LogWarning("[PlayFab] Lỗi cập nhật Profile: " + err.GenerateErrorReport())
         );

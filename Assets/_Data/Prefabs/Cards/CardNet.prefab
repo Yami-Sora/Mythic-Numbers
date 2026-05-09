@@ -571,7 +571,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2152037206770663883}
   - component: {fileID: 513927427253526400}
-  - component: {fileID: 4286878122934005440}
   - component: {fileID: 5038261363432983372}
   m_Layer: 5
   m_Name: CardNet
@@ -614,25 +613,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5429371759812574453}
   m_CullTransparentMesh: 1
---- !u!114 &4286878122934005440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5429371759812574453}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 3490621407
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 5038261363432983372}
-  ForceRemoteRenderTimeframe: 0
 --- !u!114 &5038261363432983372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -651,16 +631,6 @@ MonoBehaviour:
   txtBottom: {fileID: 647359396558260722}
   txtLeft: {fileID: 124236589109307574}
   highlightObj: {fileID: 1339143399985017692}
-  _Top: 0
-  _Right: 0
-  _Bottom: 0
-  _Left: 0
-  _OwnerID: 0
-  _HandIndex: 0
-  _CardID: 0
-  _IsInvincible:
-    _value: 0
-  _InvincibleDuration: 0
 --- !u!1 &6397153545422672430
 GameObject:
   m_ObjectHideFlags: 0

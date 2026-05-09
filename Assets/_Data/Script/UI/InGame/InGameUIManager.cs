@@ -2,7 +2,6 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using Fusion;
 
 public class InGameUIManager : MonoBehaviour
 {
@@ -52,23 +51,19 @@ public class InGameUIManager : MonoBehaviour
 
     private void Start()
     {
-        // 1. Check ẩn hiện Avatar đối thủ (AI vs Người)
-        NetworkRunner runner = FindFirstObjectByType<NetworkRunner>();
-        if (runner != null)
-        {
-            bool isSinglePlayer = (runner.GameMode == GameMode.Single);
-            if (leftAiImage != null) leftAiImage.gameObject.SetActive(isSinglePlayer);
-            if (leftPlayer2 != null) leftPlayer2.gameObject.SetActive(!isSinglePlayer);
-        }
+        // 1. Mặc định là chơi với AI (SinglePlayer)
+        bool isSinglePlayer = true;
+        if (leftAiImage != null) leftAiImage.gameObject.SetActive(isSinglePlayer);
+        if (leftPlayer2 != null) leftPlayer2.gameObject.SetActive(!isSinglePlayer);
 
         // 2. Tắt các Panel râu ria lúc mới vào game
         if (reconnectPanel != null) reconnectPanel.SetActive(false);
         if (rulePanel != null) rulePanel.SetActive(false);
 
-        // 3. Báo cáo cho NetworkAppManager đã sẵn sàng
-        if (NetworkAppManager.Instance != null)
+        // 3. Báo cáo cho BattleFlowManager đã sẵn sàng
+        if (BattleFlowManager.Instance != null)
         {
-            NetworkAppManager.Instance.OnUIManagerReady();
+            BattleFlowManager.Instance.OnUIManagerReady();
         }
     }
 
@@ -117,7 +112,7 @@ public class InGameUIManager : MonoBehaviour
     {
         if (rulePanel != null)
         {
-            GameManagerNet.Instance.SetCurrenRule();
+            GameManager.Instance.SetCurrenRule();
             rulePanel.SetActive(true);
         }
     }
@@ -135,7 +130,7 @@ public class InGameUIManager : MonoBehaviour
         if (subRuleDes != null) subRuleDes.text = subDesc;
     }
 
-    public void ShowCardFocus(CardNet card)
+    public void ShowCardFocus(CardObj card)
     {
         if (cardFocusPanel != null) cardFocusPanel.Show(card);
     }

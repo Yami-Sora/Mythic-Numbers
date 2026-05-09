@@ -10,7 +10,7 @@ public class SungSigma : RandomStatAbstract
 
     protected override int LuckySidesCount => 1;
 
-    protected override void ApplyBuffLogic(CardNet caster, List<int> targetSides)
+    protected override void ApplyBuffLogic(CardObj caster, List<int> targetSides)
     {
         // Vì LuckySidesCount = 1, list này chắc chắn chỉ có 1 phần tử
         foreach (int side in targetSides)
@@ -19,7 +19,7 @@ public class SungSigma : RandomStatAbstract
         }
     }
 
-    protected override void ApplyDebuffLogic(CardNet caster, List<int> remainingSides)
+    protected override void ApplyDebuffLogic(CardObj caster, List<int> remainingSides)
     {
         int pointsToRemove = totalDebuffAmount;
 

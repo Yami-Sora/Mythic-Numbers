@@ -5,6 +5,6 @@ public class SlotClick : MonoBehaviour
     public void OnClick()
     {
         // Tìm GameManager trong scene để gọi
-        GameManagerNet.Instance.OnSlotClicked(slotIndex);
+        GameManager.Instance.OnSlotClicked(slotIndex);
     }
 }

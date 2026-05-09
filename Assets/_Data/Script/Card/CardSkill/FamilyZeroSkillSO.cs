@@ -5,7 +5,7 @@ using System.Linq;
 [CreateAssetMenu(menuName = "Mythic/Skills/FamilyZero")]
 public class FamilyZeroSkillSO : BaseSkillSO
 {
-    public override void Execute(GameManagerNet gm, CardNet card, int slotIndex)
+    public override void Execute(GameManager gm, CardObj card, int slotIndex)
     {
         // 1. Lấy danh sách các chỉ số hiện tại để tìm Min/Max
         List<int> currentStats = new List<int> { card.Top, card.Right, card.Bottom, card.Left };

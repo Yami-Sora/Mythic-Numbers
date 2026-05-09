@@ -1,5 +1,4 @@
 using UnityEngine;
-using Fusion;
 
 // Concrete Decorator: Thêm hành vi "Bắt buộc đánh theo thứ tự"
 public class OrderRuleDecorator : RuleDecorator
@@ -12,7 +11,7 @@ public class OrderRuleDecorator : RuleDecorator
     // Ghi đè mô tả: Thêm dòng giải thích về Order
     public override string RuleDescription => "Bạn buộc phải đánh quân bài theo thứ tự được sắp xếp.";
 
-    public override bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay)
+    public override bool CanPlayCard(GameManager gm, CardObj cardToPlay)
     {
         if (!CheckOrderCondition(cardToPlay))
         {
@@ -23,10 +22,10 @@ public class OrderRuleDecorator : RuleDecorator
         return base.CanPlayCard(gm, cardToPlay);
     }
 
-    private bool CheckOrderCondition(CardNet cardToPlay)
+    private bool CheckOrderCondition(CardObj cardToPlay)
     {
         int currentPlayerID = cardToPlay.OwnerID;
-        var allCards = Object.FindObjectsByType<CardNet>(FindObjectsSortMode.None);
+        var allCards = Object.FindObjectsByType<CardObj>(FindObjectsSortMode.None);
 
         int minIndex = 20;
 

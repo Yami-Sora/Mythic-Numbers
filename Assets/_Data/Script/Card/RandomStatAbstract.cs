@@ -7,7 +7,7 @@ public abstract class RandomStatAbstract : BaseSkillSO
     // Quy định số lượng cạnh may mắn sẽ được Buff
     protected abstract int LuckySidesCount { get; }
 
-    public override void Execute(GameManagerNet gm, CardNet caster, int slotIndex)
+    public override void Execute(GameManager gm, CardObj caster, int slotIndex)
     {
         // 1. Tạo danh sách 4 hướng (0, 1, 2, 3)
         List<int> allSides = new List<int> { 0, 1, 2, 3 };
@@ -31,15 +31,15 @@ public abstract class RandomStatAbstract : BaseSkillSO
     // --- CÁC HÀM TRỪU TƯỢNG ĐỂ CON CÁI TỰ ĐỊNH NGHĨA ---
 
     // Logic xử lý cho các cạnh được chọn (VD: Cộng 5 điểm)
-    protected abstract void ApplyBuffLogic(CardNet caster, List<int> targetSides);
+    protected abstract void ApplyBuffLogic(CardObj caster, List<int> targetSides);
 
     // Logic xử lý cho các cạnh còn lại (VD: Trừ điểm, hoặc Set về 0)
-    protected abstract void ApplyDebuffLogic(CardNet caster, List<int> remainingSides);
+    protected abstract void ApplyDebuffLogic(CardObj caster, List<int> remainingSides);
 
 
     // --- CÁC HÀM TIỆN ÍCH (HELPER) DÙNG CHUNG ---
 
-    protected void ModifyStat(CardNet card, int sideIndex, int amount)
+    protected void ModifyStat(CardObj card, int sideIndex, int amount)
     {
         switch (sideIndex)
         {
@@ -50,7 +50,7 @@ public abstract class RandomStatAbstract : BaseSkillSO
         }
     }
 
-    protected void SetStat(CardNet card, int sideIndex, int value)
+    protected void SetStat(CardObj card, int sideIndex, int value)
     {
         switch (sideIndex)
         {
@@ -61,7 +61,7 @@ public abstract class RandomStatAbstract : BaseSkillSO
         }
     }
 
-    protected int GetStat(CardNet card, int sideIndex)
+    protected int GetStat(CardObj card, int sideIndex)
     {
         switch (sideIndex)
         {

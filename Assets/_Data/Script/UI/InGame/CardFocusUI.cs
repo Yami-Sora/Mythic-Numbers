@@ -26,12 +26,12 @@ public class CardFocusUI : YamiMonoBehaviour
 
     private Coroutine _currentAnimRoutine;
     private Coroutine _monitoringRoutine; // Coroutine theo dõi chỉ số
-    private CardNet _currentSourceCard;
+    private CardObj _currentSourceCard;
 
     private int _baseTop, _baseRight, _baseBottom, _baseLeft;
     private int _displayedTop, _displayedRight, _displayedBottom, _displayedLeft;
 
-    public void Show(CardNet sourceCard)
+    public void Show(CardObj sourceCard)
     {
         gameObject.SetActive(true);
         if (InGameUIManager.Instance != null)
@@ -67,7 +67,7 @@ public class CardFocusUI : YamiMonoBehaviour
     }
 
     
-    private void FetchBaseStats(CardNet source)
+    private void FetchBaseStats(CardObj source)
     {
         CardDataSO data = null;
         if (CardDatabase.Instance != null)
@@ -190,7 +190,7 @@ public class CardFocusUI : YamiMonoBehaviour
         while (true)
         {
             // Kiểm tra Card còn tồn tại không
-            if (_currentSourceCard == null || _currentSourceCard.Object == null || !_currentSourceCard.Object.IsValid)
+            if (_currentSourceCard == null)
             {
                 ClosePanel();
                 yield break;

@@ -1,10 +1,9 @@
 using UnityEngine;
-using Fusion;
 
 public interface IRuleSet
 {
     string RuleName { get; }
     string RuleDescription { get; }
-    void ResolveBattle(GameManagerNet gm, CardNet playedCard, int slotIndex);
-    bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay);
+    void ResolveBattle(GameManager gm, CardObj playedCard, int slotIndex);
+    bool CanPlayCard(GameManager gm, CardObj cardToPlay);
 }

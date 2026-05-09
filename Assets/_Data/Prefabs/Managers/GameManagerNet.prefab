@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6971291893176348093}
-  - component: {fileID: 8967817571561170791}
   - component: {fileID: 8349414639861191568}
   - component: {fileID: 7819502552760626106}
   m_Layer: 0
@@ -34,25 +33,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8967817571561170791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 843335948712489606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
-  SortKey: 1718035062
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 8349414639861191568}
-  ForceRemoteRenderTimeframe: 0
 --- !u!114 &8349414639861191568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65,11 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1bd6d1fbc98c04d849bc63126c2a8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManagerNet
-  playWithAI: 0
-  cardPrefab: {fileID: 4286878122934005440, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
-  _CurrentTurn: 0
-  _BoardState: []
-  _CurrentRuleIndex: 0
+  playWithAI: 1
+  cardPrefab: {fileID: 5429371759812574453, guid: a2b5e692f97ddb449bf708f4141bf18c, type: 3}
 --- !u!114 &7819502552760626106
 MonoBehaviour:
   m_ObjectHideFlags: 0

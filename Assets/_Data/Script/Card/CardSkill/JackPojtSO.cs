@@ -9,7 +9,7 @@ public class JackPoltSO : RandomStatAbstract
 
     protected override int LuckySidesCount => 2;
 
-    protected override void ApplyBuffLogic(CardNet caster, List<int> targetSides)
+    protected override void ApplyBuffLogic(CardObj caster, List<int> targetSides)
     {
         // Cộng điểm cho 2 cạnh may mắn
         foreach (int side in targetSides)
@@ -18,7 +18,7 @@ public class JackPoltSO : RandomStatAbstract
         }
     }
 
-    protected override void ApplyDebuffLogic(CardNet caster, List<int> remainingSides)
+    protected override void ApplyDebuffLogic(CardObj caster, List<int> remainingSides)
     {
         // Set 2 cạnh còn lại về 0
         foreach (int side in remainingSides)

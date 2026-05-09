@@ -1,17 +1,14 @@
-using Fusion;
 using UnityEngine;
 
 /// <summary>
-/// Chịu trách nhiệm chia bài và spawn card – tách khỏi GameManagerNet (SRP).
+/// Chịu trách nhiệm chia bài và spawn card – tách khỏi GameManager (SRP).
 /// </summary>
 public class CardDealer
 {
-    private readonly NetworkRunner _runner;
-    private readonly NetworkObject _cardPrefab;
+    private readonly GameObject _cardPrefab;
 
-    public CardDealer(NetworkRunner runner, NetworkObject cardPrefab)
+    public CardDealer(GameObject cardPrefab)
     {
-        _runner = runner;
         _cardPrefab = cardPrefab;
     }
 
@@ -37,8 +34,8 @@ public class CardDealer
         CardDataSO data = CardDatabase.Instance.GetCardData(cardData.CardID);
         if (data == null) return;
 
-        var no = _runner.Spawn(_cardPrefab, Vector3.zero, Quaternion.identity);
-        CardNet card = no.GetComponent<CardNet>();
+        var go = Object.Instantiate(_cardPrefab, Vector3.zero, Quaternion.identity);
+        CardObj card = go.GetComponent<CardObj>();
 
         card.OwnerID = ownerID;
         card.HandIndex = index;

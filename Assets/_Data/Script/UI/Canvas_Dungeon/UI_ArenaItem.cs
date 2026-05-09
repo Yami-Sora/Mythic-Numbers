@@ -143,14 +143,14 @@ public class UI_ArenaItem : MonoBehaviour
             }
 
             // Chuyển cảnh vào trận đấu (Chế độ Single Player vì đối thủ là Bot/Snapshot)
-            var launcher = FindFirstObjectByType<NetworkLauncher>();
+            var launcher = FindFirstObjectByType<BattleLauncher>();
             if (launcher != null)
             {
                 launcher.OnPlayOfflineClicked();
             }
             else
             {
-                Debug.LogError("[Arena] Không tìm thấy NetworkLauncher trong Scene!");
+                Debug.LogError("[Arena] Không tìm thấy BattleLauncher trong Scene!");
             }
         }
         else

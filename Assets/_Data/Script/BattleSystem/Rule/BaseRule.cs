@@ -1,5 +1,4 @@
 using UnityEngine;
-using Fusion;
 
 public abstract class BaseRule : IRuleSet
 {
@@ -7,7 +6,7 @@ public abstract class BaseRule : IRuleSet
     public abstract string RuleDescription { get; }
 
 
-    public virtual void ResolveBattle(GameManagerNet gm, CardNet playedCard, int slotIndex)
+    public virtual void ResolveBattle(GameManager gm, CardObj playedCard, int slotIndex)
     {
         int row = slotIndex / 3;
         int col = slotIndex % 3;
@@ -18,23 +17,18 @@ public abstract class BaseRule : IRuleSet
         CheckOneDirection(gm, playedCard, slotIndex - 1, "Right", row, col - 1);    // Left
     }
     //Các luật thường(Normal/Reverse) luôn cho phép đánh bất kỳ lá nào
-    public virtual bool CanPlayCard(GameManagerNet gm, CardNet cardToPlay)
+    public virtual bool CanPlayCard(GameManager gm, CardObj cardToPlay)
     {
         return true;
     }
-    protected void CheckOneDirection(GameManagerNet gm, CardNet myCard, int nIdx, string enemySide, int r, int c)
+    protected void CheckOneDirection(GameManager gm, CardObj myCard, int nIdx, string enemySide, int r, int c)
     {
         // 1. Check biên
         if (nIdx < 0 || nIdx >= 9 || r < 0 || r > 2 || c < 0 || c > 2) return;
 
         // 2. Check bài
-        NetworkId nId = gm.BoardState[nIdx];
-        if (!nId.IsValid) return;
-
-        NetworkObject obj = gm.Runner.FindObject(nId);
-        if (obj == null) return;
-
-        CardNet enemy = obj.GetComponent<CardNet>();
+        CardObj enemy = gm.BoardState[nIdx];
+        if (enemy == null) return;
 
         // 3. Check phe (Không ăn bài đồng đội)
         if (enemy.OwnerID == myCard.OwnerID) return;
@@ -55,7 +49,7 @@ public abstract class BaseRule : IRuleSet
     protected abstract bool CompareStats(int myStat, int enemyStat);
 
     // Helper lấy chỉ số
-    protected int GetStat(CardNet card, string side)
+    protected int GetStat(CardObj card, string side)
     {
         switch (side)
         {

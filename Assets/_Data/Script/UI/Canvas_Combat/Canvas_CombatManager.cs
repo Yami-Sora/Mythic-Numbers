@@ -107,7 +107,7 @@ public class Canvas_CombatManager : TabListenerBase
                 PlayerPrefs.Save();
 
                 // CHỈ khi trừ thể lực thành công thì mới cho nhảy sang Scene chiến đấu!
-                var launcher = FindFirstObjectByType<NetworkLauncher>();
+                var launcher = FindFirstObjectByType<BattleLauncher>();
                 if (launcher != null) 
                 {
                     launcher.OnPlayOfflineClicked();

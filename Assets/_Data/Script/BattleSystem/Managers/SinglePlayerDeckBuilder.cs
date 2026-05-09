@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Chịu trách nhiệm khởi tạo bộ bài cho người chơi và AI (hoặc đối thủ Arena) trong chế độ Single Player.
-/// Giảm tải logic khởi tạo cho GameManagerNet.
+/// Giảm tải logic khởi tạo cho GameManager.
 /// </summary>
 public static class SinglePlayerDeckBuilder
 {

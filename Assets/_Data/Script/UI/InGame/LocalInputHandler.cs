@@ -3,23 +3,23 @@ using UnityEngine.InputSystem;
 // Class này xử lý logic chọn bài của người chơi Local
 public class LocalInputHandler
 {
-    private GameManagerNet _gameManager;
-    private CardNet _selectedLocalCard;
+    private GameManager _gameManager;
+    private CardObj _selectedLocalCard;
 
     // --- Variables for Long Press Logic ---
-    private CardNet _currentPressCard;
+    private CardObj _currentPressCard;
     private float _pressStartTime;
     private bool _isPressing;
     private bool _isLongPressTriggered;
     private const float LONG_PRESS_DURATION = 0.4f; // Thời gian giữ để hiện Info (0.4 giây)
 
-    public LocalInputHandler(GameManagerNet gm)
+    public LocalInputHandler(GameManager gm)
     {
         _gameManager = gm;
     }
 
     // --- POINTER EVENTS (Xử lý Click & Hold) ---
-    public void OnPointerDown(CardNet card)
+    public void OnPointerDown(CardObj card)
     {
         _isPressing = true;
         _isLongPressTriggered = false;
@@ -27,7 +27,7 @@ public class LocalInputHandler
         _currentPressCard = card;
     }
 
-    public void OnPointerUp(CardNet card)
+    public void OnPointerUp(CardObj card)
     {
         if (_isLongPressTriggered) {}
         else
@@ -42,12 +42,12 @@ public class LocalInputHandler
         ResetPressState();
     }
 
-    public void OnPointerExit(CardNet card)
+    public void OnPointerExit(CardObj card)
     {
         ResetPressState();
     }
 
-    // Hàm này được gọi mỗi frame từ GameManagerNet.Render()
+    // Hàm này được gọi mỗi frame từ GameManager.Render()
     public void Update()
     {
         if (_isPressing && !_isLongPressTriggered)
@@ -74,7 +74,7 @@ public class LocalInputHandler
     }
 
     // --- GAMEPLAY LOGIC (Chọn bài để đánh) ---
-    public void SelectCard(CardNet card)
+    public void SelectCard(CardObj card)
     {
         // Logic kiểm tra chủ sở hữu
         if (card.OwnerID != _gameManager.GetLocalPlayerID())
@@ -116,7 +116,7 @@ public class LocalInputHandler
     public void OnSlotClicked(int slotIndex)
     {
         if (_selectedLocalCard == null) return;
-        if (slotIndex < 0 || slotIndex >= 9 || GameManagerNet.Instance.BoardState[slotIndex].IsValid) return;
+        if (slotIndex < 0 || slotIndex >= 9 || GameManager.Instance.BoardState[slotIndex] != null) return;
 
         if (_gameManager.GetLocalPlayerID() != _gameManager.CurrentTurn) 
         {
@@ -127,8 +127,8 @@ public class LocalInputHandler
 
         _selectedLocalCard.SetHighlight(false);
 
-        // Gọi RPC bên GameManager để xử lý logic mạng
-        _gameManager.RPC_PlayCard(_selectedLocalCard.Object.Id, slotIndex);
+        // Gọi trực tiếp GameManager để xử lý logic
+        _gameManager.PlayCard(_selectedLocalCard, slotIndex);
 
         // Gọi UI Manager để hiển thị panel phóng to lá bài vừa đánh
         InGameUIManager.Instance?.ShowCardFocus(_selectedLocalCard);

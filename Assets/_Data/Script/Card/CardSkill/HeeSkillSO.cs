@@ -5,7 +5,7 @@ public class HeheSkillSO : BaseSkillSO
     [Header("Config")]
     public int buffAmount = 3;
 
-    public override void Execute(GameManagerNet gm, CardNet card, int slotIndex)
+    public override void Execute(GameManager gm, CardObj card, int slotIndex)
     {
         int minVal = Mathf.Min(card.Top, Mathf.Min(card.Right, Mathf.Min(card.Bottom, card.Left)));
 
