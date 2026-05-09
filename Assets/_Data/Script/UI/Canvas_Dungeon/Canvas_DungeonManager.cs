@@ -36,14 +36,30 @@ public class Canvas_DungeonManager : TabListenerBase
             Transform t = transform.Find("Dungeon_Tab");
             if (t != null) dungeonTab = t.gameObject;
         }
-
-        Close_All_Panels();
     }
 
     protected override void OnTabChanged(Canvas_NavigationManager.TabType targetTab)
     {
         if (targetTab == Canvas_NavigationManager.TabType.Dungeon)
-            Close_All_Panels();
+        {
+            if (PlayFabDataManager.Instance != null)
+            {
+                if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.Arena)
+                {
+                    Open_Arena_Panel();
+                    PlayFabDataManager.Instance.CurrentMode = PlayFabDataManager.GameMode.Story; // Reset để lần sau click tab Dungeon sẽ ra menu chính
+                    return;
+                }
+                else if (PlayFabDataManager.Instance.CurrentMode == PlayFabDataManager.GameMode.GemMine)
+                {
+                    Open_Mine_Panel();
+                    PlayFabDataManager.Instance.CurrentMode = PlayFabDataManager.GameMode.Story; // Reset
+                    return;
+                }
+            }
+
+            Close_All_Panels(); // Mặc định mở menu chọn Dungeon
+        }
     }
 
     // ===================== Tab Switching =====================
