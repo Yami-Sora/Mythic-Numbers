@@ -73,7 +73,7 @@ public class InventoryManager : YamiMonoBehaviour
 
         foreach (var item in testItemsArray)
         {
-            AddItem(item, Random.Range(1, 51), true); // isSilent = true để tránh lag UI khi add nhiều
+            AddItem(item, 1, true); // Mỗi item 1 cái thôi cho sếp đỡ ngợp
         }
         RefreshUI();
         

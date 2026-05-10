@@ -106,6 +106,7 @@ public class GameReferee : MonoBehaviour
         int p1Score = 0; // Blue (ID 0)
         int p2Score = 0; // Red (ID 1)
 
+        // Đếm điểm từ các lá đã đánh trên bàn
         var board = GameManager.Instance.BoardState;
         for (int i = 0; i < 9; i++)
         {
@@ -116,7 +117,19 @@ public class GameReferee : MonoBehaviour
             }
         }
 
-        Debug.Log($"KẾT QUẢ: P1 {p1Score} - P2 {p2Score}");
+        // Đếm thêm lá bài còn trên tay chưa đánh (HandIndex != -1)
+        // Lá trên tay luôn thuộc về chủ ban đầu của nó
+        CardObj[] allCards = UnityEngine.Object.FindObjectsByType<CardObj>(FindObjectsSortMode.None);
+        foreach (var card in allCards)
+        {
+            if (card != null && card.HandIndex != -1)
+            {
+                if (card.OwnerID == 0) p1Score++;
+                else p2Score++;
+            }
+        }
+
+        Debug.Log($"KẾT QUẢ (bàn + tay): P1 {p1Score} - P2 {p2Score}");
 
         // 0: P1 Thắng, 1: P2 Thắng, 2: Hòa
         int winnerID = 2;
@@ -154,12 +167,12 @@ public class GameReferee : MonoBehaviour
             // Trường hợp kết thúc game bình thường
             if (winnerID == 2)
             {
-                message = $"Hòa\n ({s1} - {s2})";
+                message = $"Hòa\n ({s2} - {s1})";
                 textColor = Color.yellow;
             }
             else if (winnerID == myID)
             {
-                message = $"Chiến Thắng\n ({s1} - {s2})";
+                message = $"Chiến Thắng\n ({s2} - {s1})";
                 textColor = Color.green;
 
                 // [PVE LOGIC]: CỘNG THƯỞNG VÀ TĂNG ẢI
@@ -177,7 +190,7 @@ public class GameReferee : MonoBehaviour
             }
             else
             {
-                message = $"Thất Bại\n ({s1} - {s2})";
+                message = $"Thất Bại\n ({s2} - {s1})";
                 textColor = Color.red;
             }
 

@@ -271,7 +271,11 @@ public class PlayFabDataManager : MonoBehaviour
     private void OnPlayerStatsUpdated()
     {
         UpdatePublicProfile();
-        // Ép cập nhật Leaderboard nếu có thay đổi (thay thế cho dòng cũ trong PlayerDataService)
+
+        // Cập nhật lại hạng của người chơi ngay sau khi số liệu Arena thay đổi
+        FetchMyRank();
+
+        // Ép cập nhật Leaderboard nếu có thay đổi
         if (GameServices.Instance?.Leaderboard != null)
         {
             GameServices.Instance.Leaderboard.ForceUpdateLeaderboard();
@@ -995,20 +999,19 @@ public class PlayFabDataManager : MonoBehaviour
             if (Keyboard.current.digit3Key.wasPressedThisFrame) ExecuteCheat3();
         }
 
-        // --- Phần mới cho Mobile (Input System Package) ---
+        // --- Phần mới cho Mobile: Double Tap ---
         var touch = Touchscreen.current?.primaryTouch;
         if (touch != null && touch.press.wasPressedThisFrame && touch.tapCount.ReadValue() == 2)
         {
-            float touchX = touch.position.ReadValue().x;
-            float screenWidth = Screen.width;
-
-            if (touchX < screenWidth / 3f)
-                ExecuteCheat1(); // Chạm bên trái
-            else if (touchX < (screenWidth * 2f) / 3f)
-                ExecuteCheat2(); // Chạm ở giữa
-            else
-                ExecuteCheat3(); // Chạm bên phải
+            ExecuteDoubleTapCheat();
         }
+    }
+
+    private void ExecuteDoubleTapCheat()
+    {
+        Debug.Log("<color=green>[Cheat] Sếp Yami Double Tap: Bơm cả Vàng và Linh Ngọc!</color>");
+        HackCurrency(PlayFabConstants.CURRENCY_GOLD, 1000);
+        HackCurrency(PlayFabConstants.CURRENCY_LN, 100);
     }
 
 
