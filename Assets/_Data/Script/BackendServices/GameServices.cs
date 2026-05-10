@@ -32,6 +32,7 @@ public class GameServices : MonoBehaviour
     }
 
     public static event System.Action OnBackendReady;
+    public static bool IsBackendReady { get; private set; } = false;
 
     private async void TestConnection()
     {
@@ -55,6 +56,7 @@ public class GameServices : MonoBehaviour
             }
 
             // Bắn tín hiệu ra ngoài để UI hoặc DataManager khác tự bắt đầu kéo dữ liệu
+            IsBackendReady = true;
             OnBackendReady?.Invoke();
         }
         else

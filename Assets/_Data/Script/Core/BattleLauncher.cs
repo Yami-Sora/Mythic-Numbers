@@ -8,12 +8,6 @@ public class BattleLauncher : MonoBehaviour
         Application.runInBackground = true;
     }
 
-    public void OnPlayOnlineClicked()
-    {
-        Debug.Log("Chế độ Online đã bị vô hiệu hóa trong phiên bản Async PvP.");
-        // Nếu sau này muốn thêm lại, có thể xử lý tại đây
-    }
-
     public void OnPlayOfflineClicked()
     {
         Debug.Log("Đang vào chế độ Offline...");

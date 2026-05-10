@@ -243,10 +243,18 @@ public class PlayFabDataManager : MonoBehaviour
     private void Start()
     {
         GameServices.OnBackendReady += OnBackendReady;
-        
+
         if (GameServices.Instance != null && GameServices.Instance.PlayerData != null)
         {
             GameServices.Instance.PlayerData.OnPlayerStatsUpdated += OnPlayerStatsUpdated;
+        }
+
+        // FIX RACE CONDITION: Nếu GameServices đã login xong trước khi Start() này chạy,
+        // event OnBackendReady đã được bắn rồi → ta bỏ lỡ → phải tự gọi luôn!
+        if (GameServices.IsBackendReady)
+        {
+            Debug.Log("[PlayFabDataManager] Backend đã ready trước Start() → tự gọi OnBackendReady!");
+            OnBackendReady();
         }
     }
 
