@@ -22,9 +22,14 @@ public class GamePlayController : MonoBehaviour
         if (GameReferee.Instance != null && GameReferee.Instance.ResultPanel != null)
             GameReferee.Instance.ResultPanel.SetActive(false);
 
-        // Reset bàn cờ sạch sẽ cho lần chơi tiếp theo
-        if (GameManager.Instance != null)
-            GameManager.Instance.RestartGame();
+        // KHÔNG gọi RestartGame() ở đây!
+        // BattleFlowManager.StartBattle() sẽ gọi RestartGame() khi vào trận mới.
+        // Gọi 2 lần tạo ra duplicate cards (pending-destroy + newly spawned)
+        // làm OrderRule tính minIndex sai → hiển thị lá bài sai bị ép chọn.
+
+        // Reset màu sắc các ô bàn cờ về trắng ngay khi thoát
+        if (InGameUIManager.Instance != null)
+            InGameUIManager.Instance.ResetBoardUI();
 
         // Ẩn toàn bộ battle (ẩn ----PLAYCARD----)
         if (battleRoot != null)

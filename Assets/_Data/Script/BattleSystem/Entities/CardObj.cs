@@ -32,14 +32,6 @@ public class CardObj : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IP
     private void Start()
     {
         transform.localScale = Vector3.one;
-        Canvas canvas = FindFirstObjectByType<Canvas>();
-        if (canvas != null && transform.parent == null)
-        {
-            transform.SetParent(canvas.transform, false);
-            transform.localScale = Vector3.one;
-            transform.localPosition = Vector3.zero;
-        }
-
         RefreshState();
     }
 
@@ -139,6 +131,14 @@ public class CardObj : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IP
         if (target != null && (transform.parent != target || transform.localScale != targetScale))
         {
             transform.SetParent(target, false);
+            
+            // Nếu bài đang trên tay (HandIndex != -1), ép thứ tự SiblingIndex
+            // để đảm bảo HorizontalLayoutGroup xếp đúng: 0 bên trái, 4 bên phải.
+            if (HandIndex != -1)
+            {
+                transform.SetSiblingIndex(HandIndex);
+            }
+
             // Reset Transform để UI không bị méo
             transform.localScale = targetScale;
             transform.localRotation = Quaternion.identity;

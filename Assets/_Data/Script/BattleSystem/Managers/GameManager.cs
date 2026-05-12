@@ -30,9 +30,12 @@ public class GameManager : MonoBehaviour
     private bool isP2Ready;
 
     // --- SETUP ---
-    // Flag: BattleFlowManager đã gọi RestartGame() trước khi Start() kịp chạy
-    // → Start() sẽ skip deal để tránh double-deal
-    private bool _dealDone = false;
+    [Header("In-Game Hands")]
+    [SerializeField] private List<CardObj> p1Hand = new List<CardObj>();
+    [SerializeField] private List<CardObj> p2Hand = new List<CardObj>();
+
+    public List<CardObj> P1Hand => p1Hand;
+    public List<CardObj> P2Hand => p2Hand;
 
     private void Awake()
     {
@@ -55,19 +58,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        // Nếu BattleFlowManager đã gọi RestartGame() rồi thì bỏ qua,
-        // tránh deal bài 2 lần (1 lần từ RestartGame, 1 lần từ Start)
-        if (_dealDone) return;
-
-        RandomizeRule();
-        CurrentTurn = 0;
-        PrepareSinglePlayerDecks();
-        _cardDealer.DealCards(p1Deck, p2Deck);
-        UpdateRuleStrategy();
-        _dealDone = true;
-    }
 
     private void PrepareSinglePlayerDecks()
     {
@@ -109,6 +99,10 @@ public class GameManager : MonoBehaviour
         // Update Data
         BoardState[slotIndex] = card;
         card.HandIndex = -1;
+
+        // Xóa khỏi danh sách bài trên tay
+        if (card.OwnerID == 0) p1Hand.Remove(card);
+        else p2Hand.Remove(card);
 
         //Kích hoạt Pre - Battle Skill(Execute)
         if (card.CurrentSkill != null)
@@ -160,25 +154,40 @@ public class GameManager : MonoBehaviour
     {
         if (playWithAI) aiBrain?.StopThinking();
 
-        // Đánh dấu để Start() không deal thêm (tránh double-deal)
-        _dealDone = true;
-
-        // Reset Logic
-        RandomizeRule();
-        CardObj[] allCards = FindObjectsByType<CardObj>(FindObjectsSortMode.None);
-        foreach (var card in allCards) Destroy(card.gameObject);
-
-        for (int i = 0; i < 9; i++) BoardState[i] = null;
-
-        ResetUI();
+        CleanupBattle();
 
         CurrentTurn = 0;
         PrepareSinglePlayerDecks();
-        _cardDealer.DealCards(p1Deck, p2Deck);
+        _cardDealer.DealCards(p1Deck, p2Deck, out p1Hand, out p2Hand);
+
         UpdateRuleStrategy();
+        ResetUI();
     }
 
-    private void ResetUI()
+    public void CleanupBattle()
+    {
+        // 1. Reset Logic Rule
+        RandomizeRule();
+
+        // 2. Xóa sạch object bài trong scene
+        CardObj[] allCards = FindObjectsByType<CardObj>(FindObjectsSortMode.None);
+        foreach (var card in allCards)
+        {
+            if (card != null) Destroy(card.gameObject);
+        }
+
+        // 3. Xóa dữ liệu logic bàn cờ
+        for (int i = 0; i < 9; i++) BoardState[i] = null;
+
+        // 4. Xóa danh sách bài trên tay
+        p1Hand.Clear();
+        p2Hand.Clear();
+
+        // 5. Reset UI (Màu sắc slot, v.v.)
+        ResetUI();
+    }
+
+    public void ResetUI()
     {
         InGameUIManager.Instance?.ResetBoardUI();
         _inputHandler?.Deselect();

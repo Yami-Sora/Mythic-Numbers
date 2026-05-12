@@ -47,10 +47,6 @@ public class GameReferee : MonoBehaviour
             Debug.LogWarning("[GameReferee] Chưa gán BtnBack trong Inspector!");
     }
 
-    /// <summary>
-    /// Fallback: Vẫn giữ lại để BattleFlowManager có thể override nếu cần.
-    /// Trong single-scene architecture, ưu tiên gán qua Inspector.
-    /// </summary>
     public void SetUIRefs(GameObject panel, TMP_Text text)
     {
         resultPanel = panel;
@@ -65,13 +61,14 @@ public class GameReferee : MonoBehaviour
 
         Debug.Log("<color=cyan>[Referee] Sếp Yami thu quân về thành...</color>");
 
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.CleanupBattle();
+        }
+
         if (GamePlayController.Instance != null)
             GamePlayController.Instance.QuitToMenu();
-        else
-            Debug.LogError("[GameReferee] Không tìm thấy GamePlayController.Instance!");
-
-        // Reset flag: GameReferee không bị Destroy khi về Menu nữa
-        // nên phải clear để lần sau vào trận vẫn hoạt động bình thường
+        
         _isExiting = false;
     }
 

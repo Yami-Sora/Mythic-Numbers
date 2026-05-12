@@ -93,15 +93,26 @@ public class InGameUIManager : MonoBehaviour
 
     public void ResetBoardUI()
     {
-        if (slots == null) return;
+        if (slots == null || slots.Length == 0)
+        {
+            Debug.LogError("[InGameUIManager] Mảng slots đang TRỐNG! Sếp hãy gán 9 ô board vào Inspector của InGameUIManager hoặc kiểm tra BattleFlowManager nhé.");
+            return;
+        }
+
+        int count = 0;
         foreach (var slot in slots)
         {
             if (slot != null)
             {
                 Image img = slot.GetComponent<Image>();
-                if (img) img.color = Color.white;
+                if (img != null)
+                {
+                    img.color = Color.white;
+                    count++;
+                }
             }
         }
+        Debug.Log($"[InGameUIManager] Đã reset màu cho {count} ô bàn cờ.");
     }
 
     // =========================================================

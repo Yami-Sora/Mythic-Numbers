@@ -24,21 +24,23 @@ public class OrderRuleDecorator : RuleDecorator
 
     private bool CheckOrderCondition(CardObj cardToPlay)
     {
-        int currentPlayerID = cardToPlay.OwnerID;
-        var allCards = Object.FindObjectsByType<CardObj>(FindObjectsSortMode.None);
+        // Lấy danh sách bài trên tay từ GameManager dựa trên OwnerID
+        var hand = (cardToPlay.OwnerID == 0) ? 
+            GameManager.Instance.P1Hand : 
+            GameManager.Instance.P2Hand;
 
-        int minIndex = 20;
+        if (hand == null || hand.Count == 0) return true;
 
-        foreach (var card in allCards)
+        int minIndex = 100;
+        foreach (var card in hand)
         {
-            if (card.OwnerID == currentPlayerID && card.HandIndex != -1)
+            if (card.HandIndex != -1)
             {
                 if (card.HandIndex < minIndex) minIndex = card.HandIndex;
             }
         }
 
-        if (cardToPlay.HandIndex == minIndex) return true;
-
-        return false;
+        // Nếu lá định đánh có HandIndex nhỏ nhất trong danh sách bài trên tay -> Hợp lệ
+        return cardToPlay.HandIndex == minIndex;
     }
 }
