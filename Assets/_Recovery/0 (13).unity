@@ -5664,7 +5664,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 159.32007, y: -2.3799438}
+  m_AnchoredPosition: {x: 159.32007, y: -2.380005}
   m_SizeDelta: {x: -401.47, y: -80.496}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &147168048
@@ -18982,7 +18982,7 @@ GameObject:
   - component: {fileID: 670189604}
   - component: {fileID: 670189605}
   m_Layer: 0
-  m_Name: BattleLauncher
+  m_Name: AppLauncher
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21188,7 +21188,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -9.000793, y: 63.869873}
+  m_AnchoredPosition: {x: -9.001709, y: 63.869873}
   m_SizeDelta: {x: -1518, y: -753.18}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &738339164
@@ -51190,7 +51190,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -11.524231, y: 80.66699}
+  m_AnchoredPosition: {x: -11.5251465, y: 80.66699}
   m_SizeDelta: {x: 991.054, y: 530.098}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1678350848
@@ -73306,8 +73306,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 670189605}
-        m_TargetAssemblyTypeName: BattleLauncher, Assembly-CSharp
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: NetworkLauncher, Assembly-CSharp
         m_MethodName: OnQuitClicked
         m_Mode: 1
         m_Arguments:

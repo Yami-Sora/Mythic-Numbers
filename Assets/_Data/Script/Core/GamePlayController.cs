@@ -27,10 +27,6 @@ public class GamePlayController : MonoBehaviour
         // Gọi 2 lần tạo ra duplicate cards (pending-destroy + newly spawned)
         // làm OrderRule tính minIndex sai → hiển thị lá bài sai bị ép chọn.
 
-        // Reset màu sắc các ô bàn cờ về trắng ngay khi thoát
-        if (InGameUIManager.Instance != null)
-            InGameUIManager.Instance.ResetBoardUI();
-
         // Ẩn toàn bộ battle (ẩn ----PLAYCARD----)
         if (battleRoot != null)
             battleRoot.SetActive(false);

@@ -161,7 +161,6 @@ public class GameManager : MonoBehaviour
         _cardDealer.DealCards(p1Deck, p2Deck, out p1Hand, out p2Hand);
 
         UpdateRuleStrategy();
-        ResetUI();
     }
 
     public void CleanupBattle()

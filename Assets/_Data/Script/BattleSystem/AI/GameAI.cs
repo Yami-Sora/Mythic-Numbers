@@ -40,7 +40,6 @@ public class GameAI : MonoBehaviour
 
     private IEnumerator ThinkAndDecide(int aiPlayerID)
     {
-        Debug.Log("[AI] Đang suy nghĩ...");
         yield return new WaitForSeconds(thinkingTime);
 
         // Nếu GameManager bị null hoặc lượt đã đổi -> dừng
@@ -115,7 +114,6 @@ public class GameAI : MonoBehaviour
             }
         }
 
-        Debug.Log($"[AI] Quyết định: Dùng bài {bestCard.Top}/{bestCard.Right} đánh vào ô {bestSlot} (Ăn được {maxFlips} bài). Luật Reverse: {isReverseRule}");
 
         // Trước khi gửi RPC, kiểm tra lại trạng thái: lá vẫn ở tay, ô vẫn rỗng, và vẫn là lượt AI
         if (bestCard == null || bestCard.HandIndex == -1 || gameManager.BoardState[bestSlot] != null || gameManager.CurrentTurn != aiPlayerID)

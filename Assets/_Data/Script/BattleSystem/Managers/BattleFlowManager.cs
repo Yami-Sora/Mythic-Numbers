@@ -75,7 +75,6 @@ public class BattleFlowManager : MonoBehaviour
         if (InGameUIManager.Instance != null)
         {
             InGameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
-            InGameUIManager.Instance.ResetBoardUI();
         }
 
         if (GameManager.Instance != null)
