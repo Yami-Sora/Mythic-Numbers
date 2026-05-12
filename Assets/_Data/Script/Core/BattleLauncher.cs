@@ -1,8 +1,12 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class BattleLauncher : MonoBehaviour
 {
+    [Header("Root References")]
+    [Tooltip("Kéo ----PLAYCARD---- vào đây")]
+    [SerializeField] private GameObject battleRoot;
+    [SerializeField] private BattleFlowManager battleFlowManager;
+
     private void Awake()
     {
         Application.runInBackground = true;
@@ -11,19 +15,19 @@ public class BattleLauncher : MonoBehaviour
     public void OnPlayOfflineClicked()
     {
         Debug.Log("Đang vào chế độ Offline...");
-        if (PlayFabDataManager.Instance != null) PlayFabDataManager.Instance.SaveGameData();
+
+        // Lưu dữ liệu trước khi vào trận
+        if (PlayFabDataManager.Instance != null)
+            PlayFabDataManager.Instance.SaveGameData();
+
         StartGame();
     }
 
     public void OnQuitClicked()
     {
-        // Log ra console để biết nút hoạt động khi ở trong Editor
         Debug.Log("Application Quit called!");
-
-        // Lệnh thoát game (chỉ chạy khi đã Build ra file .exe/.apk)
         Application.Quit();
 
-        // Nếu đang chạy trong Editor thì dừng Play mode (tiện để test)
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #endif
@@ -31,20 +35,24 @@ public class BattleLauncher : MonoBehaviour
 
     private void StartGame()
     {
-        // 0. BẢO HIỂM DỮ LIỆU: Cập nhật lại LocalDeckContext trước khi vào trận đấu
-        // Đảm bảo chỉ số mới nhất từ việc khảm Gem sẽ được nạp thẳng vào máy chủ trận đấu
+        // 1. Cập nhật LocalDeckContext trước khi vào trận
+        //    Đảm bảo gem vừa khảm sẽ được tính vào trận ngay lập tức
         if (DeckManager.Instance != null && DeckManager.Instance.currentDeck != null)
-        {
             LocalDeckContext.SetDeck(DeckManager.Instance.currentDeck);
-        }
 
-        // 1. Dọn dẹp GameManager cũ nếu còn sót lại từ lần chơi trước
-        if (GameManager.Instance != null)
+        // 2. Bật ----PLAYCARD---- (chứa toàn bộ battle UI + managers)
+        if (battleRoot != null)
+            battleRoot.SetActive(true);
+        else
         {
-            Destroy(GameManager.Instance.gameObject);
+            Debug.LogError("[BattleLauncher] Chưa kéo ----PLAYCARD---- vào field Battle Root trong Inspector!");
+            return;
         }
 
-        // 2. Chuyển scene thuần túy
-        SceneManager.LoadScene(1);
+        // 3. Kích hoạt luồng chiến đấu
+        if (battleFlowManager != null)
+            battleFlowManager.StartBattle();
+        else
+            Debug.LogError("[BattleLauncher] Chưa kéo BattleFlowManager vào Inspector!");
     }
 }

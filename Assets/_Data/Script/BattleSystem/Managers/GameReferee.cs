@@ -4,13 +4,16 @@ using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
 
+using UnityEngine.UI;
+
 public class GameReferee : MonoBehaviour
 {
     public static GameReferee Instance { get; private set; }
 
     [Header("UI Win/Lose")]
-    private GameObject resultPanel;
-    private TMP_Text resultText;
+    [SerializeField] private GameObject resultPanel;
+    [SerializeField] private TMP_Text resultText;
+    [SerializeField] private Button btnBack;
 
     public GameObject ResultPanel => resultPanel;
     public TMP_Text ResultText => resultText;
@@ -29,42 +32,30 @@ public class GameReferee : MonoBehaviour
 
     private void Start()
     {
-        // Nếu resultPanel is null (client case), báo cho BattleFlowManager setup
-        if (resultPanel == null)
+        if (resultPanel != null)
+            resultPanel.SetActive(false);
+        else
+            Debug.LogWarning("[GameReferee] Chưa gán ResultPanel trong Inspector!");
+
+        // Gán listener cho btnBack trực tiếp qua Inspector ref
+        if (btnBack != null)
         {
-            BattleFlowManager appManager = FindFirstObjectByType<BattleFlowManager>();
-            if (appManager != null)
-            {
-                appManager.SetupRefereeUI(this);
-            }
-            else
-            {
-                Debug.LogWarning("Referee: Không tìm thấy BattleFlowManager để lấy UI Reference! Hãy kiểm tra lại Scene.");
-            }
+            btnBack.onClick.RemoveAllListeners();
+            btnBack.onClick.AddListener(BackToMenu);
         }
         else
-        {
-            resultPanel.SetActive(false);
-        }
+            Debug.LogWarning("[GameReferee] Chưa gán BtnBack trong Inspector!");
     }
 
+    /// <summary>
+    /// Fallback: Vẫn giữ lại để BattleFlowManager có thể override nếu cần.
+    /// Trong single-scene architecture, ưu tiên gán qua Inspector.
+    /// </summary>
     public void SetUIRefs(GameObject panel, TMP_Text text)
     {
         resultPanel = panel;
         resultText = text;
-
-        if (resultPanel != null)
-        {
-            resultPanel.SetActive(false);
-
-            // Tìm nút Back trong panel
-            var btnBack = resultPanel.GetComponentInChildren<UnityEngine.UI.Button>(true);
-            if (btnBack != null)
-            {
-                btnBack.onClick.RemoveAllListeners();
-                btnBack.onClick.AddListener(BackToMenu);
-            }
-        }
+        if (resultPanel != null) resultPanel.SetActive(false);
     }
 
     public void BackToMenu()
@@ -73,8 +64,15 @@ public class GameReferee : MonoBehaviour
         _isExiting = true;
 
         Debug.Log("<color=cyan>[Referee] Sếp Yami thu quân về thành...</color>");
-        
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MenuScene");
+
+        if (GamePlayController.Instance != null)
+            GamePlayController.Instance.QuitToMenu();
+        else
+            Debug.LogError("[GameReferee] Không tìm thấy GamePlayController.Instance!");
+
+        // Reset flag: GameReferee không bị Destroy khi về Menu nữa
+        // nên phải clear để lần sau vào trận vẫn hoạt động bình thường
+        _isExiting = false;
     }
 
     // --- LOGIC KIỂM TRA KẾT THÚC GAME ---

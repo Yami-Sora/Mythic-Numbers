@@ -1107,6 +1107,19 @@ public class PlayFabDataManager : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Gọi sau khi kết thúc trận đấu để đồng bộ lại toàn bộ dữ liệu từ server.
+    /// Thay thế cho OnSceneLoaded khi không còn chuyển scene nữa (1-scene architecture).
+    /// </summary>
+    public void RefreshAfterBattle()
+    {
+        if (!PlayFabClientAPI.IsClientLoggedIn()) return;
+        Debug.Log("<color=cyan>[PlayFab] Trận đấu kết thúc, đang tải lại dữ liệu...</color>");
+        LoadGameData();
+        FetchVirtualCurrencies();
+        FetchPlayerProfile();
+    }
+
     public void FetchPlayerProfile()
     {
         if (!PlayFab.PlayFabClientAPI.IsClientLoggedIn()) return;

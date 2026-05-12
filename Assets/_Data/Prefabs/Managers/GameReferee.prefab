@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6701025095058111474}
   - component: {fileID: 2680230420076682466}
   m_Layer: 0
-  m_Name: GameRefereeNet
+  m_Name: GameReferee
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -30,6 +30,10 @@ public class GameManager : MonoBehaviour
     private bool isP2Ready;
 
     // --- SETUP ---
+    // Flag: BattleFlowManager đã gọi RestartGame() trước khi Start() kịp chạy
+    // → Start() sẽ skip deal để tránh double-deal
+    private bool _dealDone = false;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -38,29 +42,31 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
-    }
 
-    private void Start()
-    {
+        // Init modules ngay trong Awake() để sẵn sàng khi BattleFlowManager
+        // gọi RestartGame() ngay sau SetActive(true) (trước khi Start() chạy)
         _inputHandler = new LocalInputHandler(this);
+        _cardDealer = new CardDealer(cardPrefab);
 
-        // Setup AI
         if (playWithAI)
         {
             aiBrain = GetComponent<GameAI>();
             if (aiBrain != null) aiBrain.Init(this);
         }
+    }
 
-        _cardDealer = new CardDealer(cardPrefab);
+    private void Start()
+    {
+        // Nếu BattleFlowManager đã gọi RestartGame() rồi thì bỏ qua,
+        // tránh deal bài 2 lần (1 lần từ RestartGame, 1 lần từ Start)
+        if (_dealDone) return;
 
         RandomizeRule();
         CurrentTurn = 0;
-        
-        // Luôn coi là SinglePlayer (Offline) trong kiến trúc mới
         PrepareSinglePlayerDecks();
         _cardDealer.DealCards(p1Deck, p2Deck);
-        
         UpdateRuleStrategy();
+        _dealDone = true;
     }
 
     private void PrepareSinglePlayerDecks()
@@ -154,6 +160,9 @@ public class GameManager : MonoBehaviour
     {
         if (playWithAI) aiBrain?.StopThinking();
 
+        // Đánh dấu để Start() không deal thêm (tránh double-deal)
+        _dealDone = true;
+
         // Reset Logic
         RandomizeRule();
         CardObj[] allCards = FindObjectsByType<CardObj>(FindObjectsSortMode.None);
@@ -164,9 +173,9 @@ public class GameManager : MonoBehaviour
         ResetUI();
 
         CurrentTurn = 0;
-        
         PrepareSinglePlayerDecks();
         _cardDealer.DealCards(p1Deck, p2Deck);
+        UpdateRuleStrategy();
     }
 
     private void ResetUI()

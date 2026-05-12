@@ -1,14 +1,9 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class BattleFlowManager : MonoBehaviour
 {
     public static BattleFlowManager Instance;
-
-    [Header("Core Prefabs")]
-    [SerializeField] private GameObject gameManagerPrefab;
-    [SerializeField] private GameObject gameRefereePrefab;
 
     [Header("Scene References")]
     [SerializeField] private Transform[] slots;
@@ -33,30 +28,45 @@ public class BattleFlowManager : MonoBehaviour
 
     private void Start()
     {
+        // Tắt ResultPanel phòng hờ Inspector quên tắt
         if (resultPanel) resultPanel.SetActive(false);
-        
-        // Spawn Managers ngay khi vào Scene
-        SpawnGameManagers();
+
+        // KHÔNG spawn GameManager/GameReferee nữa:
+        // Cả 2 đã được đặt thẳng vào ----PLAYCARD---- trong scene.
     }
 
-    private bool _hasSpawnedManagers = false;
-
-    private void SpawnGameManagers()
+    /// <summary>
+    /// Được gọi bởi BattleLauncher khi người chơi bắt đầu trận.
+    /// Thay thế hoàn toàn cho SceneManager.LoadScene("PlayCardScene").
+    /// </summary>
+    public void StartBattle()
     {
-        if (_hasSpawnedManagers) return;
-        _hasSpawnedManagers = true;
+        Debug.Log("[BattleFlowManager] Bắt đầu trận chiến!");
 
-        if (GameManager.Instance == null)
-        {
-            Debug.Log("BattleFlowManager: Tiến hành Spawn Manager...");
-            if (gameManagerPrefab != null) Instantiate(gameManagerPrefab);
-            if (gameRefereePrefab != null) Instantiate(gameRefereePrefab);
-        }
+        // Reset bàn cờ (GameManager.Start() chỉ chạy 1 lần khi Enable lần đầu,
+        // từ lần 2 trở đi phải gọi RestartGame() để deal bài mới)
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestartGame();
+        else
+            Debug.LogError("[BattleFlowManager] Không tìm thấy GameManager! Kiểm tra ----PLAYCARD---- trong Hierarchy.");
+
+        // Gán UI refs cho Referee
+        if (GameReferee.Instance != null)
+            SetupRefereeUI(GameReferee.Instance);
+        else
+            Debug.LogError("[BattleFlowManager] Không tìm thấy GameReferee! Kiểm tra ----PLAYCARD---- trong Hierarchy.");
+
+        // Gán refs cho InGameUIManager
+        if (InGameUIManager.Instance != null)
+            SetupUIManager();
     }
 
+    /// <summary>
+    /// Được InGameUIManager.Start() gọi khi nó khởi động lần đầu.
+    /// </summary>
     public void OnUIManagerReady()
     {
-        Debug.Log("[BattleFlowManager] Tìm thấy GameUIManager -> Đang chuyển giao tham chiếu UI...");
+        Debug.Log("[BattleFlowManager] UIManager ready → Setup refs...");
         SetupUIManager();
     }
 
@@ -67,17 +77,16 @@ public class BattleFlowManager : MonoBehaviour
             InGameUIManager.Instance.SetupReferences(slots, leftHandPos, rightHandPos, turnText, mainCanvas);
             InGameUIManager.Instance.ResetBoardUI();
         }
-        
+
         if (GameManager.Instance != null)
             GameManager.Instance.RefreshAllCards();
     }
 
-    // Hàm gán UI cho Referee
     public void SetupRefereeUI(GameReferee referee)
     {
         if (resultPanel == null || resultText == null)
         {
-            Debug.LogError("BattleFlowManager: Quên kéo ResultPanel hoặc ResultText vào Inspector rồi!");
+            Debug.LogError("BattleFlowManager: Thiếu ResultPanel hoặc ResultText trong Inspector!");
             return;
         }
 

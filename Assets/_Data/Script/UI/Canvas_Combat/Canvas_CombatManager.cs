@@ -36,6 +36,17 @@ public class Canvas_CombatManager : TabListenerBase
         }
     }
 
+    /// <summary>
+    /// Gọi từ GamePlayController.QuitToMenu() khi người chơi quay về Menu.
+    /// Trong kiến trúc cũ button tự reset do reload scene,
+    /// giờ phải re-enable tường minh.
+    /// </summary>
+    public void OnReturnFromBattle()
+    {
+        if (btnEnterStage != null) btnEnterStage.interactable = true;
+        RefreshStageUI();
+    }
+
     private void RefreshStageUI()
     {
         if (PlayFabDataManager.Instance == null) return;
