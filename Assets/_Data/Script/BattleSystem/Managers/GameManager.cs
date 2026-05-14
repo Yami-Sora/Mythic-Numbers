@@ -99,6 +99,7 @@ public class GameManager : MonoBehaviour
         // Update Data
         BoardState[slotIndex] = card;
         card.HandIndex = -1;
+        card.RefreshState(); // Đồng bộ vị trí ngay lập tức để skill hiện text đúng chỗ
 
         // Xóa khỏi danh sách bài trên tay
         if (card.OwnerID == 0) p1Hand.Remove(card);

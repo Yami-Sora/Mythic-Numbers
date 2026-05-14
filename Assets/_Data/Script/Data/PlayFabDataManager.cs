@@ -719,6 +719,7 @@ public class PlayFabDataManager : MonoBehaviour
             }
 
             isDataLoaded = true; // Đánh dấu đã Load xong toàn bộ dữ liệu
+            if (Canvas_CombatManager.Instance != null) Canvas_CombatManager.Instance.RefreshStageUI();
 
         }, error => {
             Debug.LogWarning("[PlayFab] Lỗi Load dữ liệu, đang thử lại sau 3s...");
@@ -854,6 +855,11 @@ public class PlayFabDataManager : MonoBehaviour
             {
                 CurrencyUIManager.Instance.UpdateBalances(gold, ln);
                 CurrencyUIManager.Instance.UpdateStamina(stamina, secondsToRecharge);
+            }
+
+            if (Canvas_CombatManager.Instance != null)
+            {
+                Canvas_CombatManager.Instance.RefreshStageUI();
             }
 
             Debug.Log($"<color=yellow>[PlayFab] Tài sản: {gold} Vàng | {ln} Linh Ngọc | {stamina}/200 Thể lực</color>");

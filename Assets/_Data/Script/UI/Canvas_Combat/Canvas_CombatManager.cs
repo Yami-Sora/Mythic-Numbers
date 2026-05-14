@@ -47,7 +47,7 @@ public class Canvas_CombatManager : TabListenerBase
         RefreshStageUI();
     }
 
-    private void RefreshStageUI()
+    public void RefreshStageUI()
     {
         if (PlayFabDataManager.Instance == null) return;
 

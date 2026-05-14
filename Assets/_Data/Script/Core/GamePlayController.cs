@@ -22,11 +22,6 @@ public class GamePlayController : MonoBehaviour
         if (GameReferee.Instance != null && GameReferee.Instance.ResultPanel != null)
             GameReferee.Instance.ResultPanel.SetActive(false);
 
-        // KHÔNG gọi RestartGame() ở đây!
-        // BattleFlowManager.StartBattle() sẽ gọi RestartGame() khi vào trận mới.
-        // Gọi 2 lần tạo ra duplicate cards (pending-destroy + newly spawned)
-        // làm OrderRule tính minIndex sai → hiển thị lá bài sai bị ép chọn.
-
         // Ẩn toàn bộ battle (ẩn ----PLAYCARD----)
         if (battleRoot != null)
             battleRoot.SetActive(false);
