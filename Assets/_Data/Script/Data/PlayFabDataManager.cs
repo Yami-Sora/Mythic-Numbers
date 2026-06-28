@@ -720,6 +720,7 @@ public class PlayFabDataManager : MonoBehaviour
 
             isDataLoaded = true; // Đánh dấu đã Load xong toàn bộ dữ liệu
             if (Canvas_CombatManager.Instance != null) Canvas_CombatManager.Instance.RefreshStageUI();
+            if (MineDungeonManager.Instance != null) MineDungeonManager.Instance.RefreshUI();
 
         }, error => {
             Debug.LogWarning("[PlayFab] Lỗi Load dữ liệu, đang thử lại sau 3s...");

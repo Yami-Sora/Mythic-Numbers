@@ -68,6 +68,9 @@ public class GameReferee : MonoBehaviour
 
         if (GamePlayController.Instance != null)
             GamePlayController.Instance.QuitToMenu();
+
+        if (MineDungeonManager.Instance != null)
+            MineDungeonManager.Instance.RefreshUI();
         
         _isExiting = false;
     }

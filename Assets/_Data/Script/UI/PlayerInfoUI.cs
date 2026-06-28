@@ -32,7 +32,7 @@ public class PlayerInfoUI : MonoBehaviour
 
     public void UpdateArenaInfo(int rank, string name, int elo, string title, int power)
     {
-        if (rankText != null) rankText.text = rank > 0 ? $"Hạng {rank}" : "Chưa xếp hạng";
+        if (rankText != null) rankText.text = elo > 0 ? $"Hạng {rank}" : "Chưa xếp hạng";
         UpdatePlayerName(name);
         UpdateElo(elo);
         UpdatePower(power);
