@@ -137,7 +137,7 @@ public class Canvas_CombatManager : TabListenerBase
                     {
                         Debug.LogWarning("Sếp ơi, hết pin (thể lực) rồi!");
 
-                        // Gọi con hàng bên ShopManager sang bắn text bay cho xịn
+                        // Gọi con hàng bên VFXManager sang bắn text bay cho xịn
                         if (VFXManager.Instance != null && btnEnterStage != null)
                         {
                             VFXManager.Instance.SpawnFloatingText("Không đủ Năng lượng!", btnEnterStage.transform);

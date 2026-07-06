@@ -35,6 +35,15 @@ public class GachaPopupManager : MonoBehaviour
         // 1. Hiển thị Card
         if (cards != null)
         {
+            // Sắp xếp bài theo độ hiếm giảm dần (SSR -> SR -> R -> N)
+            // Nếu cùng độ hiếm thì xếp theo ID để các quân bài giống nhau nằm cạnh nhau
+            cards.Sort((a, b) =>
+            {
+                int compareRate = b.rate.CompareTo(a.rate);
+                if (compareRate == 0) return a.cardID.CompareTo(b.cardID);
+                return compareRate;
+            });
+
             foreach (var card in cards)
             {
                 GameObject go = Instantiate(cardSlotPrefab, itemContainer);
@@ -52,6 +61,15 @@ public class GachaPopupManager : MonoBehaviour
         // 2. Hiển thị Gem
         if (gems != null)
         {
+            // Sắp xếp tinh thạch theo phẩm chất màu giảm dần (Red -> Orange -> Gold -> Purple -> Blue -> Green -> White)
+            // Nếu cùng phẩm chất màu thì xếp theo Item ID
+            gems.Sort((a, b) =>
+            {
+                int compareColor = b.colorLevel.CompareTo(a.colorLevel);
+                if (compareColor == 0) return string.Compare(a.itemID, b.itemID, System.StringComparison.Ordinal);
+                return compareColor;
+            });
+
             foreach (var gem in gems)
             {
                 GameObject go = Instantiate(itemSlotPrefab, itemContainer);

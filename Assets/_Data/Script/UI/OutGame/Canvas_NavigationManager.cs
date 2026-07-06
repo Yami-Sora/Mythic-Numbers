@@ -7,7 +7,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     public static Canvas_NavigationManager Instance { get; private set; }
 
     [Header("Canvas Tabs")]
-    [SerializeField] private GameObject shopCanvas;
+    [SerializeField] private GameObject summonCanvas;
     [SerializeField] private GameObject cardsCanvas;
     [SerializeField] private GameObject combatCanvas;
     [SerializeField] private GameObject dungeonCanvas;
@@ -22,7 +22,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     private GameObject _currentActiveTab;
     private Dictionary<TabType, GameObject> _tabDictionary;
 
-    public enum TabType { Shop, Cards, Combat, Dungeon, Inventory }
+    public enum TabType { Summon, Cards, Combat, Dungeon, Inventory }
 
     // [CLEAN CODE 2]: Tạo một cái Cổng Phát Thanh (Event). Ai thích hóng biến thì đăng ký vào đây.
     public static event Action<TabType> OnTabChanged;
@@ -31,7 +31,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     {
         Instance = this;
 
-        if (shopCanvas) shopCanvas.SetActive(true);
+        if (summonCanvas) summonCanvas.SetActive(true);
         if (cardsCanvas) cardsCanvas.SetActive(true);
         if (combatCanvas) combatCanvas.SetActive(true);
         if (dungeonCanvas) dungeonCanvas.SetActive(true);
@@ -71,7 +71,7 @@ public class Canvas_NavigationManager : MonoBehaviour
     {
         _tabDictionary = new Dictionary<TabType, GameObject>
         {
-            { TabType.Shop, shopCanvas },
+            { TabType.Summon, summonCanvas },
             { TabType.Cards, cardsCanvas },
             { TabType.Combat, combatCanvas },
             { TabType.Dungeon, dungeonCanvas },

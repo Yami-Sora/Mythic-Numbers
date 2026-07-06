@@ -6,9 +6,9 @@ using PlayFab.ClientModels;
 using TMPro;
 using UnityEngine;
 
-public class ShopManager : MonoBehaviour
+public class SummonManager : MonoBehaviour
 {
-    public static ShopManager Instance { get; private set; }
+    public static SummonManager Instance { get; private set; }
 
     [SerializeField] private Transform normalPackBtn;
     [SerializeField] private Transform normalPackX10Btn;
@@ -38,7 +38,7 @@ public class ShopManager : MonoBehaviour
                 _itemDatabase.Add(it.itemID, it);
             }
         }
-        Debug.Log($"[Shop] Đã nạp {_itemDatabase.Count} vật phẩm vào database shop.");
+        Debug.Log($"[Summon] Đã nạp {_itemDatabase.Count} vật phẩm vào database triệu hồi.");
     }
 
     public void BuyNormalPack() => BuyAndOpenPack("Pack_Normal", "GD", 100, 1, normalPackBtn);
@@ -123,7 +123,7 @@ public class ShopManager : MonoBehaviour
                     currentRequestDone = true;
                 },
                 error => {
-                    Debug.LogError($"[Shop] Lỗi khui hộp: {error.ErrorMessage}");
+                    Debug.LogError($"[Summon] Lỗi khui hộp: {error.ErrorMessage}");
                     currentRequestDone = true;
                 }
             );
@@ -146,14 +146,14 @@ public class ShopManager : MonoBehaviour
         bool isInsufficient = (error == null) || (error.Error == PlayFabErrorCode.InsufficientFunds);
         string logMsg = error != null ? error.ErrorMessage : "Thiếu tiền (Client check)";
         
-        Debug.LogError($"[Shop] Lỗi mua hàng: {logMsg}");
+        Debug.LogError($"[Summon] Lỗi triệu hồi: {logMsg}");
         
         if (btn != null) 
         {
             btn.DOShakePosition(0.5f, 10f);
             if (VFXManager.Instance != null) 
             {
-                string floatingMsg = isInsufficient ? "KHÔNG ĐỦ TIỀN!" : "LỖI MUA HÀNG!";
+                string floatingMsg = isInsufficient ? "KHÔNG ĐỦ TIỀN!" : "LỖI TRIỆU HỒI!";
                 VFXManager.Instance.SpawnFloatingText(floatingMsg, btn);
             }
         }
@@ -206,25 +206,25 @@ public class ShopManager : MonoBehaviour
         if (CardListManager.Instance != null) CardListManager.Instance.DisplayCards();
         if (InventoryManager.Instance != null) InventoryManager.Instance.RefreshUI();
 
-        Debug.Log($"[Shop] Kết quả gacha: {allCards.Count} Card, {allGems.Count} Gem.");
+        Debug.Log($"[Summon] Kết quả gacha: {allCards.Count} Card, {allGems.Count} Gem.");
 
         if (GachaPopupManager.Instance != null)
         {
-            GachaPopupManager.Instance.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
+            GachaPopupManager.Instance.ShowGachaRewards(allCards, allGems, "KẾT QUẢ TRIỆU HỒI");
         }
         else
         {
             GachaPopupManager gp = GameObject.FindFirstObjectByType<GachaPopupManager>(FindObjectsInactive.Include); 
             if (gp != null)
             {
-                gp.ShowGachaRewards(allCards, allGems, "KẾT QUẢ QUAY GACHA");
+                gp.ShowGachaRewards(allCards, allGems, "KẾT QUẢ TRIỆU HỒI");
             }
             else
             {
-                Debug.LogWarning("[Shop] Không tìm thấy GachaPopupManager trong Scene! Đang dùng RewardPopup cũ làm fallback.");
+                Debug.LogWarning("[Summon] Không tìm thấy GachaPopupManager trong Scene! Đang dùng RewardPopup cũ làm fallback.");
                 if (RewardPopupManager.Instance != null)
                 {
-                    if (allCards.Count > 0) RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ QUAY GACHA");
+                    if (allCards.Count > 0) RewardPopupManager.Instance.ShowCardRewards(allCards, "KẾT QUẢ TRIỆU HỒI");
                     else if (allGems.Count > 0) 
                     {
                         List<InventoryItem> gemItems = new List<InventoryItem>();

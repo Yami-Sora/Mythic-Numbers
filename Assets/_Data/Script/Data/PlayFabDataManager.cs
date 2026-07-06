@@ -1036,8 +1036,8 @@ public class PlayFabDataManager : MonoBehaviour
 
     private void ExecuteCheat3()
     {
-        Debug.Log("<color=cyan>[Cheat] Sếp Yami Double Tap Phải: +100 Linh Ngọc!</color>");
-        HackCurrency(PlayFabConstants.CURRENCY_LN, 100);
+        Debug.Log("<color=cyan>[Cheat] Sếp Yami Double Tap Phải: +500 Linh Ngọc!</color>");
+        HackCurrency(PlayFabConstants.CURRENCY_LN, 500);
     }
 
     private void HackCurrency(string currencyCode, int amount)
