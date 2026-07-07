@@ -14,6 +14,7 @@ public class CurrencyUIManager : MonoBehaviour
     [Header("UI Thể Lực (Top Bar)")]
     public TextMeshProUGUI txtStamina;
     public Button btnAddStamina;
+    [SerializeField] private StaminaPopupManager staminaPopup;
 
     private int currentStamina;
     private int maxStamina = 200;
@@ -30,9 +31,25 @@ public class CurrencyUIManager : MonoBehaviour
         if (btnAddStamina != null)
         {
             btnAddStamina.onClick.AddListener(() => {
-                if (StaminaPopupManager.Instance != null)
+                StaminaPopupManager targetPopup = StaminaPopupManager.Instance;
+                if (targetPopup == null)
                 {
-                    StaminaPopupManager.Instance.Open();
+                    targetPopup = staminaPopup;
+                }
+                if (targetPopup == null)
+                {
+                    // Dự phòng tìm kiếm động kể cả khi đang inactive
+                    var popups = Resources.FindObjectsOfTypeAll<StaminaPopupManager>();
+                    if (popups.Length > 0)
+                    {
+                        targetPopup = popups[0];
+                    }
+                }
+
+                if (targetPopup != null)
+                {
+                    targetPopup.gameObject.SetActive(true);
+                    targetPopup.Open();
                     PushDataToPopup();
                 }
             });
@@ -97,7 +114,7 @@ public class CurrencyUIManager : MonoBehaviour
     // Hàm trung chuyển: Đẩy dữ liệu nóng hổi từ TopBar sang cho thằng quản lý Popup
     private void PushDataToPopup()
     {
-        if (StaminaPopupManager.Instance != null)
+        if (StaminaPopupManager.Instance != null && StaminaPopupManager.Instance.gameObject.activeInHierarchy)
         {
             bool isMax = currentStamina >= maxStamina;
             TimeSpan time = TimeSpan.FromSeconds(regenTimer);
