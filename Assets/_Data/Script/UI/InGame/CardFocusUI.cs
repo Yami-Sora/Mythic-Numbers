@@ -78,10 +78,10 @@ public class CardFocusUI : YamiMonoBehaviour
         if (data != null)
         {
             cardImage.sprite = data.cardImage;
-            _baseTop = data.top;
-            _baseRight = data.right;
-            _baseBottom = data.bottom;
-            _baseLeft = data.left;
+            _baseTop = source.InitialTop > 0 ? source.InitialTop : data.top;
+            _baseRight = source.InitialRight > 0 ? source.InitialRight : data.right;
+            _baseBottom = source.InitialBottom > 0 ? source.InitialBottom : data.bottom;
+            _baseLeft = source.InitialLeft > 0 ? source.InitialLeft : data.left;
 
             if (txtCardName != null) txtCardName.text = data.cardName;
 
@@ -95,10 +95,10 @@ public class CardFocusUI : YamiMonoBehaviour
         }
         else
         {
-            _baseTop = source.Top;
-            _baseRight = source.Right;
-            _baseBottom = source.Bottom;
-            _baseLeft = source.Left;
+            _baseTop = source.InitialTop > 0 ? source.InitialTop : source.Top;
+            _baseRight = source.InitialRight > 0 ? source.InitialRight : source.Right;
+            _baseBottom = source.InitialBottom > 0 ? source.InitialBottom : source.Bottom;
+            _baseLeft = source.InitialLeft > 0 ? source.InitialLeft : source.Left;
             if (txtCardName) txtCardName.text = "Unknown Card";
             if (txtSkillDescription) txtSkillDescription.text = "";
         }

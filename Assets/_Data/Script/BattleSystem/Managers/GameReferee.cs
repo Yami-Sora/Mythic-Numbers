@@ -241,6 +241,10 @@ public class GameReferee : MonoBehaviour
                         PlayFabDataManager.Instance.Elo = newElo;
                         PlayFabDataManager.Instance.Wins = newWins;
                         PlayFabDataManager.Instance.TotalGames = newTotal;
+                        
+                        // Đồng bộ dữ liệu này vào User Data (PlayerStats key)
+                        PlayFabDataManager.Instance.MarkDirty();
+                        PlayFabDataManager.Instance.SaveGameData();
 
                         if (!string.IsNullOrEmpty(LocalDeckContext.OpponentPlayFabId))
                         {
@@ -261,13 +265,17 @@ public class GameReferee : MonoBehaviour
             {
                     int newLosses = PlayFabDataManager.Instance.Losses + 1;
                     int newTotal = PlayFabDataManager.Instance.TotalGames + 1;
-
+ 
                     GameServices.Instance.PlayerData.UpdateEloAfterMatchAsync(
                     PlayFabDataManager.Instance.Elo, PlayFabDataManager.Instance.Wins, newLosses, newTotal,
                     () => {
                         Debug.Log("[Arena] Thua trận, điểm không đổi.");
                         PlayFabDataManager.Instance.Losses = newLosses;
                         PlayFabDataManager.Instance.TotalGames = newTotal;
+
+                        // Đồng bộ dữ liệu này vào User Data (PlayerStats key)
+                        PlayFabDataManager.Instance.MarkDirty();
+                        PlayFabDataManager.Instance.SaveGameData();
                     },
                     null);
             }

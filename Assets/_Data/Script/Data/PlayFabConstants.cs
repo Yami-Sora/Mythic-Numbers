@@ -5,10 +5,12 @@ public static class PlayFabConstants
     public const int MAX_DECK_SIZE = 5;
 
     // Keys cho User Data
-    public const string KEY_USER_DATA = "UserSaveData";
     public const string KEY_PLAYER_DECK = "PlayerDeck";
     public const string KEY_DUNGEON_DATA = "DungeonData";
     public const string KEY_CURRENT_STAGE = "CurrentStage";
+    public const string KEY_PLAYER_STATS = "PlayerStats";
+    public const string KEY_INVENTORY = "PlayerInventory";
+    public const string KEY_CARD_LIST = "PlayerCardList";
 
     // Virtual Currencies
     public const string CURRENCY_GOLD = "GD";

@@ -50,7 +50,8 @@ public class PlayFabDataManager : MonoBehaviour
     // Bộ nhớ đệm tiền tệ (để check nhanh túi tiền)
     private int _goldBalance = 0;
     private int _lnBalance = 0;
-    private PlayFabSaveData _cachedSaveData = new PlayFabSaveData(); // Cache để bảo toàn dữ liệu khi Save
+    private List<ItemSaveData> _cachedInventory = new List<ItemSaveData>(); // Cache để bảo toàn dữ liệu khi Save
+    private List<CardSaveData> _cachedCards = new List<CardSaveData>(); // Cache để bảo toàn dữ liệu khi Save
 
 
     public int GetCurrencyBalance(string code)
@@ -321,45 +322,52 @@ public class PlayFabDataManager : MonoBehaviour
 
         if (!isDirty) return;
 
-        // [NÂNG CẤP]: Thay vì chặn hoàn toàn, ta sẽ dùng cache để "vá" những phần Manager đang null
-        if (CardListManager.Instance == null && InventoryManager.Instance == null && _cachedSaveData.inventory == null)
-        {
-            Debug.LogWarning("[PlayFab] Không có dữ liệu để Save (Managers null và Cache trống)!");
-            return;
-        }
-
-
-
         // 1. Cập nhật Inventory (Nếu Manager đang mở thì lấy từ Manager, không thì giữ nguyên cache)
         if (InventoryManager.Instance != null)
         {
-            _cachedSaveData.inventory = GetInventorySaveData();
+            _cachedInventory = GetInventorySaveData();
         }
 
         // 2. Cập nhật Cards (Nếu Manager đang mở thì lấy từ Manager, không thì giữ nguyên cache)
         if (CardListManager.Instance != null)
         {
-            _cachedSaveData.cards = GetCardsSaveData();
+            _cachedCards = GetCardsSaveData();
         }
 
-        // 3. Cập nhật các thông số khác
-        _cachedSaveData.level = PlayerLevel;
-        _cachedSaveData.exp = PlayerExp;
-        
-        // Cập nhật Arena Data vào SaveData để đồng bộ hóa
-        _cachedSaveData.elo = Elo;
-        _cachedSaveData.wins = Wins;
-        _cachedSaveData.losses = Losses;
-        _cachedSaveData.totalGames = TotalGames;
-        _cachedSaveData.rank = PlayerRank;
-        _cachedSaveData.displayName = ArenaDisplayName;
+        // Tạo các đối tượng lưu trữ riêng biệt
+        PlayerStatsSaveData statsData = new PlayerStatsSaveData
+        {
+            level = PlayerLevel,
+            exp = PlayerExp,
+            elo = Elo,
+            wins = Wins,
+            losses = Losses,
+            totalGames = TotalGames,
+            rank = PlayerRank,
+            displayName = ArenaDisplayName
+        };
 
-        string json = JsonUtility.ToJson(_cachedSaveData);
+        PlayerInventorySaveData inventoryData = new PlayerInventorySaveData
+        {
+            inventory = _cachedInventory
+        };
+
+        PlayerCardListSaveData cardListData = new PlayerCardListSaveData
+        {
+            cards = _cachedCards
+        };
+
+        string statsJson = JsonUtility.ToJson(statsData);
+        string inventoryJson = JsonUtility.ToJson(inventoryData);
+        string cardsJson = JsonUtility.ToJson(cardListData);
+
         var request = new UpdateUserDataRequest
         {
             Data = new Dictionary<string, string> 
             { 
-                { PlayFabConstants.KEY_USER_DATA, json },
+                { PlayFabConstants.KEY_PLAYER_STATS, statsJson },
+                { PlayFabConstants.KEY_INVENTORY, inventoryJson },
+                { PlayFabConstants.KEY_CARD_LIST, cardsJson },
                 { PlayFabConstants.KEY_CURRENT_STAGE, CurrentStage.ToString() }
             }
         };
@@ -367,7 +375,7 @@ public class PlayFabDataManager : MonoBehaviour
         PlayFabClientAPI.UpdateUserData(request,
             result => {
                 if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
-                Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu lên mây thành công!</color>");
+                Debug.Log("<color=green>[PlayFab] Đã backup dữ liệu (phân tách) lên mây thành công!</color>");
                 isDirty = false; // Reset cờ sau khi save thành công
 
                 // RẤT QUAN TRỌNG: Cập nhật luôn Public Profile (lực chiến, tên, v.v.)
@@ -644,24 +652,62 @@ public class PlayFabDataManager : MonoBehaviour
         {
             if (LoadingManager.Instance != null) LoadingManager.Instance.ShowLoading(false);
 
-            // 1. Phục hồi Inventory & Cards
-            if (result.Data != null && result.Data.ContainsKey(PlayFabConstants.KEY_USER_DATA))
-            {
-                string json = result.Data[PlayFabConstants.KEY_USER_DATA].Value;
-                _cachedSaveData = JsonUtility.FromJson<PlayFabSaveData>(json);
+            bool hasData = result.Data != null && 
+                            result.Data.ContainsKey(PlayFabConstants.KEY_PLAYER_STATS) && 
+                            result.Data.ContainsKey(PlayFabConstants.KEY_INVENTORY) && 
+                            result.Data.ContainsKey(PlayFabConstants.KEY_CARD_LIST);
 
-                RestoreInventory(_cachedSaveData.inventory);
-                RestoreCards(_cachedSaveData.cards);
-                this.PlayerLevel = _cachedSaveData.level > 0 ? _cachedSaveData.level : 1;
-                this.PlayerExp = _cachedSaveData.exp;
-                
-                // Nạp luôn dữ liệu Arena từ SaveData (phòng trường hợp fetch stats chưa xong)
-                this.PlayerRank = _cachedSaveData.rank;
-                this.Elo = _cachedSaveData.elo;
-                this.Wins = _cachedSaveData.wins;
-                this.Losses = _cachedSaveData.losses;
-                this.TotalGames = _cachedSaveData.totalGames;
-                this.ArenaDisplayName = _cachedSaveData.displayName;
+            if (hasData)
+            {
+                // Phục hồi dữ liệu từ các KEY MỚI
+                try
+                {
+                    // Phục hồi Stats
+                    string statsJson = result.Data[PlayFabConstants.KEY_PLAYER_STATS].Value;
+                    PlayerStatsSaveData stats = JsonUtility.FromJson<PlayerStatsSaveData>(statsJson);
+                    
+                    this.PlayerLevel = stats.level > 0 ? stats.level : 1;
+                    this.PlayerExp = stats.exp;
+                    this.PlayerRank = stats.rank;
+                    this.Elo = stats.elo;
+                    this.Wins = stats.wins;
+                    this.Losses = stats.losses;
+                    this.TotalGames = stats.totalGames;
+                    this.ArenaDisplayName = stats.displayName;
+
+                    // Phục hồi Inventory
+                    string inventoryJson = result.Data[PlayFabConstants.KEY_INVENTORY].Value;
+                    PlayerInventorySaveData inv = JsonUtility.FromJson<PlayerInventorySaveData>(inventoryJson);
+                    _cachedInventory = inv.inventory;
+                    RestoreInventory(_cachedInventory);
+
+                    // Phục hồi Card List
+                    string cardsJson = result.Data[PlayFabConstants.KEY_CARD_LIST].Value;
+                    PlayerCardListSaveData cards = JsonUtility.FromJson<PlayerCardListSaveData>(cardsJson);
+                    _cachedCards = cards.cards;
+                    RestoreCards(_cachedCards);
+
+                    Debug.Log("<color=green>[PlayFab] Đã đồng bộ dữ liệu thành công!</color>");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("[PlayFab] Lỗi phục hồi dữ liệu: " + ex.Message);
+                }
+            }
+            else
+            {
+                // Người chơi hoàn toàn mới
+                this.PlayerLevel = 1;
+                this.PlayerExp = 0;
+                this.PlayerRank = 0;
+                this.Elo = 0;
+                this.Wins = 0;
+                this.Losses = 0;
+                this.TotalGames = 0;
+                this.ArenaDisplayName = "";
+                _cachedInventory = new List<ItemSaveData>();
+                _cachedCards = new List<CardSaveData>();
+                Debug.Log("<color=green>[PlayFab] Tài khoản mới toanh, khởi tạo dữ liệu mặc định!</color>");
             }
 
             // Kéo luôn Statistics về cho chuẩn
@@ -1121,10 +1167,9 @@ public class PlayFabDataManager : MonoBehaviour
     public void RefreshAfterBattle()
     {
         if (!PlayFabClientAPI.IsClientLoggedIn()) return;
-        Debug.Log("<color=cyan>[PlayFab] Trận đấu kết thúc, đang tải lại dữ liệu...</color>");
-        LoadGameData();
+        Debug.Log("<color=cyan>[PlayFab] Trận đấu kết thúc, làm mới hiển thị tiền tệ...</color>");
+        
         FetchVirtualCurrencies();
-        FetchPlayerProfile();
     }
 
     public void FetchPlayerProfile()

@@ -66,6 +66,11 @@ public class CardDealer
         card.Bottom = cardData.Bottom;
         card.Left = cardData.Left;
 
+        card.InitialTop = cardData.Top;
+        card.InitialRight = cardData.Right;
+        card.InitialBottom = cardData.Bottom;
+        card.InitialLeft = cardData.Left;
+
         card.RefreshState();
 
         if (data.skill != null)

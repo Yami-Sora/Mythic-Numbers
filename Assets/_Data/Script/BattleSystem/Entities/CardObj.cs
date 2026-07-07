@@ -19,6 +19,12 @@ public class CardObj : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IP
     public int HandIndex { get; set; }
     public int CardID { get; set; }
 
+    // --- INITIAL BATTLE STATS ---
+    public int InitialTop { get; set; }
+    public int InitialRight { get; set; }
+    public int InitialBottom { get; set; }
+    public int InitialLeft { get; set; }
+
     // --- SKILL DATA ---
     public bool IsInvincible { get; set; }
     public int InvincibleDuration { get; set; }

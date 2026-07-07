@@ -1,32 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-[Serializable]
-public class PlayFabSaveData
-{
-    public List<ItemSaveData> inventory = new List<ItemSaveData>();
-    public List<CardSaveData> cards = new List<CardSaveData>();
-    // [PLAYER STATS]
-    public int level = 1;
-    public long exp = 0;
-    
-    // [ARENA DATA]
-    public int elo = 0;
-    public int wins = 0;
-    public int losses = 0;
-    public int totalGames = 0;
-    public int rank = 0;
-    public string displayName = "";
-
-    // [DUNGEON DATA]
-    public int goldDungeonStage = 1;
-    public int lnDungeonStage = 1;
-    public int gemMineStage = 1;
-    public int goldDungeonEntries = 0;
-    public int lnDungeonEntries = 0;
-    public int gemMineEntries = 0;
-    public string lastDungeonDate = ""; // Format: yyyy-MM-dd
-}
 
 [Serializable]
 public class ItemSaveData 
@@ -86,3 +60,29 @@ public class DungeonSaveData
     public int gemMineEntries;
     public string lastDate;
 }
+
+[Serializable]
+public class PlayerStatsSaveData
+{
+    public int level = 1;
+    public long exp = 0;
+    public int elo = 0;
+    public int wins = 0;
+    public int losses = 0;
+    public int totalGames = 0;
+    public int rank = 0;
+    public string displayName = "";
+}
+
+[Serializable]
+public class PlayerInventorySaveData
+{
+    public List<ItemSaveData> inventory = new List<ItemSaveData>();
+}
+
+[Serializable]
+public class PlayerCardListSaveData
+{
+    public List<CardSaveData> cards = new List<CardSaveData>();
+}
+
