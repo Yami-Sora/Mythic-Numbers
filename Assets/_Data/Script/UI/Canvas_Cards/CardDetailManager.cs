@@ -268,7 +268,7 @@ public class CardDetailManager : YamiMonoBehaviour
         {
             GemDirection socketDir = GetDirectionByIndex(i);
 
-            if (socketDir == targetDir && allSockets[i].EquippedGem == null && allSockets[i].IsUnlocked)
+            if (socketDir == targetDir && allSockets[i].IsUnlocked)
             {
                 allSockets[i].SetReadyToEquip(true);
             }
@@ -295,9 +295,15 @@ public class CardDetailManager : YamiMonoBehaviour
             int index = socket.transform.GetSiblingIndex();
             GemDirection socketDir = GetDirectionByIndex(index);
 
-            if (socketDir == _pendingGemToEquip.data.directionTag && socket.EquippedGem == null)
+            if (socketDir == _pendingGemToEquip.data.directionTag && socket.IsUnlocked)
             {
                 int socketIndex = socket.transform.GetSiblingIndex();
+
+                // Tháo ngọc cũ về túi nếu ổ khảm đã có ngọc
+                if (socket.EquippedGem != null && InventoryManager.Instance != null)
+                {
+                    InventoryManager.Instance.AddItem(socket.EquippedGem.data, 1);
+                }
 
                 socket.EquipGem(_pendingGemToEquip);
                 _selectedCard.equippedGems[socketIndex] = _pendingGemToEquip;

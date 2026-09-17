@@ -15,6 +15,8 @@ public class UI_Socket : MonoBehaviour
     public InventoryItem EquippedGem { get; private set; }
     public bool IsUnlocked { get; private set; } // Thẻ căn cước check mở khóa
 
+    private Coroutine _blinkCoroutine;
+
     private void Awake()
     {
         // Chống lười: Lỡ sếp quên kéo Button vào thì nó tự đi tìm
@@ -27,9 +29,16 @@ public class UI_Socket : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        StopBlinking();
+    }
+
     // Thiết lập trạng thái Khóa / Mở
     public void SetupState(bool isLocked)
     {
+        StopBlinking();
+
         IsUnlocked = !isLocked;
         EquippedGem = null;
 
@@ -50,12 +59,48 @@ public class UI_Socket : MonoBehaviour
         if (btnSocket) btnSocket.interactable = !isLocked;
     }
 
-    // Đổi màu vàng khi chờ khảm
+    // Đổi màu vàng và nhấp nháy liên tục (bật tắt) khi chờ khảm
     public void SetReadyToEquip(bool isReady)
     {
+        StopBlinking();
+
         if (imgHighlight != null)
         {
-            imgHighlight.color = isReady ? Color.yellow : Color.white;
+            if (isReady)
+            {
+                _blinkCoroutine = StartCoroutine(BlinkRoutine());
+            }
+            else
+            {
+                imgHighlight.gameObject.SetActive(true);
+                imgHighlight.color = Color.white;
+            }
+        }
+    }
+
+    private void StopBlinking()
+    {
+        if (_blinkCoroutine != null)
+        {
+            StopCoroutine(_blinkCoroutine);
+            _blinkCoroutine = null;
+        }
+    }
+
+    private System.Collections.IEnumerator BlinkRoutine()
+    {
+        float interval = 0.5f; // Tốc độ nhấp nháy bật/tắt (0.5s)
+        bool isOn = true;
+
+        while (true)
+        {
+            if (imgHighlight != null)
+            {
+                imgHighlight.gameObject.SetActive(isOn);
+                imgHighlight.color = Color.yellow;
+            }
+            yield return new WaitForSeconds(interval);
+            isOn = !isOn;
         }
     }
     public void ClearSocket()

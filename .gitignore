@@ -71,4 +71,13 @@ Assets/Plugins/PlayFab*
 /Assets/SpriteOutline
 /GameDesign.md
 /Assets/Plugins/DOTween.cs
-.agents/rules/refactor-rule.md
+.agents/
+skills-lock.json
+
+# Pipelines & Workflows
+.github/workflows/
+.pipeline/
+.pipelines/
+pipeline/
+pipelines/
+
