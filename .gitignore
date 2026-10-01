@@ -85,3 +85,5 @@ pipelines/
 .mcp.json
 
 .vscode/
+
+.vsconfig
